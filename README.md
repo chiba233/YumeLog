@@ -20,9 +20,9 @@
 * **双轨数据获取**: 完美支持从本地目录读取，或通过 HTTP/CDN 从远程服务器动态拉取 YAML 数据流。
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/blob/master/demo/1.png" width="600" />
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/blob/master/demo/1.png" width="600" />
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/blob/master/demo/1.png" width="600" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/1.png" width="600" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/2.png" width="600" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/3.png" width="600" />
 </p>
 
 ### 全方位个人展示模块

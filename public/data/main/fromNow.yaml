@@ -1,0 +1,14 @@
+block:
+  - name_zh: "测试数据"
+    name_en: "Test Data"
+    name_jp: "テストデータ"
+    name_other: "Test Data"
+    photo: ""
+    time: "19700101"
+
+  - name_zh: "如果你需要添加纪念日请进入/src/data/components/fromNow.json"
+    name_en: "To add anniversaries, please access /src/data/components/fromNow.json"
+    name_jp: "記念日の追加が必要な際は、/src/data/components/fromNow.json を開いて設定してください。"
+    name_other: "To add anniversaries, please access /src/data/components/fromNow.json"
+    photo: ""
+    time: "20260101"

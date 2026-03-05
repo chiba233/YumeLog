@@ -1,0 +1,12 @@
+{
+  "blog": {
+    "listUrl": "https://YOUR-BLOG-LIST-URL",
+    "url": "https://YOUR-BLOG-URL",
+    "spareUrl": "/blog/",
+    "spareListUrl": "/blog/list.json"
+  },
+  "main": {
+    "listUrl": "/data/main/list.json",
+    "url": "/data/main/"
+  }
+}

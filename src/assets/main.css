@@ -1,0 +1,22 @@
+body {
+    margin: 0;
+    overscroll-behavior-y: none;
+
+    #bg {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+    }
+}
+
+#app {
+    overflow: hidden;
+}
+
+html,
+body {
+    overflow: hidden;
+}

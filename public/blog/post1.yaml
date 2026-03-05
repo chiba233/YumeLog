@@ -1,0 +1,18 @@
+layout: "common"
+time: "20260106"
+title: "鲲鹏920解决升级至debian12后panic"
+blocks:
+  - type: "text"
+    content: "这是测试文本"
+  - type: "text"
+    content: |
+      $$center($$bold($$underline(这是测试)$$)$$)$$
+
+  - type: "image"
+    content:
+      - src: /background0.webp
+        spareUrl: /background0.webp
+        desc: 这是图片描述
+  - type: "text"
+    content: |
+      $$bold(粗体$$underline(嵌套下划线$$link(http://baidu.com)$$)$$)$$

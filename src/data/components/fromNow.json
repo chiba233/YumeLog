@@ -1,0 +1,10 @@
+[
+  {
+    "nameZH": "如果你需要添加纪念日请进入/src/data/components/fromNow.json",
+    "nameEN": "To add anniversaries, please access /src/data/components/fromNow.json",
+    "nameJP": "記念日(きねんび)の追加(ついか)が必要(ひつよう)な際(さい)は、/src/data/components/fromNow.json を開(ひら)いて設定(せってい)してください。",
+    "nameOther": "To add anniversaries, please access /src/data/components/fromNow.json",
+    "photo": "",
+    "time": "19700101"
+  }
+]

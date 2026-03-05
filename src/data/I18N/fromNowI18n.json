@@ -1,0 +1,18 @@
+{
+  "en": {
+    "title": "My Memory",
+    "button": "Memory"
+  },
+  "zh": {
+    "title": "我的记忆日",
+    "button": "记忆日"
+  },
+  "ja": {
+    "title": "私のメモリー",
+    "button": "記念日"
+  },
+  "other": {
+    "title": "other",
+    "button": "other"
+  }
+}

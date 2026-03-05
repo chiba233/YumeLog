@@ -1,0 +1,6 @@
+{
+  "titleZH": "如需要修改此文本请进入/src/data/I18N/titleMessage.json",
+  "titleEN": "Modify this text in /src/data/I18N/titleMessage.json",
+  "titleJP": "テキストの変更(へんこう)が必要(ひつよう)な際(さい)は、/src/data/I18N/titleMessage.json より修正(しゅうせい)を行(おこな)ってください。",
+  "titleOther": "Modify this text in /src/data/I18N/titleMessage.json"
+}

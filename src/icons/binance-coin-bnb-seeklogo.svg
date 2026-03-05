@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+        xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+        xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+        width="23"
+        height="23"
+        viewBox="0 0 18.4 18.4"
+        version="1.1"
+        id="svg2"
+        sodipodi:docname="binance-coin-bnb-seeklogo.svg"
+        inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+        xmlns="http://www.w3.org/2000/svg">
+    <defs
+            id="defs2"/>
+    <sodipodi:namedview
+            id="namedview2"
+            pagecolor="#ffffff"
+            bordercolor="#000000"
+            borderopacity="0.25"
+            inkscape:showpageshadow="2"
+            inkscape:pageopacity="0.0"
+            inkscape:pagecheckerboard="0"
+            inkscape:deskcolor="#d1d1d1"
+            inkscape:zoom="15.314236"
+            inkscape:cx="20.536447"
+            inkscape:cy="4.2770661"
+            inkscape:window-width="1920"
+            inkscape:window-height="1111"
+            inkscape:window-x="-9"
+            inkscape:window-y="-9"
+            inkscape:window-maximized="1"
+            inkscape:current-layer="svg2"/>
+    <g
+            id="g2"
+            style="fill-opacity:1"
+            transform="matrix(0.00919997,0,0,0.0092,-5.519982e-5,0)">
+        <path
+                d="m 611.59,840.42 388.4,-388.39 388.6,388.59 226,-226 L 999.99,0 385.6,614.42 l 225.99,226 M 0.006,999.969 226.013,773.962 452.005,999.955 226,1225.96 Z m 611.584,159.611 388.4,388.39 388.59,-388.58 226.12,225.88 -0.11,0.12 -614.6,614.61 -614.41,-614.4 -0.32,-0.32 226.33,-225.7 m 936.423,-159.487 226.007,-226.006 225.992,225.992 -226.006,226.007 z"
+                id="path1"
+                style="fill-opacity:1"/>
+        <path
+                d="m 1229.22,999.88 h 0.1 L 999.99,770.55 830.51,940.03 h -0.01 l -19.47,19.48 -40.16,40.17 -0.32,0.31 0.32,0.33 229.12,229.13 229.33,-229.33 0.11,-0.13 -0.21,-0.11"
+                id="path2"
+                style="fill-opacity:1"/>
+    </g>
+</svg>

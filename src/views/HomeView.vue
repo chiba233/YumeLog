@@ -58,13 +58,9 @@ const BlogView: Component = defineAsyncComponent(() => import("@/views/BlogView.
 
 const cardSelect = ref(true);
 
-type ThemeIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-type BackgroundKey = `background${ThemeIndex}`;
-type ColorData = Record<BackgroundKey, string>;
-const randomTheme = Math.floor(Math.random() * 9);
-const selectedColor = (colorData as ColorData)[
-  `background${randomTheme}` as BackgroundKey
-  ];
+const themeCount = Object.keys(colorData).length;
+const randomTheme = Math.floor(Math.random() * themeCount);
+const selectedColor = (colorData as Record<string, string>)[`background${randomTheme}`];
 const bg = document.getElementById("bg")!;
 onMounted(() => {
   themeColor.value = selectedColor;

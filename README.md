@@ -20,15 +20,16 @@
 * **双轨数据获取**: 完美支持从本地目录读取，或通过 HTTP/CDN 从远程服务器动态拉取 YAML 数据流。
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/1.png" width="600" />
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/2.png" width="600" />
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/3.png" width="600" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/1.png" width="200" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/2.png" width="200" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/3.png" width="200" />
 </p>
 
 ### 全方位个人展示模块
 
 不只是博客，更是你在这个世界的数字名片：
 
+* **主题系统**: 支持多种主题，可以设置对应壁纸和主题色
 * **多语言适配**: 抛弃繁杂的第三方 i18n 框架，自研基于 JSON/YAML
   的轻量级多语言切换中心。轻松驾驭中文、英语、日本語，甚至是泰语的无缝切换，让主页真正走向国际化。
 * **个人简介**: 高度自定义的个人状态面板。

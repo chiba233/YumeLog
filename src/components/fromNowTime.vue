@@ -38,11 +38,49 @@
 <script lang="ts" setup>
 import { NButton, NCard, NIcon, NModal } from "naive-ui";
 import Clock from "../icons/clock.svg";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import Cancel from "../icons/cancel.svg";
 import { formatTime, lang, themeColor } from "@/components/ts/useStoage";
 import fromNowI18 from "@/data/I18N/fromNowI18n.json";
-import fromNow from "@/data/components/fromNow.json";
+import { loadSingleYaml } from "@/components/ts/getYaml.ts";
+
+interface YamlTimeBlock {
+  name_zh: string;
+  name_en: string;
+  name_jp: string;
+  name_other: string;
+  photo: string;
+  time: string;
+}
+
+interface YamlResponse {
+  block: YamlTimeBlock[];
+}
+
+interface OriginalTimeBlock {
+  nameZH: string;
+  nameEN: string;
+  nameJP: string;
+  nameOther: string;
+  photo: string;
+  time: string;
+}
+
+const fromNow = ref<OriginalTimeBlock[]>([]);
+
+onMounted(async () => {
+  const res = await loadSingleYaml<YamlResponse>("main", "fromNow.yaml");
+  if (res && res.block) {
+    fromNow.value = res.block.map((item: YamlTimeBlock): OriginalTimeBlock => ({
+      nameZH: item.name_zh,
+      nameEN: item.name_en,
+      nameJP: item.name_jp,
+      nameOther: item.name_other,
+      photo: item.photo,
+      time: item.time,
+    }));
+  }
+});
 
 const langMap = {
   zh: "nameZH",
@@ -54,7 +92,6 @@ const langMap = {
 const formatDate = (t: string) => {
   return `${t.slice(0, 4)} - ${t.slice(4, 6)} - ${t.slice(6, 8)}`;
 };
-
 
 const getName = (item: Record<string, string>) => {
   const key = langMap[lang.value as keyof typeof langMap] || "nameEN";

@@ -1,4 +1,4 @@
-import maiData from "@/data/components/maimai.json";
+import maiData from "../../../public/data/config/maimai.json";
 
 export const maiUrl: string =
   "https://" + maiData.baseUrl + "/api/game/maimai2/profile?aimeId=" + maiData.aimeID;

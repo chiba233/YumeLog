@@ -9,52 +9,12 @@
 </template>
 
 <script lang="ts" setup>
-import { lang } from "@/components/ts/useStoage";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import { computed, onMounted, ref } from "vue";
-import { loadAllPosts } from "@/components/ts/getYaml.ts";
+import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 
-interface IntroductionBlock {
-  type: string;
-  content: string;
-}
-
-interface Introduction {
-  blocks?: IntroductionBlock[];
-  content?: string;
-
-  [key: string]: unknown;
-}
-
-const introduction = ref<Introduction[]>([]);
 const { onMove, onLeave } = useCardGlow();
 
-onMounted(async () => {
-  introduction.value = await loadAllPosts<Introduction>("main");
-});
-
-const displayContent = computed(() => {
-  if (!introduction.value || introduction.value.length === 0) return "Loading...";
-
-  const langMap: Record<string, string> = {
-    zh: "zh",
-    en: "en",
-    ja: "JP",
-    other: "Other",
-  };
-
-  const targetType = langMap[lang.value] || "EN";
-  const mainIntroduction = introduction.value[0];
-
-  if (!mainIntroduction || !mainIntroduction.blocks) return "";
-
-  const block = mainIntroduction.blocks.find((b) => b.type === targetType);
-
-  if (block) return block.content;
-
-  const fallback = mainIntroduction.blocks.find((b) => b.type === "EN");
-  return fallback ? fallback.content : "";
-});
+const displayContent = useYamlText("main", "introduction.yaml");
 </script>
 
 <style lang="scss" scoped>

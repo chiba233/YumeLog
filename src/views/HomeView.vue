@@ -46,7 +46,7 @@ import Title from "@/components/title.vue";
 import Details from "@/components/detail.vue";
 import Contacts from "@/components/contacts.vue";
 import MyFriends from "@/components/myFriends.vue";
-import colorData from "@/data/components/colorData.json";
+import colorData from "../../public/data/config/colorData.json";
 import { lang, themeColor } from "@/components/ts/useStoage";
 import TopBar from "@/components/topBar.vue";
 import { AnimalRabbit28Regular, Home12Regular } from "@vicons/fluent";

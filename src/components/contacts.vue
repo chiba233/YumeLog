@@ -13,13 +13,13 @@
       </template>
       <div>
         <n-image-group class="catImgCard">
-          <div v-for="{ catImg, imgName ,catImgError} in catImage" :key="imgName" class="catImgDIV">
+          <div v-for=" item in nekoImg" :key="item.imgName" class="catImgDIV">
             <n-image
-              :alt="imgName"
-              :fallback-src="catImgError"
-              :src="catImg" width="140"
+              :alt="item.imgName"
+              :fallback-src="item.imgError"
+              :src="item.img" width="140"
             ></n-image>
-            <a>{{ imgName }}</a>
+            <a>{{ item.imgName }}</a>
           </div>
         </n-image-group>
       </div>
@@ -80,7 +80,6 @@
 
 <script lang="ts" setup>
 import Solana from "@/icons/solanaLogoMark.svg";
-import catImage from "@/data/components/catImage.json";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import Cat from "@/icons/cat.svg";
 import TwitterIcon from "@/icons/twitter.svg";
@@ -99,11 +98,12 @@ import Line from "@/icons/line.svg";
 import { lang, themeColor } from "@/components/ts/useStoage";
 import { maiUrl, UserDataType } from "./ts/maimaiScore";
 import Cancel from "@/icons/cancel.svg";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import maiI18nData from "@/data/I18N/maiI18n.json";
 import axios from "axios";
 import { useAsyncState } from "@vueuse/core";
-import platformRawData from "@/data/components/socialLinks.json";
+import platformRawData from "../../public/data/config/socialLinks.json";
+import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 
 
 type PlatformId =
@@ -269,6 +269,34 @@ const getLabel = (item: PlatformConfig): string => {
   if (item.id === "cat") return catMemoryTitle.value.cat;
   return item.label;
 };
+
+interface YamlNekoBlock {
+  imgError: string;
+  img: string;
+  imgName: string;
+}
+
+interface YamlResponse {
+  img: YamlNekoBlock[];
+}
+
+interface OriginalNekoBlock {
+  imgError: string;
+  img: string;
+  imgName: string;
+}
+
+const nekoImg = ref<OriginalNekoBlock[]>([]);
+onMounted(async () => {
+  const res = await loadSingleYaml<YamlResponse>("main", "neko.yaml");
+  if (res && res.img) {
+    nekoImg.value = res.img.map((img: YamlNekoBlock): OriginalNekoBlock => ({
+      imgError: img.imgError,
+      img: img.img,
+      imgName: img.imgName,
+    }));
+  }
+});
 </script>
 
 <style lang="scss">

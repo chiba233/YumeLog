@@ -6,15 +6,15 @@
     }}</a>
   <div class="allFriends">
     <div
-      v-for="{ icon, name, url, aliasEN } in friends" :key="aliasEN" class="friendBox" @click="openURL(url)"
+      v-for=" friend  in friends" :key="friend.name" class="friendBox" @click="openURL(friend.url)"
       @mouseleave="onLeave" @mousemove="onMove">
       <div class="content">
-        <n-avatar :size="100" :src="icon" bordered round></n-avatar>
+        <n-avatar :size="100" :src="friend.icon" bordered round></n-avatar>
         <a v-if="lang === 'zh'" class="friendName">
-          {{ name }}
+          {{ friend.name }}
         </a>
         <a v-if="lang != 'zh'" class="friendName">
-          {{ aliasEN }}
+          {{ friend.alias }}
         </a>
       </div>
     </div>
@@ -24,16 +24,48 @@
 
 <script lang="ts" setup>
 import { NAvatar } from "naive-ui";
-import friends from "@/data/components/friends.json";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
 import { lang } from "@/components/ts/useStoage";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
+import { onMounted, ref } from "vue";
+import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 
 const { onMove, onLeave } = useCardGlow();
 
 function openURL(url: string) {
-  window.open(url);
+  window.open(url, "_blank");
 }
+
+interface YamlFriendsBlock {
+  name: string;
+  alias: string;
+  url: string;
+  icon: string;
+}
+
+interface YamlResponse {
+  friends: YamlFriendsBlock[];
+}
+
+interface OriginalFriendsBlock {
+  icon: string;
+  name: string;
+  url: string;
+  alias: string;
+}
+
+const friends = ref<OriginalFriendsBlock[]>([]);
+onMounted(async () => {
+  const res = await loadSingleYaml<YamlResponse>("main", "friends.yaml");
+  if (res && res.friends) {
+    friends.value = res.friends.map((friends: YamlFriendsBlock): OriginalFriendsBlock => ({
+      icon: friends.icon,
+      name: friends.name,
+      url: friends.url,
+      alias: friends.alias,
+    }));
+  }
+});
 </script>
 
 <style lang="scss">
@@ -73,6 +105,7 @@ $transition-speed: 0.3s;
   position: relative;
   z-index: 10;
   width: 100%;
+  justify-content: center;
 
 }
 
@@ -178,19 +211,17 @@ $transition-speed: 0.3s;
     height: 6em;
     margin-bottom: 0.9em;
     margin-top: 0.08em;
+    justify-content: center;
   }
 
   .friendName {
     color: #191919;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, .3);
     white-space: nowrap;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
     overflow: hidden;
-    box-orient: vertical; //test values
-    line-clamp: 1;
-    width: auto;
+    text-overflow: ellipsis;
+    width: 100%;
+    text-align: center;
   }
 }
 </style>

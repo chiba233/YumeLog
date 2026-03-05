@@ -5,7 +5,7 @@ import "moment/dist/locale/zh-cn";
 import "moment/dist/locale/en-au";
 import type { Ref } from "vue";
 
-export type LangKey = "zh" | "en" | "ja" | "other";
+export const langMap: Record<string, string> = { zh: "zh", en: "en", ja: "ja", other: "other" };
 
 const rawLang = navigator.language.substring(0, 2);
 export const browserLang = ["zh", "en", "ja"].includes(rawLang) ? rawLang : "zh";

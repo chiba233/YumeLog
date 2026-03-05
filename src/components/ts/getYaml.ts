@@ -1,6 +1,6 @@
 import yaml from "js-yaml";
 import { ref } from "vue";
-import yamlUrl from "@/data/components/yamlUrl.json";
+import yamlUrl from "../../../public/data/config/yamlUrl.json";
 import axios from "axios";
 
 interface BaseContent {
@@ -15,7 +15,6 @@ interface YamlConfigItem {
   spareUrl?: string;
   spareListUrl?: string;
 }
-
 export interface Post {
   time?: string;
   title?: string;
@@ -54,7 +53,7 @@ const fetchWithRetry = async (url: string, options?: RequestInit, retry = 3, del
     await sleep(delay);
     return fetchWithRetry(url, options, retry - 1, delay * 2);
   }
-};
+}
 
 const typedYamlUrl = yamlUrl as Record<string, YamlConfigItem>;
 
@@ -103,4 +102,28 @@ export const loadAllPosts = async <T extends BaseContent>(type: keyof typeof yam
 
   yamlLoading.value = false;
   return validData;
+};
+
+export const loadSingleYaml = async <T>(type: keyof typeof yamlUrl, fileName: string) => {
+  const { spareUrl } = typedYamlUrl[type];
+  let { url: baseUrl } = typedYamlUrl[type];
+  let targetUrl = `${baseUrl}${fileName}`;
+
+  try {
+    await axios.head(targetUrl);
+  } catch {
+    if (spareUrl) {
+      baseUrl = spareUrl;
+      targetUrl = `${baseUrl}${fileName}`;
+    }
+  }
+
+  try {
+    const response = await fetchWithRetry(targetUrl, undefined, 3, 800);
+    const yamlText = await response.text();
+    return yaml.load(yamlText) as T;
+  } catch {
+    return null;
+  }
+  ;
 };

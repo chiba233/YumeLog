@@ -11,20 +11,9 @@
 <script lang="ts" setup>
 import { NAvatar } from "naive-ui";
 import icon from "../../public/icon.webp";
-import titleMessage from "@/data/I18N/titleMessage.json";
-import { lang } from "@/components/ts/useStoage";
-import { computed } from "vue";
+import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 
-const displayTitle = computed(() => {
-  const map: Record<string, string> = {
-    zh: titleMessage.titleZH,
-    en: titleMessage.titleEN,
-    ja: titleMessage.titleJP,
-    other: titleMessage.titleOther,
-  };
-  // 也可以加一个 fallback，防止 lang 匹配不到时报错
-  return map[lang.value] || titleMessage.titleOther;
-});
+const displayTitle = useYamlText("main", "title.yaml");
 </script>
 
 <style lang="scss">

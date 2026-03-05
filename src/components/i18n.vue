@@ -14,10 +14,10 @@
 <script lang="ts" setup>
 import LangIcon from "../icons/langIcon.svg";
 import { NButton, NIcon, NPopselect } from "naive-ui";
-import i18nLang from "@/data/I18N/i18nLang.json";
+import i18nLang from "../../public/data/config/i18nLang.json";
 import { lang, themeColor } from "@/components/ts/useStoage";
 import { watchEffect } from "vue";
-import webTitle from "@/data/I18N/webTitle.json";
+import webTitle from "../../public/data/main/webTitle.json";
 
 const newWebTitle: Record<string, string> = webTitle;
 
@@ -28,7 +28,6 @@ type LangItem = {
 
 watchEffect(() => {
   document.documentElement.lang = lang.value;
-  // 2. 修改网页标题（同样使用 fallback 逻辑）
   document.title = newWebTitle[lang.value] || "Strawberry Pages";
 });
 </script>

@@ -2,6 +2,8 @@
 
 一个基于 **Vue 3** + **TypeScript** + **Naive UI** 构建的极简高颜值个人主页与博客系统。
 
+本项目为静态网页， 你可以在几乎任何托管平台直接托管，实现低成本部署。
+
 本项目拒绝臃肿的富文本与传统 Markdown 引擎，**全手动实现了一套轻量级文本解析器**，并深度集成了 MaiMai
 玩家专属成绩展示模块。致力于打造兼具硬核技术与个人美学的专属数字空间。
 
@@ -50,6 +52,63 @@
 * **构建工具**: Vite
 * **数据处理**: js-yaml (仅用于解析结构，DOM 渲染由自研 Parser 引擎全权接管)
 
+## 🛠️ 开发与部署
+
+由于项目采用了 **Vite 7** 与 **pnpm** 驱动，请确保你的开发环境已安装 pnpm。
+
+### 1. 环境准备
+
+* **Node.js**: >= 18.0.0
+* **Package Manager**: pnpm >= 8.0.0
+
+### 2. 安装依赖
+
+    pnpm install
+
+### 3. 本地开发
+
+启动开发服务器，支持热更新（HMR）：
+
+    pnpm dev
+
+如果你需要在移动端调试（局域网访问），请运行：
+
+    pnpm run host
+
+### 4. 生产环境构建
+
+执行以下命令将进行严格的类型检查并生成优化后的静态资源（存放在 dist 目录）：
+
+    pnpm build
+
+### 5. 代码质量检查
+
+# 运行 ESLint 自动修复
+
+    pnpm lint
+
+# 运行 TypeScript 类型检查
+
+    pnpm type-check
+
+## 🌐 部署说明 (デプロイ)
+
+### Nginx 配置
+
+本项目使用 vue-router 的 History 模式，部署到 Nginx 时需添加以下配置，否则刷新页面会触发 404：
+
+    server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        root /path/to/yumeLog/dist;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+}
+
 ## 块级驱动与自研语法
 
 yumeLog 采用极其灵活的 **块级** 架构组织内容。同时，自研的解析引擎完美支持了**无限嵌套**的文本格式渲染。
@@ -77,3 +136,156 @@ blocks:
       - src: /background0.webp
         spareUrl: /background0.webp
         desc: "这是图片描述"
+
+## ✍️ 内容修改指南
+```
+
+由于 **yumeLog 是纯前端静态架构（无后端）**，所有博客与个人信息均通过仓库中的数据文件进行管理。  
+如果需要修改内容，请按照以下说明操作。
+
+---
+
+### 添加博客文章
+
+**注意 要使用博客前你必须先在`\public\data\config\yamlUrl.json`** 指向正确的远程目录及热备目录
+示例：
+
+```json
+{
+  "blog": {
+    "listUrl": "https://YOUR-BLOG-LIST-URL",
+    "url": "https://YOUR-BLOG-URL",
+    "spareUrl": "/blog/",
+    "spareListUrl": "/blog/list.json"
+  },
+  "main": {
+    "listUrl": "/data/main/list.json",
+    "url": "/data/main/"
+  }
+}
+```
+
+1. 在博客目录创建新的 YAML 文件（例如 `20260106.yaml`）。
+2. 按照项目定义的 `blocks` 结构编写文章内容。
+3. **手动修改 `list.json`**，将新的文章文件名添加进去。
+
+示例：
+
+```json
+[
+  "20251201.yaml",
+  "20260106.yaml"
+]
+```
+
+如果没有添加到 `list.json`，文章将不会被系统加载。
+
+---
+
+### I18N 多语言管理
+
+语言配置文件：
+
+```
+/public/data/config/i18nLang.json
+```
+
+默认支持语言：
+
+- 中文
+- English
+- 日本語
+
+如果不需要某个语言，**直接从 JSON 中删除即可**，对应语言选项会自动从前端消失。
+示例：
+
+```json
+[
+  {
+    "label": "中文",
+    "value": "zh"
+  },
+  {
+    "label": "English",
+    "value": "en"
+  }
+]
+
+```
+
+---
+
+### 修改网页标题
+
+文件位置：
+
+```
+/public/data/main/webTitle.json
+```
+
+用于控制浏览器标签页标题以及部分全局显示名称。
+
+---
+
+### 修改首页招呼语
+
+文件位置：
+
+```
+/public/data/main/title.yaml
+```
+
+用于控制主页顶部的欢迎语与简短介绍。
+
+---
+
+### 修改照片墙
+
+文件位置：
+
+```
+/public/data/config/neko.yaml
+```
+
+用于管理照片墙展示的图片及描述内容（例如猫猫照片或摄影作品）。
+
+---
+
+### 修改个人详细简介
+
+文件位置：
+
+```
+/public/data/config/introduction.yaml
+```
+
+用于展示完整的个人介绍信息。
+
+---
+
+### 修改纪念日时间线
+
+文件位置：
+
+```
+/public/data/config/fromNow.yaml
+```
+
+用于配置纪念日与时间线展示内容。
+
+---
+
+## License
+
+本项目采用 **MIT License** 开源。
+
+你可以自由地：
+
+- 使用
+- 修改
+- 分发
+- 用于商业项目
+
+但必须保留原作者的版权声明。
+
+详情请参阅项目中的 `LICENSE` 文件。

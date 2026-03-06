@@ -1,49 +1,92 @@
-interface TextToken {
+export interface TextToken {
   type: RichType | "text";
   value: string | TextToken[];
+  url?: string;
 }
 
 const RICH_TYPES = ["bold", "thin", "underline", "strike", "center", "link"] as const;
-const BLOCK_TYPES = ["center"];
+const BLOCK_TYPES = ["center"] as const;
+
 export type RichType = (typeof RICH_TYPES)[number];
 
 const TAG_PREFIX = "$$";
 const END_TAG = ")$$";
-const START_TAG_PATTERN = `\\$\\$([a-z]+)\\(`;
-const makeTagRegex = () => new RegExp(`${START_TAG_PATTERN}`, "gy");
+
+const START_TAG_REGEX = /\$\$([a-z]+)\(/y;
+
+const splitLinkContent = (text: string): [string, string | null] => {
+  let depth = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+
+    if (c === "(") {
+      depth++;
+      continue;
+    }
+
+    if (c === ")") {
+      if (depth > 0) depth--;
+      continue;
+    }
+
+    if (c === "|" && depth === 0) {
+      return [
+        text.slice(0, i).trim(),
+        text.slice(i + 1).trim(),
+      ];
+    }
+  }
+
+  return [text.trim(), null];
+};
+
+//提取 AST 中纯文本
+
+const extractText = (ts: TextToken[]): string =>
+  ts.map(t => typeof t.value === "string" ? t.value : extractText(t.value)).join("");
 
 // 主解析器
 export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
-  const TAG_REGEX = makeTagRegex();
   const tokens: TextToken[] = [];
   let i = 0;
 
   if (depthLimit <= 0) return [{ type: "text", value: text }];
 
+  const pushText = (str: string) => {
+    if (!str) return;
+
+    const last = tokens[tokens.length - 1];
+
+    if (last && last.type === "text" && typeof last.value === "string") {
+      last.value += str;
+    } else {
+      tokens.push({ type: "text", value: str });
+    }
+  };
+
   while (i < text.length) {
     const startIdx = text.indexOf(TAG_PREFIX, i);
 
     if (startIdx === -1) {
-      const remaining = text.slice(i);
-      if (remaining) tokens.push({ type: "text", value: remaining });
+      pushText(text.slice(i));
       break;
     }
 
     if (startIdx > i) {
-      tokens.push({ type: "text", value: text.slice(i, startIdx) });
+      pushText(text.slice(i, startIdx));
     }
 
-    TAG_REGEX.lastIndex = startIdx;
-    const match = TAG_REGEX.exec(text);
+    START_TAG_REGEX.lastIndex = startIdx;
+    const match = START_TAG_REGEX.exec(text);
 
     if (match) {
       const tagName = match[1];
-      const contentStartIndex = TAG_REGEX.lastIndex;
+      const contentStart = START_TAG_REGEX.lastIndex;
 
-      // 寻找对应的结束标签
       let depth = 1;
-      let cur = contentStartIndex;
-      let contentEndIndex = -1;
+      let cur = contentStart;
+      let end = -1;
 
       while (cur < text.length) {
         const nextStart = text.indexOf(TAG_PREFIX, cur);
@@ -52,60 +95,107 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
         if (nextEnd === -1) break;
 
         if (nextStart !== -1 && nextStart < nextEnd) {
-          // 进一步确认是否是有效的起始标签 $$name(
-          TAG_REGEX.lastIndex = nextStart;
-          if (TAG_REGEX.test(text)) {
+          START_TAG_REGEX.lastIndex = nextStart;
+
+          const nested = START_TAG_REGEX.exec(text);
+
+          if (nested) {
             depth++;
-            cur = TAG_REGEX.lastIndex;
+            cur = START_TAG_REGEX.lastIndex;
             continue;
           }
+
           cur = nextStart + 2;
         } else {
           depth--;
+
           if (depth === 0) {
-            contentEndIndex = nextEnd;
+            end = nextEnd;
             break;
           }
+
           cur = nextEnd + END_TAG.length;
         }
       }
 
-      if (contentEndIndex !== -1) {
-        const innerText = text.slice(contentStartIndex, contentEndIndex);
-        const parsedInner = parseRichText(innerText, depthLimit - 1);
+      if (end !== -1) {
+        const inner = text.slice(contentStart, end);
 
-        // 只有在 RICH_TYPES 里的才作为 tag，否则打平
         if ((RICH_TYPES as readonly string[]).includes(tagName)) {
-          tokens.push({ type: tagName as RichType, value: parsedInner });
+
+          if (tagName === "link") {
+            const [urlPart, displayPart] = splitLinkContent(inner);
+
+            if (displayPart !== null) {
+              const parsedUrl = parseRichText(urlPart, depthLimit - 1);
+
+              tokens.push({
+                type: "link",
+                url: extractText(parsedUrl),
+                value: parseRichText(displayPart, depthLimit - 1),
+              });
+
+            } else {
+
+              const parsed = parseRichText(urlPart, depthLimit - 1);
+
+              tokens.push({
+                type: "link",
+                url: extractText(parsed),
+                value: parsed,
+              });
+            }
+
+          } else {
+
+            tokens.push({
+              type: tagName as RichType,
+              value: parseRichText(inner, depthLimit - 1),
+            });
+
+          }
+
         } else {
-          tokens.push(...parsedInner);
+
+          const parsedInner = parseRichText(inner, depthLimit - 1);
+
+          for (const t of parsedInner) {
+            if (t.type === "text" && typeof t.value === "string") {
+              pushText(t.value);
+            } else {
+              tokens.push(t);
+            }
+          }
+
         }
 
-        i = contentEndIndex + END_TAG.length;
+        i = end + END_TAG.length;
 
-        // 块级元素换行处理
-        if (BLOCK_TYPES.includes(tagName)) {
-          if (text[i] === "\n") i++;
-          else if (text.startsWith("\r\n", i)) i += 2;
+        if ((BLOCK_TYPES as readonly string[]).includes(tagName)) {
+          if (text.startsWith("\r\n", i)) i += 2;
+          else if (text[i] === "\n") i++;
         }
+
         continue;
       }
     }
 
-    // 如果虽然有 $$ 但不是合法标签，当作普通文本跳过
-    tokens.push({ type: "text", value: TAG_PREFIX });
-    i = startIdx + TAG_PREFIX.length;
+    pushText(text[startIdx]);
+    i = startIdx + 1;
   }
 
   return tokens;
 };
-// strip 版本
+
+//去除所有富文本
 export const stripRichText = (text: string): string => {
   const tokens = parseRichText(text);
 
-  const flatten = (ts: TextToken[]): string => {
-    return ts.map(t => typeof t.value === "string" ? t.value : flatten(t.value)).join("");
-  };
+  const flatten = (ts: TextToken[]): string =>
+    ts.map(t => typeof t.value === "string"
+      ? t.value
+      : flatten(t.value),
+    ).join("");
 
   return flatten(tokens).trim();
 };

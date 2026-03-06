@@ -4,15 +4,10 @@ import { RichType } from "@/components/ts/blogFormat.ts";
 interface TextToken {
   type: RichType | "text";
   value: string | TextToken[];
+  url?: string;
 }
 
-type TokenValue = string | TextToken[];
 type HtmlTag = keyof HTMLElementTagNameMap;
-
-const extractValue = (node: TokenValue): string => {
-  if (typeof node === "string") return node;
-  return node.map(n => extractValue(n.value)).join("");
-};
 
 defineProps<{
   tokens: TextToken[]
@@ -24,46 +19,44 @@ const tagMap: Record<string, HtmlTag> = {
   underline: "u",
   strike: "del",
   center: "div",
-  link: "a",
 };
 
-const normalizeUrl = (raw: string): string | null => {
+const normalizeUrl = (raw: string): string | undefined => {
+  if (!raw) return undefined;
   try {
     const url = raw.match(/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//)
       ? new URL(raw)
       : new URL("https://" + raw);
 
-    if (!["http:", "https:"].includes(url.protocol)) return null;
+    if (!["http:", "https:"].includes(url.protocol)) return undefined;
     return url.href;
   } catch {
-    return null;
+    return undefined;
   }
 };
 
-const onTokenClick = (token: TextToken) => {
-  if (token.type !== "link") return;
-  handleLinkClick(token);
-};
-
-const handleLinkClick = (token: TextToken) => {
-  const raw = extractValue(token.value);
-  if (!raw) return;
-
-  const url = normalizeUrl(raw);
-  if (!url) return;
-
-  window.open(url, "_blank", "noopener,noreferrer");
-};
 </script>
 
 <template>
   <template v-for="(token, index) in tokens" :key="index">
     <span v-if="token.type === 'text'" class="rich-text-content">{{ token.value }}</span>
+    <a
+      v-else-if="token.type === 'link'"
+      :href="normalizeUrl(token.url || '')"
+      class="fw-link"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      <RichTextRenderer
+        v-if="Array.isArray(token.value) && token.value.length"
+        :tokens="token.value"
+      />
+    </a>
+
     <component
       :is="tagMap[token.type] || 'span'"
       v-else
       :class="[`fw-${token.type}`, { 'rich-underline': token.type === 'underline', 'rich-strike': token.type === 'strike', 'center-text': token.type === 'center' }]"
-      @click="onTokenClick(token)"
     >
       <RichTextRenderer
         v-if="Array.isArray(token.value) && token.value.length"
@@ -85,7 +78,6 @@ const handleLinkClick = (token: TextToken) => {
   color: inherit;
   letter-spacing: 0.02em;
   line-height: 1.8;
-
 }
 
 .rich-text-content, .fw-bold, .fw-thin, .rich-underline, .rich-strike, .fw-link {

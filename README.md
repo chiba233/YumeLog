@@ -116,6 +116,9 @@ yumeLog 采用极其灵活的 **块级** 架构组织内容。同时，自研的
 **请注意，你必须添加id否则将无法访问文章，你可以直接使用id跳转至文章。**
 
 **例子：你可以直接通过此链接进行快速跳转及分享：**`http://localhost:5173/blog/test`
+
+**请记住link的语法是** `$$link(URL | $$type(点我)$$)$$` ，**其中** `$$type(点我)$$`**其中**
+`type`**支持嵌套，但是`URL`**不能嵌套！必须在链接同一层级！**
 ### 标准 YAML 示例
 
 ```yaml
@@ -134,7 +137,7 @@ blocks:
     content: |
       $$center($$bold($$underline(这是测试)$$)$$)$$
       $$bold(粗体$$underline(嵌套下划线$$link(http://baidu.com)$$)$$)$$
-      
+      $$link(https://baidu.com | $$bold($$underline(点我进入百度)$$)$$)$$
   # 3. 图像渲染块 (支持容灾备用链接)
   - type: "image"
     content:

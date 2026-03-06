@@ -147,7 +147,7 @@ watch(
             {{ post.title }}
           </h2>
           <div class="post-meta">
-            <n-icon v-if="post.pin" size="14">
+            <n-icon v-if="post.pin" size="15">
               <PushPinSharp></PushPinSharp>
             </n-icon>
             <span v-if="post.pin" class="time-divider">|</span>
@@ -175,8 +175,8 @@ watch(
             />
           </div>
           <div
-            :class="{ 'expanded-text': !post.blocks?.some((b: any) => b.type === 'image') }"
-            class="post-description">
+:class="{ 'expanded-text': !post.blocks?.some((b: any) => b.type === 'image') }"
+               class="post-description">
             <p>
               {{
                 (post.blocks || [])
@@ -483,7 +483,7 @@ $transition-speed: 0.3s;
       align-items: center;
       color: color.adjust($text-color, $lightness: 80%);
       text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
-      font-size: 0.8rem;
+      font-size: 15px;
       gap: 0.3rem;
       line-height: 1;
 

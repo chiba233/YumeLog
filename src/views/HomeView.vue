@@ -2,13 +2,28 @@
   <div class="content">
     <HomeTitle />
     <div class="detailsDIV">
-      <PersonalIntroductions />
+      <Suspense>
+        <template #default>
+          <PersonalIntroductions />
+        </template>
+        <template #fallback></template>
+      </Suspense>
     </div>
+
     <div class="contactsDIV">
-      <ContactInformation />
+      <Suspense>
+        <template #default>
+          <ContactInformation />
+        </template>
+        <template #fallback></template>
+      </Suspense>
     </div>
+
     <Suspense>
-      <MyFriends />
+      <template #default>
+        <MyFriends />
+      </template>
+      <template #fallback></template>
     </Suspense>
   </div>
 </template>

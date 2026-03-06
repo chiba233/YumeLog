@@ -6,30 +6,32 @@
           <LangIcon />
         </n-icon>
       </template>
-      <a> {{ i18nLang.find((it: LangItem) => it.value === lang)?.label }}</a>
+      <a> {{ i18nLang.find((it) => it.value === lang)?.label }}</a>
     </n-button>
   </n-popselect>
 </template>
 
 <script lang="ts" setup>
 import LangIcon from "../icons/langIcon.svg";
-import { NButton, NIcon, NPopselect } from "naive-ui";
-import i18nLang from "../../public/data/config/i18nLang.json";
+import { NButton, NIcon, NPopselect, type SelectOption } from "naive-ui";
 import { lang, themeColor } from "@/components/ts/useStoage";
 import { watchEffect } from "vue";
-import webTitle from "../../public/data/main/webTitle.json";
 
-const newWebTitle: Record<string, string> = webTitle;
+type WebTitleMap = Record<string, string>
 
-type LangItem = {
-  label: string;
-  value: string;
-};
+const [i18nLang, newWebTitle] = await Promise.all([
+  fetch("/data/config/i18nLang.json").then(
+    (res) => res.json() as Promise<SelectOption[]>,
+  ),
+  fetch("/data/main/webTitle.json").then(
+    (res) => res.json() as Promise<WebTitleMap>,
+  ),
+]);
 
 watchEffect(() => {
   document.documentElement.lang = lang.value;
   document.title = newWebTitle[lang.value] || "Strawberry Pages";
-});
+})
 </script>
 
 <style lang="scss">

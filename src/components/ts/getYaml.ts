@@ -1,11 +1,21 @@
 import yaml from "js-yaml";
 import { ref } from "vue";
-import yamlUrl from "../../../public/data/config/yamlUrl.json";
 import axios from "axios";
+
+type YamlUrlConfig = Record<string, YamlConfigItem>;
+let memoizedConfig: YamlUrlConfig | null = null;
+
+async function getYamlConfig(): Promise<YamlUrlConfig> {
+  if (memoizedConfig) return memoizedConfig;
+  const res = await fetch("/data/config/yamlUrl.json");
+  memoizedConfig = (await res.json()) as YamlUrlConfig;
+  return memoizedConfig;
+}
+
+
 
 interface BaseContent {
   time?: string;
-
   [key: string]: any;
 }
 
@@ -33,7 +43,7 @@ export const yamlLoading = ref<boolean>(false);
 export const yamlRetrying = ref<boolean>(false);
 export const changeSpareUrl = ref<boolean>(false);
 
-const fetchWithRetry = async (url: string, options?: RequestInit, retry = 3, delay = 800) => {
+const fetchWithRetry = async (url: string, options?: RequestInit, retry = 3, delay = 800): Promise<Response> => {
   loadError.value = false;
   try {
     yamlRetrying.value = false;
@@ -56,12 +66,13 @@ const fetchWithRetry = async (url: string, options?: RequestInit, retry = 3, del
   }
 }
 
-const typedYamlUrl = yamlUrl as Record<string, YamlConfigItem>;
 
-export const loadAllPosts = async <T extends BaseContent>(type: keyof typeof yamlUrl) => {
-
-  const { spareUrl, spareListUrl } = typedYamlUrl[type];
-  let { listUrl, url: baseUrl } = typedYamlUrl[type];
+export const loadAllPosts = async <T extends BaseContent>(type: string) => {
+  const typedYamlUrl = await getYamlConfig();
+  const configItem = typedYamlUrl[type];
+  if (!configItem) throw new Error(`[Yaml Error]: Type "${type}" not found in config.`);
+  const { spareUrl, spareListUrl } = configItem;
+  let { listUrl, url: baseUrl } = configItem;
   yamlLoading.value = true;
   yamlLoadingFault.value = false;
   faultTimes.value = 0;
@@ -76,7 +87,7 @@ export const loadAllPosts = async <T extends BaseContent>(type: keyof typeof yam
   }
   const listRes = await fetchWithRetry(listUrl, undefined, 3, 800);
   const postData = (await listRes.json()) as string[];
-  const promises = postData.map(async (name: string) => {
+  const promises = postData.map(async (name: string): Promise<T | null> => {
     const url = `${baseUrl}${name}`;
 
     try {
@@ -110,9 +121,13 @@ export const loadAllPosts = async <T extends BaseContent>(type: keyof typeof yam
   return validData;
 };
 
-export const loadSingleYaml = async <T>(type: keyof typeof yamlUrl, fileName: string) => {
-  const { spareUrl } = typedYamlUrl[type];
-  let { url: baseUrl } = typedYamlUrl[type];
+export const loadSingleYaml = async <T>(type: string, fileName: string) => {
+  const typedYamlUrl = await getYamlConfig();
+  const configItem = typedYamlUrl[type];
+  if (!configItem) return null;
+
+  const { spareUrl } = configItem;
+  let { url: baseUrl } = configItem;
   let targetUrl = `${baseUrl}${fileName}`;
 
   try {
@@ -131,5 +146,4 @@ export const loadSingleYaml = async <T>(type: keyof typeof yamlUrl, fileName: st
   } catch {
     return null;
   }
-  ;
 };

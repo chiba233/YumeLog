@@ -1,7 +1,22 @@
-import maiData from "../../../public/data/config/maimai.json";
+interface MaiConfig {
+  baseUrl: string;
+  aimeID: string | number;
+}
 
-export const maiUrl: string =
-  "https://" + maiData.baseUrl + "/api/game/maimai2/profile?aimeId=" + maiData.aimeID;
+let memoizedConfig: MaiConfig | null = null;
+
+async function getMaiConfig(): Promise<MaiConfig> {
+  if (memoizedConfig) return memoizedConfig;
+  const res = await fetch("/data/config/maimai.json");
+  memoizedConfig = (await res.json()) as MaiConfig;
+  return memoizedConfig;
+}
+
+export const getMaiUrl = async (): Promise<string> => {
+  const config = await getMaiConfig();
+  return `https://${config.baseUrl}/api/game/maimai2/profile?aimeId=${config.aimeID}`;
+};
+
 
 export type UserDataType = {
   userName: string; // "好DDX"

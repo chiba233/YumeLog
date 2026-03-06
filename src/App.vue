@@ -1,37 +1,53 @@
 <script lang="ts" setup>
 import { RouterView, useRouter } from "vue-router";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { NButton, NIcon, NMessageProvider } from "naive-ui";
 import { AnimalRabbit28Regular, Home12Regular } from "@vicons/fluent";
 import MessageProvider from "@/components/MessageProvider.vue";
 import TopBar from "@/components/topBar.vue";
-import colorData from "../public/data/config/colorData.json";
 import { lang, themeColor } from "@/components/ts/useStoage";
 
+type ColorData = Record<string, string>;
 const router = useRouter();
+const colorData = ref<ColorData | null>(null);
 
-const themeCount = Object.keys(colorData).length;
-const randomTheme = Math.floor(Math.random() * themeCount);
-const selectedColor = (colorData as Record<string, string>)[`background${randomTheme}`];
+async function loadJson<T>(url: string): Promise<T> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  return (await res.json()) as T;
+}
 
-onMounted(() => {
-  const bg = document.getElementById("bg")!;
-  themeColor.value = selectedColor;
-  if (bg) bg.style.backgroundImage = `url(/background${randomTheme}.webp)`;
-  document.body.style.cssText = `background-color: ${selectedColor}`;
+onMounted(async () => {
+  const data = await loadJson<ColorData>("/data/config/colorData.json");
+  colorData.value = data;
+  const keys = Object.keys(data);
+  const themeCount = keys.length;
+  if (themeCount > 0) {
+    const randomIndex = Math.floor(Math.random() * themeCount);
+    const themeKey = `background${randomIndex}`;
+    const selectedColor = data[themeKey];
+    if (selectedColor) {
+      themeColor.value = selectedColor;
+      const bg = document.getElementById("bg");
+      if (bg) bg.style.backgroundImage = `url(/background${randomIndex}.webp)`;
+      document.body.style.backgroundColor = selectedColor;
+    }
+  }
 });
 
 // 路由跳转
 const goTo = (name: string) => router.push({ name });
 
-const homeLabel: Record<string, string> = { zh: "主页", ja: "ホーム", en: "Home" };
-const blogLabel: Record<string, string> = { zh: "博客", ja: "ブログ", en: "Blog" };
+const homeLabel: Record<string, string> = { zh: "主页", ja: "ホーム (Hōmu)", en: "Home" };
+const blogLabel: Record<string, string> = { zh: "博客", ja: "ブログ (Burogu)", en: "Blog" };
 </script>
 
 <template>
   <n-message-provider>
     <MessageProvider>
+      <Suspense>
       <top-bar class="topBar"></top-bar>
+      </Suspense>
       <div class="viewport">
         <div class="main">
           <router-view v-slot="{ Component }">

@@ -80,11 +80,9 @@
 
 <script lang="ts" setup>
 import Solana from "@/icons/solanaLogoMark.svg";
-import commonI18n from "@/data/I18N/commonI18n.json";
 import Cat from "@/icons/cat.svg";
 import TwitterIcon from "@/icons/twitter.svg";
 import TelegramIcon from "@/icons/telegram.svg";
-import { NButton, NCard, NCollapse, NCollapseItem, NIcon, NImage, NImageGroup, NImagePreview, NModal } from "naive-ui";
 import MaiTrans from "@/icons/maitrans.svg";
 import Tron from "@/icons/tron.svg";
 import Eth from "@/icons/eth.svg";
@@ -95,16 +93,17 @@ import Polygon from "@/icons/polygon-matic-logo.svg";
 import Arbitrum from "@/icons/arb.svg";
 import wechat from "@/icons/wechat.svg";
 import Line from "@/icons/line.svg";
-import { lang, themeColor } from "@/components/ts/useStoage";
-import { maiUrl, UserDataType } from "./ts/maimaiScore";
 import Cancel from "@/icons/cancel.svg";
-import { computed, onMounted, ref } from "vue";
+import commonI18n from "@/data/I18N/commonI18n.json";
 import maiI18nData from "@/data/I18N/maiI18n.json";
+
+import { computed, onMounted, ref } from "vue";
+import { NButton, NCard, NCollapse, NCollapseItem, NIcon, NImage, NImageGroup, NImagePreview, NModal } from "naive-ui";
 import axios from "axios";
 import { useAsyncState } from "@vueuse/core";
-import platformRawData from "../../public/data/config/socialLinks.json";
+import { lang, themeColor } from "@/components/ts/useStoage";
+import { getMaiUrl, type UserDataType } from "./ts/maimaiScore";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
-
 
 type PlatformId =
   | "telegram" | "wechat" | "line" | "email" | "twitter"
@@ -119,11 +118,21 @@ interface PlatformConfig {
   type: InteractionType;
 }
 
+interface SocialConfig {
+  platforms: PlatformConfig[];
+  socialLinks: Record<string, string>;
+}
+
 interface I18nSource {
   [key: string]: string;
 }
 
-// --- 2. 状态与异步数据 ---
+const platformRawData: SocialConfig = await fetch("/data/config/socialLinks.json")
+  .then((res): Promise<SocialConfig> => res.json() as Promise<SocialConfig>);
+
+const platforms = platformRawData.platforms;
+const socialLinks = platformRawData.socialLinks;
+
 
 const showCatModel = ref<boolean>(false);
 const showMaiModal = ref<boolean>(false);
@@ -132,7 +141,10 @@ const showLineModel = ref<boolean>(false);
 const maiError = ref<string>("Error");
 
 const { state: data } = useAsyncState<Partial<UserDataType>>(
-  () => axios.get(maiUrl).then((res) => res.data),
+  async () => {
+    const url = await getMaiUrl();
+    return axios.get<UserDataType>(url).then((res) => res.data);
+  },
   {},
 );
 
@@ -152,10 +164,6 @@ const iconMap: Record<PlatformId, string> = {
   maimai: MaiTrans,
   cat: Cat,
 };
-
-const platforms = platformRawData.platforms as PlatformConfig[];
-const socialLinks = platformRawData.socialLinks as Record<string, string>;
-
 
 const getI18nSuffix = (): string => {
   const currentLang = lang.value;

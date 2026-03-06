@@ -1,6 +1,6 @@
-layout: "common"
 time: "20260106"
-title: "鲲鹏920解决升级至debian12后panic"
+title: "这是测试标题喵"
+id: "test"
 blocks:
   - type: "text"
     content: "这是测试文本"

@@ -113,10 +113,13 @@
 
 yumeLog 采用极其灵活的 **块级** 架构组织内容。同时，自研的解析引擎完美支持了**无限嵌套**的文本格式渲染。
 
+**请注意，你必须添加id否则将无法访问文章，你可以直接使用id跳转至文章。**
+
+**例子：你可以直接通过此链接进行快速跳转及分享：**`http://localhost:5173/blog/test`
 ### 标准 YAML 示例
 
 ```yaml
-layout: "common"
+id: "test"
 time: "20260106"
 title: "鲲鹏920解决升级至debian12后panic"
 blocks:

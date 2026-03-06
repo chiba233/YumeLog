@@ -10,7 +10,7 @@
 
 <script lang="ts" setup>
 import { NAvatar } from "naive-ui";
-import icon from "../../public/icon.webp";
+import icon from "../icons/icon.webp";
 import { displayTitle } from "@/components/ts/useStoage.ts";
 </script>
 

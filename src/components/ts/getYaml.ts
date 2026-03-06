@@ -16,10 +16,10 @@ interface YamlConfigItem {
   spareListUrl?: string;
 }
 export interface Post {
+  id: string;
   time?: string;
   title?: string;
   content?: string;
-
   [key: string]: any;
 }
 

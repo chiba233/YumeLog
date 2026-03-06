@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import FromNowTime from "@/components/fromNowTime.vue";
-import I18n from "@/components/i18n.vue";
+import I18NComponents from "@/components/i18nComponents.vue";
 </script>
 
 <template>
   <div class="overlay">
     <div class="i18">
-      <I18n></I18n>
+      <I18NComponents></I18NComponents>
     </div>
     <div class="fromTime">
       <from-now-time></from-now-time>
@@ -32,14 +32,12 @@ import I18n from "@/components/i18n.vue";
   border-radius: 1.5em;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
-
   .fromTime {
     display: flex;
     justify-content: start;
     position: absolute;
     animation: YToolIn 0.5s linear 0s 1;
   }
-
   .i18 {
     width: 100%;
     display: flex;

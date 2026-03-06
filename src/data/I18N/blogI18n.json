@@ -22,5 +22,13 @@
   "changeToSpareUrlZH": "网络连接不稳定，已为你自动切换到备用数据源。",
   "changeToSpareUrlJA": "ネットワークの影響により、GitHubに接続できないため、代替ソースを使用しています。",
   "changeToSpareUrlEN": "Network issue detected. We've automatically switched to a backup source for you.",
-  "changeToSpareUrlOther": "Network issue detected. We've automatically switched to a backup source for you."
+  "changeToSpareUrlOther": "Network issue detected. We've automatically switched to a backup source for you.",
+  "unknownPostIdZH": "未找到该文章。",
+  "unknownPostIdJA": "投稿が見つかりませんでした。",
+  "unknownPostIdEN": "The post was not found.",
+  "unknownPostIdOther": "The post was not found.",
+  "errorPostIdZH": "数据异常，无法打开文章。",
+  "errorPostIdJA": "データ エラーのため、投稿を開けません。",
+  "errorPostIdEN": "Data error, unable to open blog post.",
+  "errorPostIdOther": "Data error, unable to open blog post."
 }

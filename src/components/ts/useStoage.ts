@@ -44,9 +44,6 @@ export const useFriendsList = async () => {
   }
 };
 
-
-// 必须确保这些语言包被载入
-
 const localeMap: Record<string, string> = {
   zh: "zh-cn",
   en: "en-au",
@@ -55,7 +52,8 @@ const localeMap: Record<string, string> = {
 
 
 // 导出一个专门格式化时间的工具
-export const formatTime = (date: any) => {
+export const formatTime = (date: string | number | Date | moment.Moment | undefined): string => {
+  if (!date) return "";
   const currentLocale = localeMap[lang.value] || "en";
   moment.locale(currentLocale);
   return moment(date).fromNow();

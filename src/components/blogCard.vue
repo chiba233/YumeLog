@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { Component, computed, defineAsyncComponent, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   changeSpareUrl,
   faultTimes,
@@ -19,14 +20,33 @@ import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
 import { $message } from "@/components/ts/msgUtils.ts";
 
+const route = useRoute();
+const router = useRouter();
+
 const posts = ref<Post[]>([]);
+const selectedPost = ref<Post | null>(null);
+const showModal = ref<boolean>(false);
 
 const RichTextRenderer: Component = defineAsyncComponent(() =>
   import("@/components/RichTextRenderer.vue"),
 );
+
 onMounted(async () => {
   posts.value = await loadAllPosts("blog");
+
+  const routeId = route.params.id as string | undefined;
+  if (routeId) {
+    const targetPost = posts.value.find((p: Post) => p.id === routeId);
+    if (targetPost) {
+      selectedPost.value = targetPost;
+      showModal.value = true;
+    } else {
+      $message.warning(blogDisplay.value.unknownPostId, true, 4000);
+    }
+  }
 });
+
+// 语言与显示处理
 const getI18nSuffix = (): string => {
   const currentLang = lang.value;
   if (currentLang === "zh") return "ZH";
@@ -58,30 +78,43 @@ const blogDisplay = computed(() => {
 
   return displayObj;
 });
-
-const formatDate = (t: string) => {
-  return `${t.slice(0, 4)} - ${t.slice(4, 6)} - ${t.slice(6, 8)}`;
-};
-
-
-const selectedPost = ref();
-const showModal = ref(false);
-
-const cardClick = (posts: Record<string, unknown>) => {
-  selectedPost.value = posts;
-  showModal.value = showModal.value === false;
-};
-
 const closePortal = () => {
   showModal.value = false;
 };
+const formatDate = (t: string | undefined): string => {
+  if (!t) return "";
+  return `${t.slice(0, 4)} - ${t.slice(4, 6)} - ${t.slice(6, 8)}`;
+};
+
+const cardClick = async (post: Post) => {
+  if (!post.id) {
+    $message.warning(blogDisplay.value.errorPostId, true, 4000);
+    return;
+  }
+  selectedPost.value = post;
+  showModal.value = true;
+  await router.push({ name: "blog", params: { id: post.id } });
+};
+
 
 const { onMove, onLeave } = useCardGlow();
+
 watch(
   () => changeSpareUrl.value,
   (v: boolean) => {
     if (v) {
       $message.warning(blogDisplay.value.changeToSpareUrl, true, 4000);
+    }
+  }
+);
+watch(
+  () => showModal.value,
+  async (v: boolean) => {
+    if (!v) {
+      await router.push({ name: "blog" });
+      setTimeout(() => {
+        selectedPost.value = null;
+      }, 300);
     }
   },
 );
@@ -162,7 +195,7 @@ watch(
   </div>
 
   <n-modal v-show="showModal" v-model:show="showModal">
-    <n-card :title="selectedPost!.title" class="postModel" size="huge">
+    <n-card v-if="selectedPost" :title="selectedPost!.title" class="postModel" size="huge">
       <template #header-extra>
         <n-button circle tertiary @click="closePortal">
           <template #icon>

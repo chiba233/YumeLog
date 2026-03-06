@@ -129,7 +129,7 @@ const showCatModel = ref<boolean>(false);
 const showMaiModal = ref<boolean>(false);
 const showWechatModel = ref<boolean>(false);
 const showLineModel = ref<boolean>(false);
-const maiError = ref<string>("Failed");
+const maiError = ref<string>("Error");
 
 const { state: data } = useAsyncState<Partial<UserDataType>>(
   () => axios.get(maiUrl).then((res) => res.data),

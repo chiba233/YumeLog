@@ -25,7 +25,7 @@
 <script lang="ts" setup>
 import { NAvatar } from "naive-ui";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
-import { lang } from "@/components/ts/useStoage";
+import { displayTitle, lang } from "@/components/ts/useStoage";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { onMounted, ref } from "vue";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
@@ -65,6 +65,7 @@ onMounted(async () => {
       alias: friends.alias,
     }));
   }
+  console.log(displayTitle.value);
 });
 </script>
 

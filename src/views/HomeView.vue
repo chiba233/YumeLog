@@ -21,7 +21,7 @@
   </div>
   <div class="copyright">
     <div class="cardButton">
-      <n-button :color="themeColor" class="cButton" round @click="cardChange('b')">
+      <n-button :color="themeColor" class="cButton" round @click="cardChange('home')">
         <template #icon>
           <n-icon size="23">
             <Home12Regular></Home12Regular>
@@ -29,7 +29,7 @@
         </template>
         <a>{{ home[lang] }}</a>
       </n-button>
-      <n-button :color="themeColor" class="cButton" round @click="cardChange('a')">
+      <n-button :color="themeColor" class="cButton" round @click="cardChange('blog')">
         <template #icon>
           <n-icon size="23">
             <AnimalRabbit28Regular></AnimalRabbit28Regular>
@@ -69,10 +69,12 @@ onMounted(() => {
 });
 
 function cardChange(e: string) {
-  if (e === "a") {
+  if (e === "blog") {
     cardSelect.value = false;
   }
-  if (e === "b") cardSelect.value = true;
+  if (e === "home") {
+    cardSelect.value = true;
+  }
 }
 
 const home: Record<string, string> = {

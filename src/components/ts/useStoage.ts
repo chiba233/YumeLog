@@ -3,7 +3,8 @@ import moment from "moment";
 import "moment/dist/locale/ja";
 import "moment/dist/locale/zh-cn";
 import "moment/dist/locale/en-au";
-import type { Ref } from "vue";
+import { Ref } from "vue";
+import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 
 export const langMap: Record<string, string> = { zh: "zh", en: "en", ja: "ja", other: "other" };
 
@@ -11,6 +12,8 @@ const rawLang = navigator.language.substring(0, 2);
 export const browserLang = ["zh", "en", "ja"].includes(rawLang) ? rawLang : "zh";
 export const lang: Ref<string> = useStorage("useLang", browserLang);
 export const themeColor: Ref<string> = useStorage("setColor", "");
+export const displayContent = useYamlText("main", "introduction.yaml");
+export const displayTitle = useYamlText("main", "title.yaml");
 
 
 // 必须确保这些语言包被载入

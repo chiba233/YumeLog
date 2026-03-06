@@ -82,7 +82,6 @@ watch(
   (v: boolean) => {
     if (v) {
       $message.warning(blogDisplay.value.changeToSpareUrl, true, 4000);
-      changeSpareUrl.value = false;
     }
   },
 );
@@ -113,12 +112,22 @@ watch(
           <div v-if="post.blocks?.some((b: any) => b.type === 'image')" class="post-image">
             <img
               :alt="post.title"
-              :src="post.blocks.find((b: any) => b.type === 'image')?.content?.[0].src"
+              :src="post.blocks.filter((b: any) => b.type === 'image')[0]?.content?.[0].src"
               loading="lazy"
-              @error="(e) => { (e.target as HTMLImageElement).src = post.blocks.find((b: any) => b.type === 'image')?.content?.[0].spareUrl }"
+              @error="(e) => { (e.target as HTMLImageElement).src = post.blocks.filter((b: any) => b.type === 'image')[0]?.content?.[0].spareUrl }"
+            />
+            <img
+              v-if="post.blocks.filter((b: any) => b.type === 'image')[1]?.content?.[0].src"
+              :alt="post.title"
+              :src="post.blocks.filter((b: any) => b.type === 'image')[1]?.content?.[0].src"
+              class="secondImg"
+              loading="lazy"
+              @error="(e) => { (e.target as HTMLImageElement).src = post.blocks.filter((b: any) => b.type === 'image')[1]?.content?.[0].spareUrl }"
             />
           </div>
-          <div class="post-description">
+          <div
+            :class="{ 'expanded-text': !post.blocks?.some((b: any) => b.type === 'image') }"
+            class="post-description">
             <p>
               {{
                 (post.blocks || [])
@@ -173,9 +182,14 @@ watch(
           <div v-if="block.type === 'image'" class="postCardImage">
             <div v-for="img in block.content" :key="img.src" class="postCardNImage">
               <n-image
-                v-if="img.src"
-                :fallback-src="img.spareUrl"
+                v-if="img.src && changeSpareUrl===false"
                 :src="img.src"
+                class="postCardImg"
+                width="120"
+              />
+              <n-image
+                v-if="img.src && changeSpareUrl===true"
+                :src="img.spareUrl"
                 class="postCardImg"
                 width="120"
               />
@@ -443,11 +457,21 @@ $transition-speed: 0.3s;
       width: 120px;
 
       img {
+        min-width: 120px;
+        min-height: 120px;
         width: 120px;
         height: 120px;
         object-fit: cover;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-left: 0.25rem;
+        margin-right: 0.25rem;
+      }
+
+      .secondImg {
+        @media (min-width: 900px) {
+          display: none;
+        }
       }
     }
 
@@ -456,6 +480,16 @@ $transition-speed: 0.3s;
       flex: 1;
       min-width: 0;
 
+      &.expanded-text p {
+        @media (max-width: 900px) {
+          -webkit-line-clamp: 11;
+          line-clamp: 11
+        }
+        @media (min-width: 900px) {
+          -webkit-line-clamp: 8;
+          line-clamp: 8;
+        }
+      }
       p {
         max-height: 100%;
         margin: 0;
@@ -482,6 +516,7 @@ $transition-speed: 0.3s;
     }
   }
 }
+
 
 .postCardText {
   font-size: 1.1rem;

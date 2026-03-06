@@ -38,8 +38,8 @@ onMounted(async () => {
 // 路由跳转
 const goTo = (name: string) => router.push({ name });
 
-const homeLabel: Record<string, string> = { zh: "主页", ja: "ホーム (Hōmu)", en: "Home" };
-const blogLabel: Record<string, string> = { zh: "博客", ja: "ブログ (Burogu)", en: "Blog" };
+const homeLabel: Record<string, string> = { zh: "主页", ja: "ホーム", en: "Home" };
+const blogLabel: Record<string, string> = { zh: "博客", ja: "ブログ", en: "Blog" };
 </script>
 
 <template>

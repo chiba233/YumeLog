@@ -102,23 +102,28 @@ export const loadAllPosts = async <T extends BaseContent>(type: string) => {
 
   const results = await Promise.all(promises);
   const validData = results.filter((p): p is NonNullable<typeof p> => p !== null);
+  const parseTime = (t?: string) => {
+    if (!t) return 0;
 
-  validData.sort((a, b) => {
-    const pinA = (a as { pin?: boolean }).pin ? 1 : 0;
-    const pinB = (b as { pin?: boolean }).pin ? 1 : 0;
-    if (pinA !== pinB) return pinB - pinA;
-
-    const timeA = (a as BaseContent).time;
-    const timeB = (b as BaseContent).time;
-
-    if (timeA && timeB) {
-      return new Date(timeB).getTime() - new Date(timeA).getTime();
+    if (/^\d{8}$/.test(t)) {
+      const iso = `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}`;
+      return Date.parse(iso);
     }
-    return 0;
+
+    return Date.parse(t) || 0;
+  };
+  validData.sort((a, b) => {
+
+    if (a.pin && !b.pin) return -1;
+    if (!a.pin && b.pin) return 1;
+
+    return parseTime(b.time) - parseTime(a.time);
+
   });
 
   yamlLoading.value = false;
   return validData;
+
 };
 
 export const loadSingleYaml = async <T>(type: string, fileName: string) => {

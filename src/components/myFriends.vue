@@ -25,10 +25,9 @@
 <script lang="ts" setup>
 import { NAvatar } from "naive-ui";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
-import { displayTitle, lang } from "@/components/ts/useStoage";
+import { lang, useFriendsList } from "@/components/ts/useStoage";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import { onMounted, ref } from "vue";
-import { loadSingleYaml } from "@/components/ts/getYaml.ts";
+
 
 const { onMove, onLeave } = useCardGlow();
 
@@ -36,37 +35,8 @@ function openURL(url: string) {
   window.open(url, "_blank");
 }
 
-interface YamlFriendsBlock {
-  name: string;
-  alias: string;
-  url: string;
-  icon: string;
-}
+const friends = await useFriendsList();
 
-interface YamlResponse {
-  friends: YamlFriendsBlock[];
-}
-
-interface OriginalFriendsBlock {
-  icon: string;
-  name: string;
-  url: string;
-  alias: string;
-}
-
-const friends = ref<OriginalFriendsBlock[]>([]);
-onMounted(async () => {
-  const res = await loadSingleYaml<YamlResponse>("main", "friends.yaml");
-  if (res && res.friends) {
-    friends.value = res.friends.map((friends: YamlFriendsBlock): OriginalFriendsBlock => ({
-      icon: friends.icon,
-      name: friends.name,
-      url: friends.url,
-      alias: friends.alias,
-    }));
-  }
-  console.log(displayTitle.value);
-});
 </script>
 
 <style lang="scss">

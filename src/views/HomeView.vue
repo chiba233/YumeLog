@@ -13,7 +13,9 @@
             <div class="contactsDIV">
               <Contacts />
             </div>
+            <Suspense>
             <MyFriends />
+            </Suspense>
           </div>
         </div>
       </Transition>

@@ -31,9 +31,7 @@ const RichTextRenderer: Component = defineAsyncComponent(() =>
   import("@/components/RichTextRenderer.vue"),
 );
 
-onMounted(async () => {
-  posts.value = await loadAllPosts("blog");
-
+const syncModalWithRoute = async () => {
   const routeId = route.params.id as string | undefined;
   if (routeId) {
     const targetPost = posts.value.find((p: Post) => p.id === routeId);
@@ -42,11 +40,36 @@ onMounted(async () => {
       showModal.value = true;
     } else {
       $message.warning(blogDisplay.value.unknownPostId, true, 4000);
+      await router.replace({ name: "blog" });
     }
+  } else {
+    showModal.value = false;
   }
+};
+
+onMounted(async () => {
+  posts.value = await loadAllPosts("blog");
+  await syncModalWithRoute();
 });
 
-// 语言与显示处理
+watch(
+  () => route.params.id,
+  async () => {
+    if (posts.value.length > 0) {
+      await syncModalWithRoute();
+    }
+  },
+);
+
+watch(
+  () => showModal.value,
+  async (isOpen: boolean) => {
+    if (!isOpen && route.params.id) {
+      await router.push({ name: "blog" });
+    }
+  },
+);
+
 const getI18nSuffix = (): string => {
   const currentLang = lang.value;
   if (currentLang === "zh") return "ZH";
@@ -78,9 +101,7 @@ const blogDisplay = computed(() => {
 
   return displayObj;
 });
-const closePortal = () => {
-  showModal.value = false;
-};
+
 const formatDate = (t: string | undefined): string => {
   if (!t) return "";
   return `${t.slice(0, 4)} - ${t.slice(4, 6)} - ${t.slice(6, 8)}`;
@@ -91,11 +112,12 @@ const cardClick = async (post: Post) => {
     $message.warning(blogDisplay.value.errorPostId, true, 4000);
     return;
   }
-  selectedPost.value = post;
-  showModal.value = true;
   await router.push({ name: "blog", params: { id: post.id } });
 };
 
+const closePortal = () => {
+  showModal.value = false;
+};
 
 const { onMove, onLeave } = useCardGlow();
 
@@ -106,17 +128,6 @@ watch(
       $message.warning(blogDisplay.value.changeToSpareUrl, true, 4000);
     }
   }
-);
-watch(
-  () => showModal.value,
-  async (v: boolean) => {
-    if (!v) {
-      await router.push({ name: "blog" });
-      setTimeout(() => {
-        selectedPost.value = null;
-      }, 300);
-    }
-  },
 );
 </script>
 

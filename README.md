@@ -121,6 +121,8 @@ yumeLog 采用极其灵活的 **块级** 架构组织内容。同时，自研的
 ```yaml
 id: "test"
 time: "20260106"
+pin: true
+# pin值以将重要文章置顶
 title: "鲲鹏920解决升级至debian12后panic"
 blocks:
   # 1. 普通文本块

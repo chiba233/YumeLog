@@ -19,6 +19,7 @@ import { parseRichText, stripRichText } from "@/components/ts/blogFormat.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
 import { $message } from "@/components/ts/msgUtils.ts";
+import { PushPinSharp } from "@vicons/material";
 
 const route = useRoute();
 const router = useRouter();
@@ -134,8 +135,8 @@ watch(
 <template>
   <div v-if="!yamlLoading" class="post-container">
     <article
-      v-for="(post,a) in posts"
-      :key="a"
+      v-for="(post) in posts"
+      :key="post.time"
       class="post-card"
       @click="() => cardClick(post)" @mouseleave="onLeave"
       @mousemove="onMove"
@@ -146,6 +147,10 @@ watch(
             {{ post.title }}
           </h2>
           <div class="post-meta">
+            <n-icon v-if="post.pin" size="14">
+              <PushPinSharp></PushPinSharp>
+            </n-icon>
+            <span v-if="post.pin" class="time-divider">|</span>
             <time :datetime="post.time">{{ formatDate(post.time!) }}</time>
             <span class="time-divider">|</span>
             <span>{{ formatTime(post.time) }}</span>
@@ -313,7 +318,8 @@ $transition-speed: 0.3s;
 
     span {
       font-size: 0.9rem;
-      color: #666;
+      color: color.adjust($text-color, $lightness: 80%);
+      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
       text-align: center;
       display: block;
       word-break: break-all;
@@ -386,11 +392,11 @@ $transition-speed: 0.3s;
   transition: transform 0.2s, background-color 0.3s;
 
   @media (max-width: 900px) {
-    height: 16.45rem;
+    height: 15.9rem;
   }
   @media (min-width: 900px) {
     width: 25rem;
-    height: 12.9rem;
+    height: 12.3rem;
   }
   // 1. 面光 (Surface Glow) - 柔和的大范围光晕
   &::before {
@@ -454,28 +460,51 @@ $transition-speed: 0.3s;
   .post-header {
     text-align: center;
     margin-bottom: 0.5rem;
+    width: 100%;
 
     .post-title {
+      display: block;
+      min-width: 0;
+
       font-size: 1.25rem;
       font-weight: 700;
       color: $text-color;
       margin: 0 0 0.5rem 0;
       line-height: 1.2;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 1;
+
+      white-space: nowrap;
       overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .post-meta {
-      font-size: 0.9rem;
-      color: color.adjust($text-color, $lightness: 90%);
       display: flex;
       justify-content: center;
+      align-items: center;
+      color: color.adjust($text-color, $lightness: 80%);
+      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
+      font-size: 0.8rem;
       gap: 0.3rem;
+      line-height: 1;
+
+      .n-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 1em;
+        transform: translateY(1px);
+
+        svg {
+          display: block;
+        }
+      }
+
 
       .time-divider {
-        opacity: 0.5;
+        display: flex;
+        align-items: center;
+        height: 1em;
+        transform: translateY(-1px);
       }
     }
   }
@@ -501,9 +530,8 @@ $transition-speed: 0.3s;
       width: 120px;
 
       img {
-        min-width: 120px;
-        min-height: 120px;
         width: 120px;
+        flex-shrink: 0;
         height: 120px;
         object-fit: cover;
         border-radius: 12px;
@@ -514,6 +542,9 @@ $transition-speed: 0.3s;
 
       .secondImg {
         @media (min-width: 900px) {
+          display: none;
+        }
+        @media (max-width: 300px) {
           display: none;
         }
       }

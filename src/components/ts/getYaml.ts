@@ -16,6 +16,7 @@ interface YamlConfigItem {
   spareListUrl?: string;
 }
 export interface Post {
+  pin?: boolean;
   id: string;
   time?: string;
   title?: string;
@@ -90,7 +91,12 @@ export const loadAllPosts = async <T extends BaseContent>(type: keyof typeof yam
 
   const results = await Promise.all(promises);
   const validData = results.filter((p): p is NonNullable<typeof p> => p !== null);
+
   validData.sort((a, b) => {
+    const pinA = (a as { pin?: boolean }).pin ? 1 : 0;
+    const pinB = (b as { pin?: boolean }).pin ? 1 : 0;
+    if (pinA !== pinB) return pinB - pinA;
+
     const timeA = (a as BaseContent).time;
     const timeB = (b as BaseContent).time;
 

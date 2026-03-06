@@ -1,5 +1,6 @@
 time: "20260106"
 title: "这是测试标题喵"
+pin: true
 id: "test"
 blocks:
   - type: "text"

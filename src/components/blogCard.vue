@@ -185,8 +185,8 @@ watch(
             />
           </div>
           <div
-            :class="{ 'expanded-text': !post.blocks?.some((b: any) => b.type === 'image') }"
-            class="post-description">
+:class="{ 'expanded-text': !post.blocks?.some((b: any) => b.type === 'image') }"
+               class="post-description">
             <p>
               {{
                 (post.blocks || [])

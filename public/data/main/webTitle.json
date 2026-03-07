@@ -1,6 +1,14 @@
 {
-  "zh": "YumeLOG 的页面",
-  "en": "YumeLOG Pages",
-  "ja": "YumeLOG - ホーム",
-  "other": "YumeLOG Pages"
+  "home": {
+    "zh": "YumeLOG的页面",
+    "en": "YumeLOG Pages",
+    "ja": "YumeLOG - ホーム",
+    "other": "YumeLOG Pages"
+  },
+  "blog": {
+    "zh": "YumeLOG的博客",
+    "en": "YumeLOG's Blog",
+    "ja": "YumeLOGのブログ",
+    "other": "YumeLOG's Blog"
+  }
 }

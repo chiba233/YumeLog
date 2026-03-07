@@ -97,7 +97,7 @@ import Cancel from "@/icons/cancel.svg";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import maiI18nData from "@/data/I18N/maiI18n.json";
 
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, shallowRef } from "vue";
 import { NButton, NCard, NCollapse, NCollapseItem, NIcon, NImage, NImageGroup, NImagePreview, NModal } from "naive-ui";
 import axios from "axios";
 import { useAsyncState } from "@vueuse/core";
@@ -123,16 +123,23 @@ interface SocialConfig {
   socialLinks: Record<string, string>;
 }
 
-interface I18nSource {
-  [key: string]: string;
-}
+const platformRawData = shallowRef<SocialConfig | null>(null);
 
-const platformRawData: SocialConfig = await fetch("/data/config/socialLinks.json")
-  .then((res): Promise<SocialConfig> => res.json() as Promise<SocialConfig>);
+fetch("/data/config/socialLinks.json")
+  .then((res) => res.json() as Promise<SocialConfig>)
+  .then((data) => {
+    platformRawData.value = data;
+  })
+  .catch((err) => {
+    console.error(err);
+  });
 
-const platforms = platformRawData.platforms;
-const socialLinks = platformRawData.socialLinks;
-
+const platforms = computed(() => {
+  return platformRawData.value?.platforms ?? [];
+});
+const socialLinks = computed(() => {
+  return platformRawData.value?.socialLinks ?? {};
+});
 
 const showCatModel = ref<boolean>(false);
 const showMaiModal = ref<boolean>(false);
@@ -165,21 +172,13 @@ const iconMap: Record<PlatformId, string> = {
   cat: Cat,
 };
 
-const getI18nSuffix = (): string => {
-  const currentLang = lang.value;
-  if (currentLang === "zh") return "ZH";
-  if (currentLang === "en") return "EN";
-  if (currentLang === "ja") return "JP";
-  if (currentLang === "other") return "Other";
-  return "en";
-};
-
+type I18nSource = Record<string, Record<string, string>>
 const catMemoryTitle = computed(() => {
-  const suffix = getI18nSuffix();
   const source = commonI18n as I18nSource;
+
   return {
-    catMemory: source[`catMemoryTitle${suffix}`] || source[`catMemoryTitleJP`],
-    cat: source[`cat${suffix}`] || source[`catJP`],
+    catMemory: source.catMemoryTitle[lang.value] ?? source.catMemoryTitle.jp,
+    cat: source.cat[lang.value] ?? source.cat.jp,
   };
 });
 
@@ -217,31 +216,12 @@ const maiSections = [
 ];
 
 const maiDisplay = computed(() => {
-  const suffix = getI18nSuffix();
-  const source = maiI18nData as Record<string, string>;
-
-  const displayObj: Record<string, string> = {};
-
-  Object.keys(source).forEach(fullKey => {
-    if (fullKey.endsWith(suffix)) {
-      const baseKey = fullKey.replace(suffix, "");
-      displayObj[baseKey] = source[fullKey];
-    }
-  });
-
-  // 兜底策略
-  if (suffix !== "JP") {
-    Object.keys(source).forEach(fullKey => {
-      if (fullKey.endsWith("JP")) {
-        const baseKey = fullKey.replace("JP", "");
-        if (!displayObj[baseKey]) {
-          displayObj[baseKey] = source[fullKey];
-        }
-      }
-    });
+  const source = maiI18nData as Record<string, Record<string, string>>;
+  const result: Record<string, string> = {};
+  for (const key in source) {
+    result[key] = source[key][lang.value] || source[key].ja;
   }
-
-  return displayObj;
+  return result;
 });
 const getStatValue = (key: string): string | number => {
   const stats = data.value as Record<string, string | number | undefined>;
@@ -253,10 +233,15 @@ const getStatValue = (key: string): string | number => {
 
 
 const handleContactClick = (item: PlatformConfig): void => {
+  const links = socialLinks.value;
+  const url = links[item.id as keyof typeof links];
   const actions: Record<InteractionType, () => void> = {
     link: () => {
-      const url = socialLinks[item.id];
-      if (url) window.open(url);
+      if (url) {
+        window.open(url);
+      } else {
+        console.warn(`找不到 ID 为 ${item.id} 的社交链接！`);
+      }
     },
     modal: () => {
       if (item.id === "wechat") showWechatModel.value = true;

@@ -2,29 +2,12 @@
   <div class="content">
     <HomeTitle />
     <div class="detailsDIV">
-      <Suspense>
-        <template #default>
           <PersonalIntroductions />
-        </template>
-        <template #fallback></template>
-      </Suspense>
     </div>
-
     <div class="contactsDIV">
-      <Suspense>
-        <template #default>
           <ContactInformation />
-        </template>
-        <template #fallback></template>
-      </Suspense>
     </div>
-
-    <Suspense>
-      <template #default>
         <MyFriends />
-      </template>
-      <template #fallback></template>
-    </Suspense>
   </div>
 </template>
 
@@ -33,6 +16,30 @@ import HomeTitle from "@/components/homeTitle.vue";
 import PersonalIntroductions from "@/components/personalIntroduction.vue";
 import ContactInformation from "@/components/contactInformation.vue";
 import MyFriends from "@/components/myFriends.vue";
+import { onMounted, shallowRef, watch } from "vue";
+import { lang } from "@/components/ts/useStoage.ts";
+
+
+type WebTitleMap = Record<string, Record<string, string>>;
+const newWebTitle = shallowRef<WebTitleMap | null>(null);
+
+const updatePageTitle = () => {
+  if (!newWebTitle.value) return;
+  const currentLang = lang.value;
+  document.title = newWebTitle.value["home"]?.[currentLang] || "Default Title";
+};
+
+watch([lang, newWebTitle], () => {
+  updatePageTitle();
+}, { immediate: true });
+
+onMounted(async () => {
+  await fetch("/data/main/webTitle.json")
+    .then(res => res.json())
+    .then((data: WebTitleMap) => {
+      newWebTitle.value = data;
+    });
+});
 </script>
 
 <style lang="scss">

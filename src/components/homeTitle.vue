@@ -61,11 +61,13 @@ import { displayTitle } from "@/components/ts/useStoage.ts";
       display: flex;
       width: 6em;
       height: 6em;
+      flex-shrink: 0;
     }
     @media (max-width: 380px) {
       display: flex;
       width: 4em;
       height: 4em;
+      flex-shrink: 0;
     }
   }
 

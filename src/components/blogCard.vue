@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Component, computed, defineAsyncComponent, onMounted, ref, watch } from "vue";
+import { Component, computed, defineAsyncComponent, onMounted, ref, shallowRef, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   changeSpareUrl,
@@ -31,6 +31,19 @@ const showModal = ref<boolean>(false);
 const RichTextRenderer: Component = defineAsyncComponent(() =>
   import("@/components/RichTextRenderer.vue"),
 );
+type WebTitleMap = Record<string, Record<string, string>>;
+const newWebTitle = shallowRef<WebTitleMap>({});
+const updatePageTitle = () => {
+  const currentLang = lang.value;
+  if (showModal.value && selectedPost.value) {
+    document.title = selectedPost.value.title + " - " + newWebTitle.value["blog"]?.[currentLang] || "Blog";
+  } else {
+    document.title = newWebTitle.value["blog"]?.[currentLang] || "Default Title";
+  }
+};
+watch([showModal, lang, selectedPost], () => {
+  updatePageTitle();
+});
 
 const syncModalWithRoute = async () => {
   const routeId = route.params.id as string | undefined;
@@ -49,6 +62,18 @@ const syncModalWithRoute = async () => {
 };
 
 onMounted(async () => {
+  try {
+    const [postsData, titleData] = await Promise.all([
+      await loadAllPosts("blog") as unknown as Promise<Post[]>,
+      fetch("/data/main/webTitle.json").then(res => res.json() as Promise<WebTitleMap>),
+    ]);
+    posts.value = postsData;
+    newWebTitle.value = titleData;
+    await syncModalWithRoute();
+    updatePageTitle();
+  } catch (err) {
+    console.error("Initialization failed:", err);
+  }
   posts.value = await loadAllPosts("blog");
   await syncModalWithRoute();
 });
@@ -71,33 +96,18 @@ watch(
   },
 );
 
-const getI18nSuffix = (): string => {
-  const currentLang = lang.value;
-  if (currentLang === "zh") return "ZH";
-  if (currentLang === "ja") return "JA";
-  if (currentLang === "en") return "EN";
-  return "Other";
-};
 
 const blogDisplay = computed(() => {
-  const suffix = getI18nSuffix();
-  const source = blogI18nData as Record<string, string>;
+  const currentLang = lang.value;
+  const source = blogI18nData as Record<string, Record<string, string>>;
   const displayObj: Record<string, string> = {};
 
-  Object.keys(source).forEach(fullKey => {
-    if (fullKey.endsWith(suffix)) {
-      const baseKey = fullKey.replace(suffix, "");
-      displayObj[baseKey] = source[fullKey];
-    }
-  });
-
-  Object.keys(source).forEach(fullKey => {
-    if (fullKey.endsWith("EN")) {
-      const baseKey = fullKey.replace("EN", "");
-      if (!displayObj[baseKey]) {
-        displayObj[baseKey] = source[fullKey];
-      }
-    }
+  Object.keys(source).forEach(key => {
+    const translations = source[key];
+    displayObj[key] = translations[currentLang]
+      || translations["en"]
+      || translations["other"]
+      || Object.values(translations)[0];
   });
 
   return displayObj;
@@ -120,7 +130,7 @@ const closePortal = () => {
   showModal.value = false;
 };
 
-const { onMove, onLeave } = useCardGlow();
+const { onMove, onLeave, onEnter } = useCardGlow();
 
 watch(
   () => changeSpareUrl.value,
@@ -139,7 +149,7 @@ watch(
       :key="post.time"
       class="post-card"
       @click="() => cardClick(post)" @mouseleave="onLeave"
-      @mousemove="onMove"
+      @mouseenter="onEnter" @mousemove="onMove"
     >
       <div class="content">
         <div class="post-header">
@@ -147,7 +157,7 @@ watch(
             {{ post.title }}
           </h2>
           <div class="post-meta">
-            <n-icon v-if="post.pin" size="14">
+            <n-icon v-if="post.pin" size="15">
               <PushPinSharp></PushPinSharp>
             </n-icon>
             <span v-if="post.pin" class="time-divider">|</span>
@@ -483,7 +493,7 @@ $transition-speed: 0.3s;
       align-items: center;
       color: color.adjust($text-color, $lightness: 80%);
       text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
-      font-size: 0.8rem;
+      font-size: 15px;
       gap: 0.3rem;
       line-height: 1;
 

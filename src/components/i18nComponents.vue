@@ -15,23 +15,22 @@
 import LangIcon from "../icons/langIcon.svg";
 import { NButton, NIcon, NPopselect, type SelectOption } from "naive-ui";
 import { lang, themeColor } from "@/components/ts/useStoage";
-import { watchEffect } from "vue";
+import { onMounted, shallowRef, watchEffect } from "vue";
 
-type WebTitleMap = Record<string, string>
+const i18nLang = shallowRef<SelectOption[]>([]);
 
-const [i18nLang, newWebTitle] = await Promise.all([
-  fetch("/data/config/i18nLang.json").then(
-    (res) => res.json() as Promise<SelectOption[]>,
-  ),
-  fetch("/data/main/webTitle.json").then(
-    (res) => res.json() as Promise<WebTitleMap>,
-  ),
-]);
+onMounted(async () => {
+  await fetch("/data/config/i18nLang.json")
+    .then(res => res.json())
+    .then((langData: SelectOption[]) => {
+      i18nLang.value = langData;
+    });
+});
+
 
 watchEffect(() => {
   document.documentElement.lang = lang.value;
-  document.title = newWebTitle[lang.value] || "Strawberry Pages";
-})
+});
 </script>
 
 <style lang="scss">

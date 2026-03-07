@@ -1,5 +1,5 @@
 <template>
-  <div class="textBox" @mouseleave="onLeave" @mousemove="onMove">
+  <div class="textBox" @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
     <div class="content">
       <div class="detailText">
         {{ displayContent }}
@@ -12,7 +12,7 @@
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { displayContent } from "@/components/ts/useStoage.ts";
 
-const { onMove, onLeave } = useCardGlow();
+const { onMove, onLeave, onEnter } = useCardGlow();
 
 </script>
 

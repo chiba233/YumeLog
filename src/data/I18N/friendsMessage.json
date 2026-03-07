@@ -1,6 +1,8 @@
 {
-  "titleZH": "我的好朋友们",
-  "titleEN": "My Friends",
-  "titleJP": "友達",
-  "titleOther": "Käytä sivun kääntämiseen reunaa tai kromi Firefoxia."
+  "title": {
+    "zh": "我的好朋友们",
+    "en": "My Friends",
+    "ja": "友達",
+    "other": "Käytä sivun kääntämiseen reunaa tai kromi Firefoxia."
+  }
 }

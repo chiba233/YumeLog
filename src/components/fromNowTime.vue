@@ -47,7 +47,7 @@ import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 interface YamlTimeBlock {
   name_zh: string;
   name_en: string;
-  name_jp: string;
+  name_ja: string;
   name_other: string;
   photo: string;
   time: string;
@@ -74,7 +74,7 @@ onMounted(async () => {
     fromNow.value = res.block.map((item: YamlTimeBlock): OriginalTimeBlock => ({
       nameZH: item.name_zh,
       nameEN: item.name_en,
-      nameJP: item.name_jp,
+      nameJP: item.name_ja,
       nameOther: item.name_other,
       photo: item.photo,
       time: item.time,

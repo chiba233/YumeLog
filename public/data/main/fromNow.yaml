@@ -8,7 +8,7 @@ block:
 
   - name_zh: "如果你需要添加纪念日请进入/src/data/components/fromNow.json"
     name_en: "To add anniversaries, please access /src/data/components/fromNow.json"
-    name_jp: "記念日の追加が必要な際は、/src/data/components/fromNow.json を開いて設定してください。"
+    name_ja: "記念日の追加が必要な際は、/src/data/components/fromNow.json を開いて設定してください。"
     name_other: "To add anniversaries, please access /src/data/components/fromNow.json"
     photo: ""
     time: "20260101"

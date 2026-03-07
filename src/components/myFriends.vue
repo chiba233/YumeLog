@@ -1,13 +1,11 @@
 <template>
-  <a class="friendTitle">{{
-      friendsMessage[
-        `title${lang === "zh" ? "ZH" : lang === "en" ? "EN" : lang === "ja" ? "JP" : "Other"}`
-        ]
-    }}</a>
+  <a class="friendTitle">
+    {{ friendsTitle.title }}
+  </a>
   <div class="allFriends">
     <div
       v-for=" friend  in friends" :key="friend.name" class="friendBox" @click="openURL(friend.url)"
-      @mouseleave="onLeave" @mousemove="onMove">
+      @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
       <div class="content">
         <n-avatar :size="100" :src="friend.icon" bordered round></n-avatar>
         <a v-if="lang === 'zh'" class="friendName">
@@ -27,15 +25,36 @@ import { NAvatar } from "naive-ui";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
 import { lang, useFriendsList } from "@/components/ts/useStoage";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
+import { computed, onMounted, ref } from "vue";
+
+type I18nSource = Record<string, Record<string, string>>
+const friendsTitle = computed(() => {
+  const source = friendsMessage as I18nSource;
+
+  return {
+    title: source.title[lang.value] ?? source.title.en,
+  };
+});
+
+interface Friend {
+  name: string;
+  alias: string;
+  url: string;
+  icon: string;
+}
 
 
-const { onMove, onLeave } = useCardGlow();
+const { onMove, onLeave, onEnter } = useCardGlow();
 
 function openURL(url: string) {
   window.open(url, "_blank");
 }
 
-const friends = await useFriendsList();
+const friends = ref<Friend[]>([]);
+
+onMounted(async () => {
+  friends.value = await useFriendsList();
+});
 
 </script>
 

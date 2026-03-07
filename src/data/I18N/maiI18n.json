@@ -1,66 +1,98 @@
 {
-  "titleNameZH": "我的maimaiDX成绩",
-  "titleNameEN": "MaiMai Score.",
-  "titleNameJP": "マイマイスコア",
-  "titleNameOther": "MaiMai Score.",
-  "mainInfoZH": "我的DX主要成绩。",
-  "mainInfoEN": "Main info.",
-  "mainInfoJP": "主な情報",
-  "mainInfoOther": "Main info.",
-  "otherInfoZH": "来看看更详细的信息。",
-  "otherInfoEN": "Other info.",
-  "otherInfoJP": "他の情報.",
-  "otherInfoOther": "Other info.",
-  "historyInfoZH": "看看以前的最高成绩？",
-  "historyInfoEN": "History info.",
-  "historyInfoJP": "履歴成績",
-  "historyInfoOther": "History info.",
-  "dxRatingNameZH": "我的最新最热DX分",
-  "dxRatingNameEN": "Best DX score",
-  "dxRatingNameJP": "新しいDXスコア",
-  "dxRatingNameOther": "Best DX score",
-  "dxNameZH": "我的DX游戏名",
-  "dxNameEN": "DX Name",
-  "dxNameJP": "DX名前",
-  "dxNameOther": "DX Name",
-  "dxLastPlayZH": "上次乌蒙启动在",
-  "dxLastPlayEN": "Last play time",
-  "dxLastPlayJP": "先回DXを開いたの時間",
-  "dxLastPlayOther": "Last play time",
-  "dxVersionZH": "玩的最新最热版本",
-  "dxVersionEN": "Last play Game version",
-  "dxVersionJP": "新しい版本",
-  "dxVersionOther": "Last play Game version",
-  "BasicDeluxscoreZH": "绿谱总DX分",
-  "BasicDeluxscoreEN": "Basic Delux Score",
-  "BasicDeluxscoreJP": "BasicDXスコア",
-  "BasicDeluxscoreOther": "Basic Delux Score",
-  "AdvancedDeluxscoreZH": "黄谱总DX分",
-  "AdvancedDeluxscoreEN": "Advanced Delux score",
-  "AdvancedDeluxscoreJP": "AdvancedDXスコア",
-  "AdvancedDeluxscoreOther": "Advanced Delux score",
-  "ExpertDeluxscoreZH": "红谱总DX分",
-  "ExpertDeluxscoreEN": "Expert Delux score",
-  "ExpertDeluxscoreJP": "ExpertDXスコア",
-  "ExpertDeluxscoreOther": "Expert Delux score",
-  "MasterDeluxscoreZH": "紫谱总DX分",
-  "MasterDeluxscoreEN": "Master Delux score",
-  "MasterDeluxscoreJP": "MasterDXスコア",
-  "MasterDeluxscoreOther": "Master Delux score",
-  "ReMasterDeluxscoreZH": "白谱总DX分",
-  "ReMasterDeluxscoreEN": "Re-Master Delux score",
-  "ReMasterDeluxscoreJP": "Re-MasterDXスコア",
-  "ReMasterDeluxscoreOther": "Re-Master Delux score",
-  "totalDeluxscoreZH": "总DX分",
-  "totalDeluxscoreEN": "Total Delux score",
-  "totalDeluxscoreJP": "全部DXスコア",
-  "totalDeluxscoreOther": "Total Delux score",
-  "highestRatingZH": "我的最高 Ratting 分",
-  "highestRatingEN": "Highest Ratting",
-  "highestRatingJP": "最高のDXスコア",
-  "highestRatingOther": "Highest Ratting",
-  "dxPlayCountZH": "游玩（摆烂）计数",
-  "dxPlayCountEN": "Play Count",
-  "dxPlayCountJP": "DXプレイ回数",
-  "dxPlayCountOther": "Play Count"
+  "titleName": {
+    "zh": "我的maimaiDX成绩",
+    "en": "MaiMai Score.",
+    "ja": "マイマイスコア",
+    "other": "MaiMai Score."
+  },
+  "mainInfo": {
+    "zh": "我的DX主要成绩。",
+    "en": "Main info.",
+    "ja": "主な情報",
+    "other": "Main info."
+  },
+  "otherInfo": {
+    "zh": "来看看更详细的信息。",
+    "en": "Other info.",
+    "ja": "他の情報.",
+    "other": "Other info."
+  },
+  "historyInfo": {
+    "zh": "看看以前的最高成绩？",
+    "en": "History info.",
+    "ja": "履歴成績",
+    "other": "History info."
+  },
+  "dxRatingName": {
+    "zh": "我的最新最热DX分",
+    "en": "Best DX score",
+    "ja": "新しいDXスコア",
+    "other": "Best DX score"
+  },
+  "dxName": {
+    "zh": "我的DX游戏名",
+    "en": "DX Name",
+    "ja": "DX名前",
+    "other": "DX Name"
+  },
+  "dxLastPlay": {
+    "zh": "上次乌蒙启动在",
+    "en": "Last play time",
+    "ja": "先回DXを開いたの時間",
+    "other": "Last play time"
+  },
+  "dxVersion": {
+    "zh": "玩的最新最热版本",
+    "en": "Last play Game version",
+    "ja": "新しい版本",
+    "other": "Last play Game version"
+  },
+  "BasicDeluxscore": {
+    "zh": "绿谱总DX分",
+    "en": "Basic Delux Score",
+    "ja": "BasicDXスコア",
+    "other": "Basic Delux Score"
+  },
+  "AdvancedDeluxscore": {
+    "zh": "黄谱总DX分",
+    "en": "Advanced Delux score",
+    "ja": "AdvancedDXスコア",
+    "other": "Advanced Delux score"
+  },
+  "ExpertDeluxscore": {
+    "zh": "红谱总DX分",
+    "en": "Expert Delux score",
+    "ja": "ExpertDXスコア",
+    "other": "Expert Delux score"
+  },
+  "MasterDeluxscore": {
+    "zh": "紫谱总DX分",
+    "en": "Master Delux score",
+    "ja": "MasterDXスコア",
+    "other": "Master Delux score"
+  },
+  "ReMasterDeluxscore": {
+    "zh": "白谱总DX分",
+    "en": "Re-Master Delux score",
+    "ja": "Re-MasterDXスコア",
+    "other": "Re-Master Delux score"
+  },
+  "totalDeluxscore": {
+    "zh": "总DX分",
+    "en": "Total Delux score",
+    "ja": "全部DXスコア",
+    "other": "Total Delux score"
+  },
+  "highestRating": {
+    "zh": "我的最高 Ratting 分",
+    "en": "Highest Ratting",
+    "ja": "最高のDXスコア",
+    "other": "Highest Ratting"
+  },
+  "dxPlayCount": {
+    "zh": "游玩（摆烂）计数",
+    "en": "Play Count",
+    "ja": "DXプレイ回数",
+    "other": "Play Count"
+  }
 }

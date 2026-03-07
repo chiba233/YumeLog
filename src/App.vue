@@ -45,9 +45,7 @@ const blogLabel: Record<string, string> = { zh: "博客", ja: "ブログ", en: "
 <template>
   <n-message-provider>
     <MessageProvider>
-      <Suspense>
       <top-bar class="topBar"></top-bar>
-      </Suspense>
       <div class="viewport">
         <div class="main">
           <router-view v-slot="{ Component }">

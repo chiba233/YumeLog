@@ -28,7 +28,7 @@ export const useYamlText = (type: keyof typeof yamlUrl, fileName: string) => {
 
   return computed(() => {
     if (!introData.value || !introData.value.blocks) return "loading";
-    const targetType = langMap[lang.value] || "en";
+    const targetType = lang.value;
     const { blocks } = introData.value;
     return blocks.find((b) => b.type === targetType)?.content
       || blocks.find((b) => b.type === "en")?.content

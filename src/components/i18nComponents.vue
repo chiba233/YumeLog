@@ -14,7 +14,7 @@
 <script lang="ts" setup>
 import LangIcon from "../icons/langIcon.svg";
 import { NButton, NIcon, NPopselect, type SelectOption } from "naive-ui";
-import { lang, themeColor } from "@/components/ts/useStoage";
+import { lang, themeColor } from "@/components/ts/useStorage.ts";
 import { onMounted, shallowRef, watchEffect } from "vue";
 
 const i18nLang = shallowRef<SelectOption[]>([]);

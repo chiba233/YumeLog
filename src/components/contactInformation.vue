@@ -101,7 +101,7 @@ import { computed, onMounted, ref, shallowRef } from "vue";
 import { NButton, NCard, NCollapse, NCollapseItem, NIcon, NImage, NImageGroup, NImagePreview, NModal } from "naive-ui";
 import axios from "axios";
 import { useAsyncState, useStorage } from "@vueuse/core";
-import { lang, themeColor } from "@/components/ts/useStoage";
+import { lang, themeColor } from "@/components/ts/useStorage.ts";
 import { getMaiUrl, type UserDataType } from "./ts/maimaiScore";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 

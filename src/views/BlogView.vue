@@ -1,22 +1,19 @@
 <template>
   <div class="root">
     <div class="title">
-      <a>{{ titleI18N[lang] }}</a>
+      <a>{{ titleI18N[lang] || titleI18N.en }}</a>
     </div>
     <blog-card></blog-card>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { lang } from "@/components/ts/useStoage";
+import { lang } from "@/components/ts/useStorage.ts";
 import BlogCard from "@/components/blogCard.vue";
+import commonI18n from "@/data/I18N/commonI18n.json";
 
-const titleI18N: Record<string, string> = {
-  zh: "欢迎来到我的博客！",
-  ja: "ブログをようこそ！",
-  en: "Welcome Back to my blog!",
-  other: "Welcome Back to my blog!",
-};
+const titleI18N = commonI18n.blogWelcome as Record<string, string>;
+
 </script>
 <style lang="scss" scoped>
 .root {

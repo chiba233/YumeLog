@@ -1,45 +1,77 @@
 <script lang="ts" setup>
-import { RouterView, useRouter } from "vue-router";
-import { onMounted, ref } from "vue";
+import { RouterView, useRoute, useRouter } from "vue-router"; // 👈 追加了 useRoute！
+import { computed, onMounted, watch } from "vue"; // 删除了无用的 ref
 import { NButton, NIcon, NMessageProvider } from "naive-ui";
 import { AnimalRabbit28Regular, Home12Regular } from "@vicons/fluent";
 import MessageProvider from "@/components/MessageProvider.vue";
 import TopBar from "@/components/topBar.vue";
-import { lang, themeColor } from "@/components/ts/useStoage";
+import { lang, themeColor } from "@/components/ts/useStorage.ts";
+import { dynamicTitlePrefix, globalWebTitleMap } from "./components/ts/useTitleState";
+import commonI18n from "@/data/I18N/commonI18n.json";
 
 type ColorData = Record<string, string>;
-const router = useRouter();
-const colorData = ref<ColorData | null>(null);
 
-async function loadJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-  return (await res.json()) as T;
-}
+const router = useRouter();
+const route = useRoute();
 
 onMounted(async () => {
-  const data = await loadJson<ColorData>("/data/config/colorData.json");
-  colorData.value = data;
-  const keys = Object.keys(data);
-  const themeCount = keys.length;
-  if (themeCount > 0) {
-    const randomIndex = Math.floor(Math.random() * themeCount);
-    const themeKey = `background${randomIndex}`;
-    const selectedColor = data[themeKey];
-    if (selectedColor) {
-      themeColor.value = selectedColor;
-      const bg = document.getElementById("bg");
-      if (bg) bg.style.backgroundImage = `url(/background${randomIndex}.webp)`;
-      document.body.style.backgroundColor = selectedColor;
+  try {
+    const [colorRes, titleRes] = await Promise.all([
+      fetch("/data/config/colorData.json"),
+      fetch("/data/main/webTitle.json"),
+    ]);
+
+    if (colorRes.ok) {
+      const colorData = await colorRes.json() as ColorData;
+      const keys = Object.keys(colorData);
+      if (keys.length > 0) {
+        const randomIndex = Math.floor(Math.random() * keys.length);
+        const themeKey = `background${randomIndex}`;
+        const selectedColor = colorData[themeKey];
+
+        if (selectedColor) {
+          themeColor.value = selectedColor;
+          const bg = document.getElementById("bg");
+          if (bg) bg.style.backgroundImage = `url(/background${randomIndex}.webp)`;
+          document.body.style.backgroundColor = selectedColor;
+        }
+      }
+    } else {
+      console.warn("颜色配置加载异常");
     }
+
+    if (titleRes.ok) {
+      globalWebTitleMap.value = await titleRes.json() as Record<string, Record<string, string>>;
+    } else {
+      console.warn("标题配置加载异");
+    }
+
+  } catch (e) {
+    console.error("全局初始化失败:", e);
   }
 });
 
-// 路由跳转
+const currentDisplayTitle = computed(() => {
+  const pageKey = (route.name as string) || "home";
+  const baseTitle = globalWebTitleMap.value[pageKey]?.[lang.value] || "My Website";
+  if (dynamicTitlePrefix.value) {
+    return `${dynamicTitlePrefix.value} - ${baseTitle}`;
+  }
+  return baseTitle;
+});
+
+watch(currentDisplayTitle, (newVal: string) => {
+  document.title = newVal;
+}, { immediate: true });
+
+watch(() => route.path, () => {
+  dynamicTitlePrefix.value = "";
+});
+
 const goTo = (name: string) => router.push({ name });
 
-const homeLabel: Record<string, string> = { zh: "主页", ja: "ホーム", en: "Home" };
-const blogLabel: Record<string, string> = { zh: "博客", ja: "ブログ", en: "Blog" };
+const homeLabel = commonI18n.bottonToolBarHome as Record<string, string>;
+const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
 </script>
 
 <template>
@@ -172,8 +204,24 @@ const blogLabel: Record<string, string> = { zh: "博客", ja: "ブログ", en: "
   will-change: transform;
 }
 
-/* 不要 leave 动画 */
 .page-leave-active {
   animation: none;
+}
+
+.n-message-container {
+  margin-top: 4em;
+
+  .n-message.n-message--warning-type {
+    --n-border: none !important;
+    --n-color: rgba(251, 238, 241, 0.6) !important;
+    background-color: var(--n-color) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+    --n-content-text-color: #333 !important;
+    --n-icon-color: #d03050 !important;
+    transition: transform 0.3s cubic-bezier(.4, 0, .2, 1), opacity 0.3s !important;
+  }
 }
 </style>

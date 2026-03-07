@@ -4,6 +4,8 @@ import { useRoute, useRouter } from "vue-router";
 import {
   changeSpareUrl,
   faultTimes,
+  listPrimaryError,
+  listSpareError,
   loadAllPosts,
   loadError,
   Post,
@@ -12,7 +14,7 @@ import {
   yamlLoadingFault,
   yamlRetrying,
 } from "@/components/ts/getYaml.ts";
-import { formatTime, lang } from "@/components/ts/useStoage";
+import { formatTime, lang } from "@/components/ts/useStorage";
 import Cancel from "@/icons/cancel.svg";
 import { NAlert, NButton, NCard, NIcon, NImage, NModal } from "naive-ui";
 import { parseRichText, stripRichText } from "@/components/ts/blogFormat.ts";
@@ -20,6 +22,17 @@ import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
+
+interface ImageContent {
+  src: string;
+  spareUrl?: string;
+  desc?: string;
+}
+
+interface PostBlock {
+  type: string;
+  content?: string | ImageContent[];
+}
 
 const route = useRoute();
 const router = useRouter();
@@ -74,8 +87,6 @@ onMounted(async () => {
   } catch (err) {
     console.error("Initialization failed:", err);
   }
-  posts.value = await loadAllPosts("blog");
-  await syncModalWithRoute();
 });
 
 watch(
@@ -132,14 +143,51 @@ const closePortal = () => {
 
 const { onMove, onLeave, onEnter } = useCardGlow();
 
+const getImageBlocks = (blocks?: PostBlock[]) => {
+  if (!blocks) return [];
+  return blocks.filter(b => b.type === "image");
+};
+
+const getDescriptionText = (blocks?: PostBlock[]) => {
+  if (!blocks) return "";
+  return blocks
+    .filter(b => b.type === "text" || b.type === "center")
+    .map(b => typeof b.content === "string" ? stripRichText(b.content) : "")
+    .join(" ");
+};
+
+const handleImgError = (e: Event, spareUrl?: string) => {
+  const target = e.target as HTMLImageElement;
+  if (spareUrl) target.src = spareUrl;
+};
+
+
+watch(
+  () => yamlLoadingFault.value,
+  (v: boolean) => {
+    if (v) {
+      $message.warning(blogDisplay.value.partialLoadError, true, 4000);
+    }
+  },
+);
+watch(
+  () => listPrimaryError.value,
+  (v: boolean) => {
+    if (v) {
+      $message.warning(blogDisplay.value.listPrimaryError, true, 4000);
+    }
+  },
+);
+
 watch(
   () => changeSpareUrl.value,
   (v: boolean) => {
-    if (v) {
+    if (v && !listPrimaryError.value) {
       $message.warning(blogDisplay.value.changeToSpareUrl, true, 4000);
     }
-  }
+  },
 );
+
 </script>
 
 <template>
@@ -168,52 +216,50 @@ watch(
         </div>
 
         <div class="post-body">
-          <div v-if="post.blocks?.some((b: any) => b.type === 'image')" class="post-image">
-            <img
-              :alt="post.title"
-              :src="post.blocks.filter((b: any) => b.type === 'image')[0]?.content?.[0].src"
-              loading="lazy"
-              @error="(e) => { (e.target as HTMLImageElement).src = post.blocks.filter((b: any) => b.type === 'image')[0]?.content?.[0].spareUrl }"
-            />
-            <img
-              v-if="post.blocks.filter((b: any) => b.type === 'image')[1]?.content?.[0].src"
-              :alt="post.title"
-              :src="post.blocks.filter((b: any) => b.type === 'image')[1]?.content?.[0].src"
-              class="secondImg"
-              loading="lazy"
-              @error="(e) => { (e.target as HTMLImageElement).src = post.blocks.filter((b: any) => b.type === 'image')[1]?.content?.[0].spareUrl }"
-            />
+          <div v-if="getImageBlocks(post.blocks as PostBlock[]).length > 0" class="post-image">
+            <template v-for="(block, idx) in getImageBlocks(post.blocks as PostBlock[]).slice(0, 2)" :key="idx">
+              <img
+                v-if="Array.isArray(block.content) && block.content[0]?.src"
+                :alt="post.title"
+                :class="{ 'secondImg': idx === 1 }"
+                :src="block.content[0].src"
+                loading="lazy"
+                @error="(e) => handleImgError(e, (block.content as ImageContent[])?.[0]?.spareUrl)"
+              />
+            </template>
           </div>
+
           <div
-:class="{ 'expanded-text': !post.blocks?.some((b: any) => b.type === 'image') }"
-               class="post-description">
+            :class="{ 'expanded-text': !getImageBlocks(post.blocks as PostBlock[]).length }"
+            class="post-description"
+          >
             <p>
-              {{
-                (post.blocks || [])
-                  .filter((b: any) => b.type === "text" || b.type === "center")
-                  .map((b: any) => stripRichText(b.content))
-                  .join(" ")
-              }}
+              {{ getDescriptionText(post.blocks as PostBlock[]) }}
             </p>
           </div>
         </div>
       </div>
     </article>
   </div>
+
   <div v-else class="loading-state">
     <div class="loader">
-      <n-alert v-if="serverError" title="Error" type="error">
+      <n-alert v-if="serverError" :title="blogDisplay.listFetchError" class="alert" type="error">
         {{ blogDisplay.serverFault }}
       </n-alert>
-      <n-alert v-else-if="loadError" title="Error" type="error">
-        {{ blogDisplay.loadError }}
+
+      <n-alert v-else-if="loadError" :title="blogDisplay.notFoundError" class="alert" type="error">
+        {{ blogDisplay.notFoundError }}
       </n-alert>
-      <n-alert v-else-if="yamlLoadingFault" title="Error" type="error">
-        {{ blogDisplay.serverFault }}
-      </n-alert>
-      <n-alert v-else-if="yamlRetrying" title="Warning" type="warning">
+
+      <n-alert v-else-if="yamlRetrying" class="alert" title="Warning" type="warning">
         {{ blogDisplay.yamlRetrying }} {{ blogDisplay.retry }} {{ faultTimes }}
       </n-alert>
+
+      <n-alert v-else-if="listSpareError" class="alert" title="Warning" type="warning">
+        {{ blogDisplay.listSpareError }}
+      </n-alert>
+
       <p v-else>
         {{ blogDisplay.loading }}
       </p>
@@ -237,9 +283,9 @@ watch(
           <span class="time-divider">|</span>
           <span>{{ formatTime(selectedPost.time) }}</span>
         </div>
-        <div v-for="(block,a) in selectedPost.blocks" :key="a" class="postCardBody">
+        <div v-for="(block, a) in (selectedPost.blocks as PostBlock[])" :key="a" class="postCardBody">
           <div v-if="block.type === 'image'" class="postCardImage">
-            <div v-for="img in block.content" :key="img.src" class="postCardNImage">
+            <div v-for="img in (block.content as ImageContent[])" :key="img.src" class="postCardNImage">
               <n-image
                 v-if="img.src && changeSpareUrl===false"
                 :src="img.src"
@@ -257,14 +303,16 @@ watch(
               </div>
             </div>
           </div>
-          <div v-if="block.type === 'text'" class="postCardText" @click="console.log(parseRichText(block.content))">
-            <RichTextRenderer :tokens="parseRichText(block.content)" />
+          <div
+            v-if="block.type === 'text'" class="postCardText">
+            <RichTextRenderer :tokens="parseRichText(block.content as string)" />
           </div>
         </div>
       </div>
     </n-card>
   </n-modal>
 </template>
+
 
 <style lang="scss">
 @use "sass:color";
@@ -327,18 +375,18 @@ $transition-speed: 0.3s;
       border-radius: 8px;
     }
 
-  .postCardImageDesc {
-    margin-top: 0.5rem;
+    .postCardImageDesc {
+      margin-top: 0.5rem;
 
-    span {
-      word-break: break-all;
-      white-space: pre-line;
-      font-size: 0.9rem;
-      color: color.adjust($text-color, $lightness: 80%);
-      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
-      text-align: center;
-      display: block;
-    }
+      span {
+        word-break: break-all;
+        white-space: pre-line;
+        font-size: 0.9rem;
+        color: color.adjust($text-color, $lightness: 80%);
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
+        text-align: center;
+        display: block;
+      }
     }
   }
 }
@@ -581,6 +629,7 @@ $transition-speed: 0.3s;
           line-clamp: 8;
         }
       }
+
       p {
         max-height: 100%;
         margin: 0;
@@ -616,10 +665,59 @@ $transition-speed: 0.3s;
 }
 
 .loading-state {
-  text-align: center;
-  padding: 4rem;
-  color: $text-color;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
-  font-size: 2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+
+  .loader {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .n-alert {
+      --n-border: none !important;
+      --n-color: rgba(251, 238, 241, 0.4) !important;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --n-title-text-color: rgb(31, 34, 37) !important;
+      --n-content-text-color: rgb(51, 54, 57) !important;
+      --n-padding: 13px !important;
+      --n-icon-color: #d03050 !important;
+      transition: all 0.3s var(--n-bezier);
+
+      &:hover {
+        background-color: rgba(251, 238, 241, 0.6) !important;
+      }
+    }
+
+
+    .alert {
+      margin-bottom: 0;
+    }
+
+    p {
+      text-align: center;
+      font-size: 3rem;
+      color: white;
+      text-shadow: #383838 1px 0 0,
+      #383838 0 1px 0,
+      #383838 -1px 0 0,
+      #383838 0 -1px 0;
+      opacity: 0.8;
+      animation: loading-pulse 1.5s infinite ease-in-out;
+    }
+  }
+}
+
+@keyframes loading-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.9;
+  }
 }
 </style>

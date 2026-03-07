@@ -11,7 +11,7 @@
 <script lang="ts" setup>
 import { NAvatar } from "naive-ui";
 import icon from "../icons/icon.webp";
-import { displayTitle } from "@/components/ts/useStoage.ts";
+import { displayTitle } from "@/components/ts/useStorage.ts";
 </script>
 
 <style lang="scss">

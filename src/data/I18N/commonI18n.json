@@ -2,13 +2,31 @@
   "cat": {
     "zh": "孩子们",
     "en": "Neko",
-    "jp": "猫達",
+    "ja": "猫達",
     "other": "Neko"
   },
   "catMemoryTitle": {
     "zh": "孩子照片: 需要能GitHub",
     "en": "Neko: Requires GitHub access",
-    "jp": "猫写真：GitHub接続は必要です",
+    "ja": "猫写真：GitHub接続は必要です",
     "other": "Neko: Requires GitHub access"
+  },
+  "bottonToolBarHome": {
+    "zh": "主页",
+    "en": "Home",
+    "ja": "ホーム",
+    "other": "Home"
+  },
+  "bottomToolbarHome": {
+    "zh": "博客",
+    "en": "Blog",
+    "ja": "ブログ",
+    "other": "Blog"
+  },
+  "blogWelcome": {
+    "zh": "欢迎来到我的博客！",
+    "ja": "ブログをようこそ！",
+    "en": "Welcome Back to my blog!",
+    "other": "Welcome Back to my blog!"
   }
 }

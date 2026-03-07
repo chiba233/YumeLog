@@ -40,7 +40,7 @@ import { NButton, NCard, NIcon, NModal } from "naive-ui";
 import Clock from "../icons/clock.svg";
 import { computed, onMounted, ref } from "vue";
 import Cancel from "../icons/cancel.svg";
-import { formatTime, lang, themeColor } from "@/components/ts/useStoage";
+import { formatTime, lang, themeColor } from "@/components/ts/useStorage.ts";
 import fromNowI18 from "@/data/I18N/fromNowI18n.json";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 

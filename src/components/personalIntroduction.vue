@@ -10,7 +10,7 @@
 
 <script lang="ts" setup>
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import { displayContent } from "@/components/ts/useStoage.ts";
+import { displayContent } from "@/components/ts/useStorage.ts";
 
 const { onMove, onLeave, onEnter } = useCardGlow();
 

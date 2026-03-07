@@ -23,7 +23,7 @@
 <script lang="ts" setup>
 import { NAvatar } from "naive-ui";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
-import { lang, useFriendsList } from "@/components/ts/useStoage";
+import { lang, useFriendsList } from "@/components/ts/useStorage.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { computed, onMounted, ref } from "vue";
 

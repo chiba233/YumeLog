@@ -4,7 +4,7 @@ export interface TextToken {
   url?: string;
 }
 
-const RICH_TYPES = ["bold", "thin", "underline", "strike", "center", "link"] as const;
+const RICH_TYPES = ["bold", "thin", "underline", "strike", "center", "link", "code"] as const;
 const BLOCK_TYPES = ["center"] as const;
 
 export type RichType = (typeof RICH_TYPES)[number];

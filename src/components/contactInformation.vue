@@ -17,7 +17,7 @@
             <n-image
               :alt="item.imgName"
               :fallback-src="item.imgError"
-              :src="item.img" width="140"
+              :src="item.img" width="160"
             ></n-image>
             <a>{{ item.imgName }}</a>
           </div>
@@ -100,7 +100,7 @@ import maiI18nData from "@/data/I18N/maiI18n.json";
 import { computed, onMounted, ref, shallowRef } from "vue";
 import { NButton, NCard, NCollapse, NCollapseItem, NIcon, NImage, NImageGroup, NImagePreview, NModal } from "naive-ui";
 import axios from "axios";
-import { useAsyncState } from "@vueuse/core";
+import { useAsyncState, useStorage } from "@vueuse/core";
 import { lang, themeColor } from "@/components/ts/useStoage";
 import { getMaiUrl, type UserDataType } from "./ts/maimaiScore";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
@@ -147,12 +147,25 @@ const showWechatModel = ref<boolean>(false);
 const showLineModel = ref<boolean>(false);
 const maiError = ref<string>("Error");
 
+const maiStorage = useStorage<{ data: Partial<UserDataType>; updatedAt: number }>(
+  "mai-user-data-cache",
+  { data: {}, updatedAt: 0 },
+);
+
 const { state: data } = useAsyncState<Partial<UserDataType>>(
   async () => {
+    const now = Date.now();
+    if (Object.keys(maiStorage.value.data).length > 0 && now - maiStorage.value.updatedAt < 86400000) {
+      return maiStorage.value.data;
+    }
+
     const url = await getMaiUrl();
-    return axios.get<UserDataType>(url).then((res) => res.data);
+    return axios.get<UserDataType>(url).then((res) => {
+      maiStorage.value = { data: res.data, updatedAt: now };
+      return res.data;
+    });
   },
-  {},
+  maiStorage.value.data,
 );
 
 const iconMap: Record<PlatformId, string> = {
@@ -177,12 +190,23 @@ const catMemoryTitle = computed(() => {
   const source = commonI18n as I18nSource;
 
   return {
-    catMemory: source.catMemoryTitle[lang.value] ?? source.catMemoryTitle.jp,
-    cat: source.cat[lang.value] ?? source.cat.jp,
+    catMemory: source.catMemoryTitle[lang.value] ?? source.catMemoryTitle.en,
+    cat: source.cat[lang.value] ?? source.cat.en,
   };
 });
 
-const maiSections = [
+interface MaiSectionItem {
+  label: string;
+  value: string;
+}
+
+interface MaiSection {
+  titleKey: string;
+  name: string;
+  items: MaiSectionItem[];
+}
+
+const maiSections: MaiSection[] = [
   {
     titleKey: "mainInfo",
     name: "1",
@@ -219,7 +243,7 @@ const maiDisplay = computed(() => {
   const source = maiI18nData as Record<string, Record<string, string>>;
   const result: Record<string, string> = {};
   for (const key in source) {
-    result[key] = source[key][lang.value] || source[key].ja;
+    result[key] = source[key][lang.value] || source[key].en;
   }
   return result;
 });
@@ -300,9 +324,17 @@ onMounted(async () => {
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
+
+  .n-card__content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .n-card-header__main {
+    text-align: center;
+  }
 }
 
-/* 1. 强制覆盖外层容器，让它变回 row */
 .catCard .n-card__content div:has(> .catImgDIV) {
   display: flex !important;
   flex-direction: row !important;
@@ -311,30 +343,30 @@ onMounted(async () => {
   justify-content: center !important;
 }
 
-/* 2. 让每一组图片和文字纵向排列 (Column) */
 .catImgDIV {
   display: flex !important;
   flex-direction: column;
   align-items: center;
-}
-
-/* 3. 文字微调 */
-.catImgDIV {
-  display: flex;
   justify-content: end;
-  align-items: center;
+
+  img {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 
   a {
-    margin-top: 0.3rem;
+    margin-top: 0.4rem;
+    margin-bottom: 0.2rem;
     text-align: center;
-    font-size: 0.8rem;
-    color: var(--n-text-color); /* 使用 Naive UI 的变量保持色调一致 */
+    font-size: 0.85rem;
+    color: #e6e6e6;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
     text-decoration: none;
   }
 }
 
 .catCard {
-  max-width: 40em;
+  max-width: 48em;
   @media (max-width: 600px) {
     max-width: 98%;
   }
@@ -407,7 +439,7 @@ onMounted(async () => {
     }
 
     @media (min-width: 550px) {
-      width: 8.5em;
+      width: 8.8em;
     }
     @media (max-width: 550px) {
       .n-icon {

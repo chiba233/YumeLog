@@ -3,7 +3,7 @@ import moment from "moment";
 import "moment/dist/locale/ja";
 import "moment/dist/locale/zh-cn";
 import "moment/dist/locale/en-au";
-import { ref, watch, type Ref } from "vue";
+import { ref, type Ref, watch } from "vue";
 import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 
@@ -34,7 +34,10 @@ watch(langMap, (newMap) => {
   if (!validValues.includes(lang.value)) {
     lang.value = validValues.includes(rawLang) ? rawLang : (validValues.includes("en") ? "en" : validValues[0]);
   }
-});
+  },
+  { immediate: true },
+);
+
 
 interface YamlFriendsBlock {
   name: string;
@@ -72,9 +75,11 @@ const localeMap: Record<string, string> = {
 
 
 // 导出一个专门格式化时间的工具
-export const formatTime = (date: string | number | Date | moment.Moment | undefined): string => {
-  if (!date) return "";
-  const currentLocale = localeMap[lang.value] || "en";
-  moment.locale(currentLocale);
+export const formatTime = (
+  date?: string | number | Date | moment.Moment,
+): string => {
+  if (!date) return "error";
+  const locale = localeMap[lang.value] || "en";
+  moment.locale(locale);
   return moment(date).fromNow();
 };

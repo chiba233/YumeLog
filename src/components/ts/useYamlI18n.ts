@@ -1,5 +1,5 @@
 import { computed, ref } from "vue";
-import { lang, langMap } from "@/components/ts/useStoage";
+import { lang } from "@/components/ts/useStoage";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 import yamlUrl from "../../../public/data/config/yamlUrl.json";
 

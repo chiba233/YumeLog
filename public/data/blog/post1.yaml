@@ -16,6 +16,7 @@ blocks:
         desc: 这是图片描述
   - type: "text"
     content: |
+      $$code(const a = ref(true))$$
       $$bold(粗体$$underline(嵌套下划线$$link(http://baidu.com)$$)$$)$$
       $$link(https://baidu.com | $$bold($$underline(点我进入百度)$$)$$)$$
       测试文本 $$bold(测试文本)$$ $$link(测试文本)$$ $$strike(测试文本)$$ $$underline(测试文本)$$ $$center(测试文本)$$

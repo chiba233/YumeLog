@@ -257,7 +257,7 @@ watch(
               </div>
             </div>
           </div>
-          <div v-if="block.type === 'text'" class="postCardText">
+          <div v-if="block.type === 'text'" class="postCardText" @click="console.log(parseRichText(block.content))">
             <RichTextRenderer :tokens="parseRichText(block.content)" />
           </div>
         </div>
@@ -285,12 +285,17 @@ watch(
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   max-height: 84.4dvh;
+
+  .n-card__content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .n-card-header__main {
+    text-align: center;
+  }
 }
 
-.n-card__content {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
 
 .postCardImg img {
   margin: 1em;
@@ -302,37 +307,38 @@ $border-radius: 16px;
 $transition-speed: 0.3s;
 
 .postCardImage {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1.5rem;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
   margin: 1rem 0;
+  gap: 1.5rem;
 
   .postCardNImage {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
     width: fit-content;
-    justify-content: center;
-    align-content: center;
+    height: auto;
 
     .postCardImg img {
       margin: 0 !important;
       border-radius: 8px;
     }
-  }
 
   .postCardImageDesc {
     margin-top: 0.5rem;
 
     span {
+      word-break: break-all;
+      white-space: pre-line;
       font-size: 0.9rem;
       color: color.adjust($text-color, $lightness: 80%);
       text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
       text-align: center;
       display: block;
-      word-break: break-all;
+    }
     }
   }
 }

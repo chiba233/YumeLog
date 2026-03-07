@@ -124,6 +124,15 @@ const clickMemory = () => {
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+
+  .n-card__content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .n-card-header__main {
+    text-align: center;
+  }
 }
 
 .n-card__content {

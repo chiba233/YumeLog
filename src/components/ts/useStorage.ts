@@ -3,6 +3,7 @@ import moment from "moment";
 import "moment/dist/locale/ja";
 import "moment/dist/locale/zh-cn";
 import "moment/dist/locale/en-au";
+import "moment/dist/locale/th.js";
 import { ref, type Ref, watch } from "vue";
 
 export interface SelectOption {
@@ -40,6 +41,7 @@ const localeMap: Record<string, string> = {
   zh: "zh-cn",
   en: "en-au",
   ja: "ja",
+  th: "th",
 };
 
 

@@ -3,36 +3,42 @@
     "zh": "孩子们",
     "en": "Neko",
     "ja": "猫達",
+    "th": "แมวๆ",
     "other": "Neko"
   },
   "catMemoryTitle": {
     "zh": "孩子照片: 需要能GitHub",
     "en": "Neko: Requires GitHub access",
     "ja": "猫写真：GitHub接続は必要です",
+    "th": "รูปแมว: ต้องสามารถเข้าถึง GitHub ได้",
     "other": "Neko: Requires GitHub access"
   },
-  "bottonToolBarHome": {
+  "bottomToolBarHome": {
     "zh": "主页",
     "en": "Home",
     "ja": "ホーム",
+    "th": "หน้าแรก",
     "other": "Home"
   },
   "bottomToolbarHome": {
     "zh": "博客",
     "en": "Blog",
     "ja": "ブログ",
+    "th": "บล็อก",
     "other": "Blog"
   },
   "blogWelcome": {
     "zh": "欢迎来到我的博客！",
-    "ja": "ブログをようこそ！",
-    "en": "Welcome Back to my blog!",
-    "other": "Welcome Back to my blog!"
+    "ja": "ブログへようこそ！",
+    "en": "Welcome back to my blog!",
+    "th": "ยินดีต้อนรับสู่บล็อกของฉัน!",
+    "other": "Welcome back to my blog!"
   },
   "invalidAccess": {
     "zh": "非法访问，已为你返回主页！",
     "ja": "不正なアクセスが検出されました。トップページに戻ります。",
     "en": "Invalid access. Redirecting to the homepage.",
+    "th": "ตรวจพบการเข้าถึงที่ไม่ถูกต้อง กำลังกลับไปหน้าแรก",
     "other": "Invalid access. Redirecting to the homepage."
   }
 }

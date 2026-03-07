@@ -70,7 +70,7 @@ watch(() => route.path, () => {
 
 const goTo = (name: string) => router.push({ name });
 
-const homeLabel = commonI18n.bottonToolBarHome as Record<string, string>;
+const homeLabel = commonI18n.bottomToolBarHome as Record<string, string>;
 const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
 </script>
 

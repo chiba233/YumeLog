@@ -12,6 +12,10 @@
     "value": "ja"
   },
   {
+    "label": "ไทย",
+    "value": "th"
+  },
+  {
     "label": "Other",
     "value": "other"
   }

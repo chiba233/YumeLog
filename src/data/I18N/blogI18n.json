@@ -3,78 +3,91 @@
     "zh": "GitHub服务器连接失败。",
     "ja": "github サーバー接続に失敗しました！",
     "en": "GitHub Server connection failed.",
+    "th": "การเชื่อมต่อกับเซิร์ฟเวอร์ GitHub ล้มเหลว",
     "other": "GitHub Server connection failed."
   },
   "loadError": {
     "zh": "无法连接，已超过重试次数。",
     "ja": "接続はできません。再試行回数を超過しました。",
     "en": "Unable to connect; retries exceeded.",
+    "th": "ไม่สามารถเชื่อมต่อได้ จำนวนครั้งในการลองใหม่เกินกำหนด",
     "other": "Unable to connect; retries exceeded."
   },
   "yamlRetrying": {
     "zh": "连接失败，重试中。请尝试切换互联网或检查代理软件。",
     "ja": "接続に失敗しました。再試行しています。\nネットワーク接続の切り替えやプロキシソフトウェアの確認をお試しください。",
     "en": "Connection failed, retrying.\nPlease try switching your internet connection or check if your proxy software is working properly.",
+    "th": "การเชื่อมต่อล้มเหลว กำลังลองใหม่\nกรุณาลองเปลี่ยนเครือข่ายอินเทอร์เน็ต หรือ ตรวจสอบซอฟต์แวร์พร็อกซีของคุณ",
     "other": "Connection failed, retrying.\nPlease try switching your internet connection or check if your proxy software is working properly."
   },
   "retry": {
     "zh": "剩余重试次数为",
     "ja": "残りの再試行回数は",
     "en": "Remaining retries:",
+    "th": "จำนวนครั้งที่สามารถลองใหม่ได้:",
     "other": "Remaining retries:"
   },
   "loading": {
     "zh": "加载中。",
     "ja": "読み込み。",
     "en": "Loading...",
+    "th": "กำลังโหลด...",
     "other": "Loading..."
   },
   "unknownPostId": {
     "zh": "未找到该文章。",
     "ja": "投稿が見つかりませんでした。",
     "en": "The post was not found.",
+    "th": "ไม่พบบทความนี้",
     "other": "The post was not found."
   },
   "errorPostId": {
     "zh": "数据异常，无法打开文章。",
     "ja": "データ エラーのため、投稿を開けません。",
     "en": "Data error, unable to open blog post.",
+    "th": "เกิดข้อผิดพลาดของข้อมูล ไม่สามารถเปิดบทความได้",
     "other": "Data error, unable to open blog post."
   },
   "notFoundError": {
     "zh": "抱歉，请求的数据不存在 (404)。",
     "ja": "申し訳ありませんが、リクエストされたデータが見つかりません (404)。",
     "en": "Sorry, the requested data was not found (404).",
+    "th": "ขออภัย ไม่พบข้อมูลที่ร้องขอ (404)",
     "other": "Sorry, the requested data was not found (404)."
   },
   "partialLoadError": {
     "zh": "部分文章数据丢失，显示内容可能不完整。",
     "ja": "一部の記事データが欠落しているため、表示が不完全な可能性があります。",
     "en": "Some post data is missing, content display may be incomplete.",
+    "th": "ข้อมูลบางส่วนของบทความสูญหาย การแสดงผลอาจไม่สมบูรณ์",
     "other": "Some post data is missing, content display may be incomplete."
   },
   "listFetchError": {
     "zh": "文章索引获取失败，请检查网络连接。",
     "ja": "記事インデックスの取得に失敗しました。ネットワーク接続を確認してください。",
     "en": "Failed to fetch post index, please check your network connection.",
+    "th": "ไม่สามารถดึงดัชนีบทความได้ กรุณาตรวจสอบการเชื่อมต่อเครือข่าย",
     "other": "Failed to fetch post index, please check your network connection."
   },
   "listPrimaryError": {
     "zh": "主索引连接失败，正在尝试调度备用节点...",
     "ja": "メインインデックスの接続に失敗しました。予備ノードを試行中です...",
-    "en": "primary index failed, attempting to dispatch backup node...",
-    "other": "primary index failed, attempting to dispatch backup node..."
+    "en": "Primary index failed, attempting to dispatch backup node...",
+    "th": "การเชื่อมต่อดัชนีหลักล้มเหลว กำลังลองใช้โหนดสำรอง...",
+    "other": "Primary index failed, attempting to dispatch backup node..."
   },
   "listSpareError": {
     "zh": "致命错误：主备源文章索引均获取失败，请检查后端资源。",
     "ja": "致命的なエラー：メインと予備の記事インデックスの両方の取得に失敗しました。",
     "en": "Critical Error: Failed to fetch both primary and spare post indexes.",
+    "th": "ข้อผิดพลาดร้ายแรง: ไม่สามารถดึงดัชนีบทความจากแหล่งหลักและสำรองได้",
     "other": "Critical Error: Failed to fetch both primary and spare post indexes."
   },
   "changeToSpareUrl": {
     "zh": "网络连接不稳定，已为你自动切换到备用数据源。",
     "ja": "ネットワークの影響により、GitHubに接続できないため、代替ソースを使用しています。",
     "en": "Network issue detected. We've automatically switched to a backup source for you.",
+    "th": "ตรวจพบปัญหาเครือข่าย ระบบได้สลับไปใช้แหล่งข้อมูลสำรองให้อัตโนมัติ",
     "other": "Network issue detected. We've automatically switched to a backup source for you."
   }
 }

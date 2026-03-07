@@ -11,7 +11,7 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint . --fix",
-    "testBuildDist": "npx serve dist"
+    "testBuildDist": "npx serve dist -s"
   },
   "dependencies": {
     "@vicons/fluent": "^0.13.0",

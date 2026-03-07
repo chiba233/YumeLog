@@ -28,5 +28,11 @@
     "ja": "ブログをようこそ！",
     "en": "Welcome Back to my blog!",
     "other": "Welcome Back to my blog!"
+  },
+  "invalidAccess": {
+    "zh": "非法访问，已为你返回主页！",
+    "ja": "不正なアクセスが検出されました。トップページに戻ります。",
+    "en": "Invalid access. Redirecting to the homepage.",
+    "other": "Invalid access. Redirecting to the homepage."
   }
 }

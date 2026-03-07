@@ -4,8 +4,6 @@ import "moment/dist/locale/ja";
 import "moment/dist/locale/zh-cn";
 import "moment/dist/locale/en-au";
 import { ref, type Ref, watch } from "vue";
-import { useYamlText } from "@/components/ts/useYamlI18n.ts";
-import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 
 export interface SelectOption {
   label: string;
@@ -24,8 +22,6 @@ fetch("/data/config/i18nLang.json")
 const rawLang = navigator.language.substring(0, 2);
 export const lang: Ref<string> = useStorage("useLang", rawLang);
 export const themeColor: Ref<string> = useStorage("setColor", "");
-export const displayContent = useYamlText("main", "introduction.yaml");
-export const displayTitle = useYamlText("main", "title.yaml");
 
 watch(langMap, (newMap) => {
   if (newMap.length === 0) return;
@@ -39,33 +35,6 @@ watch(langMap, (newMap) => {
 );
 
 
-interface YamlFriendsBlock {
-  name: string;
-  alias: string;
-  url: string;
-  icon: string;
-}
-
-interface YamlResponse {
-  friends: YamlFriendsBlock[];
-}
-
-export const useFriendsList = async () => {
-  try {
-    const rawData = await loadSingleYaml<YamlResponse>("main", "friends.yaml");
-    if (!rawData || !rawData.friends) return [];
-
-    return rawData.friends.map((friend) => ({
-      icon: friend.icon,
-      name: friend.name,
-      url: friend.url,
-      alias: friend.alias,
-    }));
-  } catch (err) {
-    console.error("Error", err);
-    return [];
-  }
-};
 
 const localeMap: Record<string, string> = {
   zh: "zh-cn",

@@ -21,10 +21,44 @@
 * **支持的格式指令**: `"bold"`, `"thin"`, `"underline"`, `"strike"`, `"center"`, `"link"`, `"code"`。
 * **双轨数据获取**: 完美支持从本地目录读取，或通过 HTTP/CDN 从远程服务器动态拉取 YAML 数据流。
 
+### 截图
+
+#### 电脑端
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/1.png" width="200" />
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/2.png" width="200" />
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/3.png" width="200" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/1.png" width="170" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/2.png" width="170" />
+</p>
+
+#### 手机端
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/3.png" width="170" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/4.png" width="170" />
+</p>
+
+#### maimai功能
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/5.png" width="170" />
+</p>
+
+#### 纪念日功能
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/6.png" width="170" />
+</p>
+
+#### 照片墙功能
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/7.png" width="170" />
+</p>
+
+#### blog详情页
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/8.png" width="170" />
 </p>
 
 ### 全方位个人展示模块
@@ -52,7 +86,7 @@
 * **构建工具**: Vite
 * **数据处理**: js-yaml (仅用于解析结构，DOM 渲染由自研 Parser 引擎全权接管)
 
-## 🛠️ 开发与部署
+## 开发与部署
 
 由于项目采用了 **Vite 7** 与 **pnpm** 驱动，请确保你的开发环境已安装 pnpm。
 
@@ -91,7 +125,7 @@
 
     pnpm type-check
 
-## 🌐 部署说明
+## 部署说明
 
 ### Nginx 配置
 
@@ -119,6 +153,7 @@ yumeLog 采用极其灵活的 **块级** 架构组织内容。同时，自研的
 
 **请记住link的语法是** `$$link(URL | $$type(点我)$$)$$` ，**其中** `$$type(点我)$$`**其中**
 `type`**支持嵌套，但是`URL`**不能嵌套！必须在链接同一层级！**
+
 ### 标准 YAML 示例
 
 ```yaml
@@ -153,7 +188,7 @@ blocks:
 
 ---
 
-### 添加博客文章
+## 添加博客文章
 
 **注意 要使用博客前你必须先在`\public\data\config\yamlUrl.json`** 指向正确的远程目录及热备目录
 示例：
@@ -177,7 +212,7 @@ blocks:
 2. 按照项目定义的 `blocks` 结构编写文章内容。
 3. **手动修改 `list.json`**，将新的文章文件名添加进去。
 
-示例：
+### 示例：
 
 ```json
 [
@@ -190,9 +225,9 @@ blocks:
 
 ---
 
-### I18N 多语言管理
+## I18N 多语言管理
 
-语言配置文件：
+### 语言配置文件：
 
 ```
 /public/data/config/i18nLang.json
@@ -223,9 +258,9 @@ blocks:
 
 ---
 
-### 修改主题
+## 修改主题
 
-文件位置：
+### 文件位置：
 
 ```
 /public/data/config/colorData.json
@@ -241,66 +276,162 @@ blocks:
   "background0": "#C7B0C0",
   "background1": "#9E8A95",
   "background2": "#BF948E",
-  //示例
 }
 
 ```
 
 ---
-### 修改网页标题
 
-文件位置：
+## 修改网页标题
+
+### 文件位置：
 
 ```
 /public/data/main/webTitle.json
+```
+
+### 标准 JSON 示例
+
+``` json
+{
+  "home": {
+    "zh": "YumeLOG的页面",
+    "en": "YumeLOG Pages",
+    "ja": "YumeLOG - ホーム",
+    "other": "YumeLOG Pages"
+  },
+  "blog": {
+    "zh": "YumeLOG的博客",
+    "en": "YumeLOG's Blog",
+    "ja": "YumeLOGのブログ",
+    "other": "YumeLOG's Blog"
+  }
+}
 ```
 
 用于控制浏览器标签页标题以及部分全局显示名称。
 
 ---
 
-### 修改首页招呼语
+## 修改首页招呼语
 
-文件位置：
+### 文件位置：
 
 ```
 /public/data/main/title.yaml
+```
+
+标准 YAML 示例
+
+```yaml
+title:
+  - type: "zh"
+    content: "天气真好啊，我们去散步吧"
+  - type: "en"
+    content: "How are you? I am fine."
+  - type: "ja"
+    content: "元気いいね、何かいいことでもあったのかい？"
+  - type: "other"
+    content: "Sorry Unknown Language!"
 ```
 
 用于控制主页顶部的欢迎语与简短介绍。
 
 ---
 
-### 修改照片墙
+## 修改照片墙
 
-文件位置：
+### 文件位置：
 
 ```
 /public/data/config/neko.yaml
 ```
 
+### 标准 YAML 示例
+
+```yaml
+img:
+  - imgError: /cat/猫咪图片1.webp
+    img: https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E6%A9%98%E7%8C%AB.webp
+    imgName: 猫咪图片1
+  - imgError: /cat/猫咪图片2.webp
+    img: https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E5%A5%B6%E5%AD%90.webp
+    imgName: 猫咪图片2
+```
 用于管理照片墙展示的图片及描述内容（例如猫猫照片或摄影作品）。
 
 ---
 
-### 修改个人详细简介
+## 修改个人详细简介
 
-文件位置：
+### 文件位置：
 
 ```
 /public/data/config/introduction.yaml
+```
+
+### 标准 YAML 示例
+
+```yaml
+introduction:
+  - type: "zh"
+    content: |
+      这是基础信息，你可以访问/main/introduction.yaml进行修改
+
+  - type: "en"
+    content: |
+      This is the basic information. 
+      You can access /main/introduction.yaml to modify it.
+  - type: "ja"
+    content: |
+      これは基本情報(きほんじょうほう)です。
+      /main/introduction.yaml にアクセスして編集(へんしゅう)できます。
+  - type: "other"
+    content: |
+      This is the basic information. 
+      You can access /main/introduction.yaml to modify it.
 ```
 
 用于展示完整的个人介绍信息。
 
 ---
 
-### 修改纪念日时间线
+## 修改纪念日时间线
 
-文件位置：
+### 文件位置：
 
 ```
 /public/data/config/fromNow.yaml
+```
+
+### 标准 YAML 示例
+
+```yaml
+introduction:
+fromNow:
+  - time: "19700101"
+    photo: ""
+    names:
+      - type: "zh"
+        content: "测试数据"
+      - type: "en"
+        content: "Test Data"
+      - type: "ja"
+        content: "テストデータ"
+      - type: "other"
+        content: "Test Data"
+
+  - time: "20260101"
+    photo: ""
+    names:
+      - type: "zh"
+        content: "如果你需要添加纪念日请进入/src/data/components/fromNow.json"
+      - type: "en"
+        content: "To add anniversaries, please access /src/data/components/fromNow.json"
+      - type: "ja"
+        content: "記念日の追加が必要な際は、/src/data/components/fromNow.json を開いて設定してください。"
+      - type: "other"
+        content: "To add anniversaries, please access /src/data/components/fromNow.json"
 ```
 
 用于配置纪念日与时间线展示内容。

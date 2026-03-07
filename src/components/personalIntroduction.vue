@@ -10,7 +10,9 @@
 
 <script lang="ts" setup>
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import { displayContent } from "@/components/ts/useStorage.ts";
+import { useYamlText } from "@/components/ts/useYamlI18n.ts";
+
+const displayContent = useYamlText("main", "introduction.yaml", "introduction");
 
 const { onMove, onLeave, onEnter } = useCardGlow();
 

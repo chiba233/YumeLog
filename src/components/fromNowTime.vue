@@ -6,7 +6,7 @@
           <Clock></Clock>
         </n-icon>
       </template>
-      <a>{{ fromNowI18[lang as keyof typeof fromNowI18]?.button || fromNowI18.zh.button }}</a>
+      <a>{{ buttonTitle }}</a>
     </n-button>
     <n-modal v-model:show="showModal">
       <n-card :title="boxTitle" class="fromTimeCard" size="huge">
@@ -27,7 +27,7 @@
           <a>{{ getName(item) }}</a>
 
           <div>
-            <a>{{ formatTime(item.time) }}</a>
+            <a>{{ formatTime(String(item.time)) }}</a>
           </div>
         </div>
       </n-card>
@@ -42,74 +42,75 @@ import { computed, onMounted, ref } from "vue";
 import Cancel from "../icons/cancel.svg";
 import { formatTime, lang, themeColor } from "@/components/ts/useStorage.ts";
 import fromNowI18 from "@/data/I18N/fromNowI18n.json";
-import { loadSingleYaml } from "@/components/ts/getYaml.ts";
+import { useContentStore } from "@/components/ts/contentStore.ts";
+
+interface I18nBlock {
+  type: string;
+  content: string;
+}
 
 interface YamlTimeBlock {
-  name_zh: string;
-  name_en: string;
-  name_ja: string;
-  name_other: string;
-  photo: string;
-  time: string;
+  time: string | number;
+  photo?: string;
+  names?: I18nBlock[];
+  name_zh?: string;
+  name_en?: string;
+  name_ja?: string;
+  name_other?: string;
 }
 
 interface YamlResponse {
-  block: YamlTimeBlock[];
+  fromNow: YamlTimeBlock[];
 }
 
-interface OriginalTimeBlock {
-  nameZH: string;
-  nameEN: string;
-  nameJP: string;
-  nameOther: string;
-  photo: string;
-  time: string;
-}
-
-const fromNow = ref<OriginalTimeBlock[]>([]);
+const fromNow = ref<YamlTimeBlock[]>([]);
+const { getSingle } = useContentStore();
 
 onMounted(async () => {
-  const res = await loadSingleYaml<YamlResponse>("main", "fromNow.yaml");
-  if (res && res.block) {
-    fromNow.value = res.block.map((item: YamlTimeBlock): OriginalTimeBlock => ({
-      nameZH: item.name_zh,
-      nameEN: item.name_en,
-      nameJP: item.name_ja,
-      nameOther: item.name_other,
-      photo: item.photo,
-      time: item.time,
-    }));
+  const res = await getSingle<YamlResponse>("main", "fromNow.yaml");
+  if (res && res.fromNow) {
+    fromNow.value = res.fromNow;
   }
 });
 
-const langMap = {
-  zh: "nameZH",
-  en: "nameEN",
-  ja: "nameJP",
-  other: "nameOther",
-} as const;
 
-const formatDate = (t: string) => {
-  return `${t.slice(0, 4)} - ${t.slice(4, 6)} - ${t.slice(6, 8)}`;
+const formatDate = (t: string | number | undefined) => {
+  if (!t) return "Unknown Date";
+  const str = String(t);
+  if (str.length < 8) return str;
+  return `${str.slice(0, 4)} - ${str.slice(4, 6)} - ${str.slice(6, 8)}`;
 };
 
-const getName = (item: Record<string, string>) => {
-  const key = langMap[lang.value as keyof typeof langMap] || "nameEN";
-  return item[key];
+
+const getName = (item: YamlTimeBlock): string => {
+  const { names } = item;
+
+  if (!names || !Array.isArray(names)) return "";
+
+  return (
+    names.find((n) => n.type === lang.value)?.content ||
+    names.find((n) => n.type === "en")?.content ||
+    names.find((n) => n.type === "other")?.content ||
+    names[0]?.content ||
+    ""
+  );
 };
 
-//模块分割线
 interface LanguageConfig {
   title: string;
   button: string;
 }
 
-const data: Record<string, LanguageConfig> = fromNowI18;
+const data = fromNowI18 as Record<string, LanguageConfig>;
+
 const boxTitle = computed(() => {
   return data[lang.value]?.title || data["en"].title;
 });
 
-//模块分割线
+const buttonTitle = computed(() => {
+  return data[lang.value]?.button || data["zh"]?.button;
+});
+
 const showModal = ref(false);
 const clickMemory = () => {
   showModal.value = showModal.value === false;

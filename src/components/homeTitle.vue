@@ -11,8 +11,11 @@
 <script lang="ts" setup>
 import { NAvatar } from "naive-ui";
 import icon from "../icons/icon.webp";
-import { displayTitle } from "@/components/ts/useStorage.ts";
+import { useYamlText } from "@/components/ts/useYamlI18n.ts";
+
+const displayTitle = useYamlText("main", "title.yaml", "title");
 </script>
+
 
 <style lang="scss">
 .dashboardTitle {

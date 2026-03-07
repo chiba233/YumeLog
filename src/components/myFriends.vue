@@ -21,20 +21,12 @@
 )
 
 <script lang="ts" setup>
+import { computed, onMounted, ref } from "vue";
 import { NAvatar } from "naive-ui";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
-import { lang, useFriendsList } from "@/components/ts/useStorage.ts";
+import { lang } from "@/components/ts/useStorage.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import { computed, onMounted, ref } from "vue";
-
-type I18nSource = Record<string, Record<string, string>>
-const friendsTitle = computed(() => {
-  const source = friendsMessage as I18nSource;
-
-  return {
-    title: source.title[lang.value] ?? source.title.en,
-  };
-});
+import { useContentStore } from "@/components/ts/contentStore.ts";
 
 interface Friend {
   name: string;
@@ -43,17 +35,33 @@ interface Friend {
   icon: string;
 }
 
+interface YamlResponse {
+  friends: Friend[];
+}
+
+type I18nSource = Record<string, Record<string, string>>
 
 const { onMove, onLeave, onEnter } = useCardGlow();
+const { getSingle } = useContentStore();
+const friends = ref<Friend[]>([]);
+
+const friendsTitle = computed(() => {
+  const source = friendsMessage as I18nSource;
+  return {
+    title: source.title[lang.value] ?? source.title.en,
+  };
+});
 
 function openURL(url: string) {
   window.open(url, "_blank");
 }
 
-const friends = ref<Friend[]>([]);
-
 onMounted(async () => {
-  friends.value = await useFriendsList();
+  const rawData = await getSingle<YamlResponse>("main", "friends.yaml");
+
+  if (rawData && rawData.friends) {
+    friends.value = rawData.friends;
+  }
 });
 
 </script>

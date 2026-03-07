@@ -1,4 +1,4 @@
-blocks:
+introduction:
   - type: "zh"
     content: |
       这是基础信息，你可以访问/main/introduction.yaml进行修改

@@ -20,7 +20,7 @@ function getYamlConfig(): Promise<YamlUrlConfig> {
   return memoizedConfig;
 }
 
-interface BaseContent {
+export interface BaseContent {
   time?: string;
   pin?: boolean;
 

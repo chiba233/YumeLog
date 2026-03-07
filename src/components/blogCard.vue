@@ -6,7 +6,6 @@ import {
   faultTimes,
   listPrimaryError,
   listSpareError,
-  loadAllPosts,
   loadError,
   Post,
   serverError,
@@ -22,7 +21,11 @@ import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
+import { useContentStore } from "./ts/contentStore";
 
+const { getPosts, getSingle } = useContentStore();
+
+// ... (interface 和其他变量声明保持完全一致)
 interface ImageContent {
   src: string;
   spareUrl?: string;
@@ -36,7 +39,6 @@ interface PostBlock {
 
 const route = useRoute();
 const router = useRouter();
-
 const posts = ref<Post[]>([]);
 const selectedPost = ref<Post | null>(null);
 const showModal = ref<boolean>(false);
@@ -77,11 +79,11 @@ const syncModalWithRoute = async () => {
 onMounted(async () => {
   try {
     const [postsData, titleData] = await Promise.all([
-      await loadAllPosts("blog") as unknown as Promise<Post[]>,
-      fetch("/data/main/webTitle.json").then(res => res.json() as Promise<WebTitleMap>),
+      getPosts<Post>("blog"),
+      getSingle<WebTitleMap>("main", "webTitle.json"),
     ]);
-    posts.value = postsData;
-    newWebTitle.value = titleData;
+    if (postsData) posts.value = postsData;
+    if (titleData) newWebTitle.value = titleData;
     await syncModalWithRoute();
     updatePageTitle();
   } catch (err) {

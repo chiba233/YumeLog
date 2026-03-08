@@ -18,7 +18,8 @@
 
 不依赖庞大的第三方渲染库，仅使用 `js-yaml` 获取与结构化数据，核心样式解析完全自研！支持通过独创的 `$$Type()$$` 语法进行快速渲染：
 
-* **支持的格式指令**: `"bold"`, `"thin"`, `"underline"`, `"strike"`, `"center"`, `"link"`, `"code"`。
+* **支持的格式指令**: `"bold"`, `"thin"`, `"underline"`, `"strike"`, `"center"`, `"link"`, `"code"`, `"info"`,
+  `"warning"`。
 * **双轨数据获取**: 完美支持从本地目录读取，或通过 HTTP/CDN 从远程服务器动态拉取 YAML 数据流。
 
 ### 截图
@@ -173,6 +174,11 @@ blocks:
     content: |
       $$center($$bold($$underline(这是测试)$$)$$)$$
       $$code(const a = ref(true))$$
+      $$info(typescript | const a = ref(true))$$
+      $$warning(error | 我去，原地爆炸了！
+      爆炸了)$$
+      $$warning(error | $$center(我去，原地爆炸了！这个有居中效果喵！
+      爆炸了)$$)$$
       $$bold(粗体$$underline(嵌套下划线$$link(http://baidu.com)$$)$$)$$
       $$link(https://baidu.com | $$bold($$underline(点我进入百度)$$)$$)$$
   # 3. 图像渲染块 (支持容灾备用链接)

@@ -1,6 +1,8 @@
 <template>
   <div>
-    <n-button :color="themeColor" class="buttonClock" round @click="clickMemory">
+    <n-button
+:color="themeColor" :style="{ '--dynamic-width': props.btnWidth }" class="buttonClock sync-btn" round
+              @click="clickMemory">
       <template #icon>
         <n-icon size="20">
           <Clock></Clock>
@@ -44,6 +46,13 @@ import { formatTime, lang, themeColor } from "@/components/ts/useStorage.ts";
 import fromNowI18 from "@/data/I18N/fromNowI18n.json";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 
+interface Props {
+  btnWidth?: string;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  btnWidth: "auto",
+});
 interface I18nBlock {
   type: string;
   content: string;
@@ -146,15 +155,25 @@ const clickMemory = () => {
   margin-left: 1em;
   height: 2.2em;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: var(--dynamic-width, auto);
+  width: auto;
+  @media (min-width: 301px) {
+    min-width: var(--dynamic-width, auto);
+  }
+
   @media (max-width: 300px) {
+    min-width: 5em !important;
+    width: 5em !important;
+    padding: 0 !important;
     .n-icon {
-      margin-left: 6px;
+      margin-left: 6px !important
     }
   }
 
   a {
     color: #191919;
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+    white-space: nowrap;
     @media (max-width: 300px) {
       display: none;
     }

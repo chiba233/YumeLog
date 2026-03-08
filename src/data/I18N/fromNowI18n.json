@@ -1,22 +1,22 @@
 {
   "en": {
     "title": "My Memories",
-    "button": "Memories"
+    "button": "Timeline"
   },
   "zh": {
     "title": "我的记忆日",
-    "button": "记忆日"
+    "button": "记忆"
   },
   "ja": {
     "title": "私の思い出",
     "button": "記念日"
   },
   "th": {
-    "title": "ความทรงจำของฉัน",
-    "button": "ความทรงจำ"
+    "title": "วันครบรอบของฉัน",
+    "button": "ครบรอบ"
   },
   "other": {
     "title": "My Memories",
-    "button": "Memories"
+    "button": "Memory"
   }
 }

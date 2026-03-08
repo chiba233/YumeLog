@@ -136,7 +136,7 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
   background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  border-radius: 1.5em;
+  border-radius: 1.4em;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   display: flex;
@@ -148,12 +148,22 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
   animation: downToUp 0.7s linear 0s 1;
   z-index: 2;
   pointer-events: auto;
-  bottom: calc(0.4em + env(safe-area-inset-bottom));
+  bottom: calc(0.45em + env(safe-area-inset-bottom));
+
+  .cardButton {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 1em;
+  }
 
   .cButton {
-    margin-right: 1em;
+    width: 100%;
     height: 2.2em;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-right: 0;
+    display: flex;
+    justify-content: center;
     pointer-events: auto;
     @media (max-width: 300px) {
       .n-icon {

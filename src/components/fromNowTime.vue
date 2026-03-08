@@ -1,8 +1,8 @@
 <template>
   <div>
     <n-button
-:color="themeColor" :style="{ '--dynamic-width': props.btnWidth }" class="buttonClock sync-btn" round
-              @click="clickMemory">
+      :color="themeColor" :style="{ '--dynamic-width': props.btnWidth }" class="buttonClock sync-btn" round
+      @click="clickMemory">
       <template #icon>
         <n-icon size="20">
           <Clock></Clock>

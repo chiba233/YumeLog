@@ -37,7 +37,6 @@ const syncWidth = () => {
 watch(lang, () => {
   void nextTick(() => {
     syncWidth();
-    console.log("Watch 捕获到的宽度:", btnWidth.value);
   });
 });
 

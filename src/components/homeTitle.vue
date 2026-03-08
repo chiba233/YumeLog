@@ -16,7 +16,6 @@ import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 const displayTitle = useYamlText("main", "title.yaml", "title");
 </script>
 
-
 <style lang="scss">
 .dashboardTitle {
   display: flex;
@@ -43,10 +42,11 @@ const displayTitle = useYamlText("main", "title.yaml", "title");
     align-content: center;
     color: white;
     text-align: center;
-    text-shadow: #383838 1px 0 0,
-    #383838 0 1px 0,
-    #383838 -1px 0 0,
-    #383838 0 -1px 0;
+    text-shadow:
+      #383838 1px 0 0,
+      #383838 0 1px 0,
+      #383838 -1px 0 0,
+      #383838 0 -1px 0;
     font-weight: lighter;
     @media (min-width: 840px) {
       font-size: 1.9em;

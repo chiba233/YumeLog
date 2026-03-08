@@ -1,7 +1,6 @@
 import { reactive } from "vue";
 import { BaseContent, loadAllPosts, loadSingleYaml } from "./getYaml.ts";
 
-
 interface CacheEntry<T> {
   data: T;
   lastFetch: number;
@@ -17,7 +16,7 @@ export const useContentStore = () => {
     const now = Date.now();
     const cached = postsCache[type];
 
-    if (!force && cached && (now - cached.lastFetch < CACHE_TIMEOUT)) {
+    if (!force && cached && now - cached.lastFetch < CACHE_TIMEOUT) {
       return cached.data as T[];
     }
 
@@ -38,7 +37,7 @@ export const useContentStore = () => {
     const now = Date.now();
     const cached = singleCache[cacheKey];
 
-    if (!force && cached && (now - cached.lastFetch < CACHE_TIMEOUT)) {
+    if (!force && cached && now - cached.lastFetch < CACHE_TIMEOUT) {
       return cached.data as T;
     }
 

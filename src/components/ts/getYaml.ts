@@ -1,5 +1,8 @@
 import yaml from "js-yaml";
 import { ref } from "vue";
+import pLimit from "p-limit";
+
+const limit = pLimit(6);
 
 interface YamlConfigItem {
   listUrl: string;
@@ -10,13 +13,26 @@ interface YamlConfigItem {
 
 type YamlUrlConfig = Record<string, YamlConfigItem>;
 
-let memoizedConfig: Promise<YamlUrlConfig> | null = null;
+let memoizedConfig: Promise<YamlUrlConfig> | undefined;
+let cacheTime = 0;
+const TTL = 600000;
 
-function getYamlConfig(): Promise<YamlUrlConfig> {
-  if (!memoizedConfig) {
+export function getYamlConfig(): Promise<YamlUrlConfig> {
+  const now = Date.now();
+  if (!memoizedConfig || now - cacheTime > TTL) {
+    cacheTime = now;
     memoizedConfig = fetch("/data/config/yamlUrl.json")
-      .then(res => res.json() as Promise<YamlUrlConfig>);
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load config");
+        return res.json();
+      })
+      .then((data) => data as YamlUrlConfig)
+      .catch((err) => {
+        memoizedConfig = undefined;
+        throw err;
+      });
   }
+
   return memoizedConfig;
 }
 
@@ -57,7 +73,7 @@ export const listPrimaryError = ref<boolean>(false);
 export const listSpareError = ref<boolean>(false);
 export const yamlLoadingFault = ref<boolean>(false);
 
-const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
+const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 const fetchWithRetry = async (
   url: string,
@@ -118,7 +134,6 @@ export const loadAllPosts = async <T extends BaseContent>(type: string): Promise
     }
   }
 
-
   if (!listRes || !listRes.ok) {
     if (listRes?.status === 404) {
       loadError.value = true;
@@ -129,25 +144,29 @@ export const loadAllPosts = async <T extends BaseContent>(type: string): Promise
   }
 
   try {
-    const postData = (await listRes.json()) as string[];
+    const data: unknown = await listRes.json();
+    const postData = data as string[];
 
-    const promises: Promise<T | null>[] = postData.map(async (name: string): Promise<T | null> => {
-      let res = await fetchWithRetry(`${baseUrl}${name}`, undefined, 1, 300);
-
-      if ((!res || !res.ok) && spareUrl) {
-        changeSpareUrl.value = true;
-        res = await fetchWithRetry(`${spareUrl}${name}`, undefined, 1, 300);
-      }
-
-      if (res && res.ok) {
-        const text = await res.text();
-        const parsed = yaml.load(text);
-        return (parsed as T) || null;
-      } else {
-        yamlLoadingFault.value = true;
-        return null;
-      }
-    });
+    const promises = postData.map((name: string) =>
+      limit(async (): Promise<T | null> => {
+        let res = await fetchWithRetry(`${baseUrl}${name}`, undefined, 1, 300);
+        if ((!res || !res.ok) && spareUrl) {
+          changeSpareUrl.value = true;
+          res = await fetchWithRetry(`${spareUrl}${name}`, undefined, 1, 300);
+        }
+        if (res && res.ok) {
+          const text = await res.text();
+          const parsed: unknown = yaml.load(text, { schema: yaml.FAILSAFE_SCHEMA });
+          if (parsed === null || typeof parsed !== "object") {
+            return null;
+          }
+          return parsed as T;
+        } else {
+          yamlLoadingFault.value = true;
+          return null;
+        }
+      }),
+    );
 
     const results = await Promise.all(promises);
     const validData = results.filter((p): p is NonNullable<typeof p> => p !== null);
@@ -161,18 +180,21 @@ export const loadAllPosts = async <T extends BaseContent>(type: string): Promise
 
       return Date.parse(t) || 0;
     };
-    validData.sort((a, b) => {
+    validData.forEach((p) => {
+      (p as unknown as T & { _ts: number })._ts = parseTime(p.time);
+    });
 
+    validData.sort((a, b) => {
       if (a.pin && !b.pin) return -1;
       if (!a.pin && b.pin) return 1;
 
-      return parseTime(b.time) - parseTime(a.time);
-
+      const timeA = (a as unknown as T & { _ts: number })._ts;
+      const timeB = (b as unknown as T & { _ts: number })._ts;
+      return timeB - timeA;
     });
 
     yamlLoading.value = false;
     return validData;
-
   } catch (e: unknown) {
     const errMsg = e instanceof Error ? e.message : String(e);
     console.error("[Post Processing Error]:", errMsg);
@@ -190,7 +212,6 @@ export const loadSingleYaml = async <T>(type: string, fileName: string): Promise
   const { url: baseUrl, spareUrl } = configItem;
   let res = await fetchWithRetry(`${baseUrl}${fileName}`, undefined, 2, 500);
 
-
   if ((!res || !res.ok) && spareUrl) {
     changeSpareUrl.value = true;
     res = await fetchWithRetry(`${spareUrl}${fileName}`, undefined, 2, 500);
@@ -198,7 +219,13 @@ export const loadSingleYaml = async <T>(type: string, fileName: string): Promise
 
   if (res && res.ok) {
     try {
-      return yaml.load(await res.text()) as T;
+      const parsed: unknown = yaml.load(await res.text());
+
+      if (parsed === null || typeof parsed !== "object") {
+        return null;
+      }
+
+      return parsed as T;
     } catch (e: unknown) {
       console.error("[Single YAML Parse Error]", e instanceof Error ? e.message : e);
       return null;

@@ -4,7 +4,7 @@ import vueParser from "vue-eslint-parser";
 import prettierPlugin from "eslint-plugin-prettier";
 import prettierConfig from "eslint-config-prettier";
 
-export default [
+export default tseslint.config(
   {
     ignores: [
       "dist/**",
@@ -15,11 +15,8 @@ export default [
       "eslint.config.mjs",
     ],
   },
-
   ...tseslint.configs.recommendedTypeChecked,
-  ...pluginVue.configs["flat/recommended"],
-
-  prettierConfig,
+  pluginVue.configs["flat/recommended"],
   {
     files: ["**/*.{ts,tsx,vue}"],
     languageOptions: {
@@ -28,7 +25,7 @@ export default [
       parser: vueParser,
       parserOptions: {
         parser: tseslint.parser,
-        project: "./tsconfig.json",
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
         extraFileExtensions: [".vue"],
       },
@@ -36,14 +33,18 @@ export default [
     plugins: {
       prettier: prettierPlugin,
     },
-
     rules: {
+      "prettier/prettier": "warn",
+
       "vue/multi-word-component-names": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unsafe-argument": "warn",
       "@typescript-eslint/no-unsafe-assignment": "warn",
+      "@typescript-eslint/no-unsafe-call": "warn",
       "@typescript-eslint/no-unsafe-return": "warn",
       "@typescript-eslint/no-unnecessary-type-assertion": "warn",
     },
   },
-];
+
+  prettierConfig,
+);

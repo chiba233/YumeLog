@@ -2,13 +2,18 @@
   <n-popselect
     v-model:value="lang"
     :menu-props="{
-    class: 'custom-i18n-menu',
-    style: { '--dynamic-theme-color': themeColor }
-  }"
+      class: 'custom-i18n-menu',
+      style: { '--dynamic-theme-color': themeColor },
+    }"
     :options="i18nLang"
     trigger="click"
   >
-    <n-button :color="themeColor" :style="{ '--dynamic-width': props.btnWidth }" class="buttonI18 sync-btn" round>
+    <n-button
+      :color="themeColor"
+      :style="{ '--dynamic-width': props.btnWidth }"
+      class="buttonI18 sync-btn"
+      round
+    >
       <template #icon>
         <n-icon size="20">
           <LangIcon />
@@ -36,7 +41,7 @@ const i18nLang = shallowRef<SelectOption[]>([]);
 
 onMounted(async () => {
   await fetch("/data/config/i18nLang.json")
-    .then(res => res.json())
+    .then((res) => res.json())
     .then((langData: SelectOption[]) => {
       i18nLang.value = langData;
     });
@@ -58,7 +63,6 @@ watchEffect(() => {
   document.documentElement.style.setProperty("--global-theme-rgb-deep", rgbDeep);
   document.documentElement.style.setProperty("--global-theme-color-deep", `rgb(${rgbDeep})`);
 });
-
 </script>
 
 <style lang="scss">
@@ -103,7 +107,9 @@ watchEffect(() => {
         font-size: 1.15em;
         padding-right: 28px !important;
         text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
-        transition: color 0.2s, text-shadow 0.2s;
+        transition:
+          color 0.2s,
+          text-shadow 0.2s;
         box-sizing: border-box;
       }
 
@@ -170,7 +176,7 @@ watchEffect(() => {
     width: 5em !important;
     padding: 0 !important;
     .n-icon {
-      margin-left: 6px !important
+      margin-left: 6px !important;
     }
   }
 

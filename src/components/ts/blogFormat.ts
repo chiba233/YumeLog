@@ -12,7 +12,7 @@ export type RichType = (typeof RICH_TYPES)[number];
 const TAG_PREFIX = "$$";
 const END_TAG = ")$$";
 
-const START_TAG_REGEX = /\$\$([a-z]+)\(/y;
+const START_TAG_REGEX = /\$\$([a-z][a-z0-9_-]*)\(/y;
 
 const splitLinkContent = (text: string): [string, string | null] => {
   let depth = 0;
@@ -31,10 +31,7 @@ const splitLinkContent = (text: string): [string, string | null] => {
     }
 
     if (c === "|" && depth === 0) {
-      return [
-        text.slice(0, i).trim(),
-        text.slice(i + 1).trim(),
-      ];
+      return [text.slice(0, i).trim(), text.slice(i + 1).trim()];
     }
   }
 
@@ -44,7 +41,7 @@ const splitLinkContent = (text: string): [string, string | null] => {
 //提取 AST 中纯文本
 
 const extractText = (ts: TextToken[]): string =>
-  ts.map(t => typeof t.value === "string" ? t.value : extractText(t.value)).join("");
+  ts.map((t) => (typeof t.value === "string" ? t.value : extractText(t.value))).join("");
 
 // 主解析器
 export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
@@ -89,14 +86,8 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
       let end = -1;
 
       while (cur < text.length) {
-        const nextStart = text.indexOf(TAG_PREFIX, cur);
-        const nextEnd = text.indexOf(END_TAG, cur);
-
-        if (nextEnd === -1) break;
-
-        if (nextStart !== -1 && nextStart < nextEnd) {
-          START_TAG_REGEX.lastIndex = nextStart;
-
+        if (text.startsWith(TAG_PREFIX, cur)) {
+          START_TAG_REGEX.lastIndex = cur;
           const nested = START_TAG_REGEX.exec(text);
 
           if (nested) {
@@ -105,24 +96,29 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
             continue;
           }
 
-          cur = nextStart + 2;
-        } else {
+          cur += TAG_PREFIX.length;
+          continue;
+        }
+
+        if (text.startsWith(END_TAG, cur)) {
           depth--;
 
           if (depth === 0) {
-            end = nextEnd;
+            end = cur;
             break;
           }
 
-          cur = nextEnd + END_TAG.length;
+          cur += END_TAG.length;
+          continue;
         }
+
+        cur++;
       }
 
       if (end !== -1) {
         const inner = text.slice(contentStart, end);
 
         if ((RICH_TYPES as readonly string[]).includes(tagName)) {
-
           if (tagName === "link") {
             const [urlPart, displayPart] = splitLinkContent(inner);
 
@@ -134,9 +130,7 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
                 url: extractText(parsedUrl),
                 value: parseRichText(displayPart, depthLimit - 1),
               });
-
             } else {
-
               const parsed = parseRichText(urlPart, depthLimit - 1);
 
               tokens.push({
@@ -145,18 +139,13 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
                 value: parsed,
               });
             }
-
           } else {
-
             tokens.push({
               type: tagName as RichType,
               value: parseRichText(inner, depthLimit - 1),
             });
-
           }
-
         } else {
-
           const parsedInner = parseRichText(inner, depthLimit - 1);
 
           for (const t of parsedInner) {
@@ -166,7 +155,6 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
               tokens.push(t);
             }
           }
-
         }
 
         i = end + END_TAG.length;
@@ -192,10 +180,7 @@ export const stripRichText = (text: string): string => {
   const tokens = parseRichText(text);
 
   const flatten = (ts: TextToken[]): string =>
-    ts.map(t => typeof t.value === "string"
-      ? t.value
-      : flatten(t.value),
-    ).join("");
+    ts.map((t) => (typeof t.value === "string" ? t.value : flatten(t.value))).join("");
 
   return flatten(tokens).trim();
 };

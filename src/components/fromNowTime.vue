@@ -1,8 +1,12 @@
 <template>
   <div>
     <n-button
-      :color="themeColor" :style="{ '--dynamic-width': props.btnWidth }" class="buttonClock sync-btn" round
-      @click="clickMemory">
+      :color="themeColor"
+      :style="{ '--dynamic-width': props.btnWidth }"
+      class="buttonClock sync-btn"
+      round
+      @click="clickMemory"
+    >
       <template #icon>
         <n-icon size="20">
           <Clock></Clock>
@@ -42,7 +46,7 @@ import { NButton, NCard, NIcon, NModal } from "naive-ui";
 import Clock from "../icons/clock.svg";
 import { computed, onMounted, ref } from "vue";
 import Cancel from "../icons/cancel.svg";
-import { formatTime, lang, themeColor } from "@/components/ts/useStorage.ts";
+import { formatDate, formatTime, lang, themeColor } from "@/components/ts/useStorage.ts";
 import fromNowI18 from "@/data/I18N/fromNowI18n.json";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 
@@ -53,6 +57,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   btnWidth: "auto",
 });
+
 interface I18nBlock {
   type: string;
   content: string;
@@ -81,15 +86,6 @@ onMounted(async () => {
     fromNow.value = res.fromNow;
   }
 });
-
-
-const formatDate = (t: string | number | undefined) => {
-  if (!t) return "Unknown Date";
-  const str = String(t);
-  if (str.length < 8) return str;
-  return `${str.slice(0, 4)} - ${str.slice(4, 6)} - ${str.slice(6, 8)}`;
-};
-
 
 const getName = (item: YamlTimeBlock): string => {
   const { names } = item;
@@ -166,7 +162,7 @@ const clickMemory = () => {
     width: 5em !important;
     padding: 0 !important;
     .n-icon {
-      margin-left: 6px !important
+      margin-left: 6px !important;
     }
   }
 

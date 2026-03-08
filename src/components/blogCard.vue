@@ -22,6 +22,7 @@ import blogI18nData from "@/data/I18N/blogI18n.json";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
 import { useContentStore } from "./ts/contentStore";
+import { formatDate } from "@/components/ts/useStorage.ts";
 
 const { getPosts, getSingle } = useContentStore();
 
@@ -43,15 +44,16 @@ const posts = ref<Post[]>([]);
 const selectedPost = ref<Post | null>(null);
 const showModal = ref<boolean>(false);
 
-const RichTextRenderer: Component = defineAsyncComponent(() =>
-  import("@/components/RichTextRenderer.vue"),
+const RichTextRenderer: Component = defineAsyncComponent(
+  () => import("@/components/RichTextRenderer.vue"),
 );
 type WebTitleMap = Record<string, Record<string, string>>;
 const newWebTitle = shallowRef<WebTitleMap>({});
 const updatePageTitle = () => {
   const currentLang = lang.value;
   if (showModal.value && selectedPost.value) {
-    document.title = selectedPost.value.title + " - " + newWebTitle.value["blog"]?.[currentLang] || "Blog";
+    document.title =
+      selectedPost.value.title + " - " + newWebTitle.value["blog"]?.[currentLang] || "Blog";
   } else {
     document.title = newWebTitle.value["blog"]?.[currentLang] || "Default Title";
   }
@@ -109,27 +111,22 @@ watch(
   },
 );
 
-
 const blogDisplay = computed(() => {
   const currentLang = lang.value;
   const source = blogI18nData as Record<string, Record<string, string>>;
   const displayObj: Record<string, string> = {};
 
-  Object.keys(source).forEach(key => {
+  Object.keys(source).forEach((key) => {
     const translations = source[key];
-    displayObj[key] = translations[currentLang]
-      || translations["en"]
-      || translations["other"]
-      || Object.values(translations)[0];
+    displayObj[key] =
+      translations[currentLang] ||
+      translations["en"] ||
+      translations["other"] ||
+      Object.values(translations)[0];
   });
 
   return displayObj;
 });
-
-const formatDate = (t: string | undefined): string => {
-  if (!t) return "";
-  return `${t.slice(0, 4)} - ${t.slice(4, 6)} - ${t.slice(6, 8)}`;
-};
 
 const cardClick = async (post: Post) => {
   if (!post.id) {
@@ -147,14 +144,14 @@ const { onMove, onLeave, onEnter } = useCardGlow();
 
 const getImageBlocks = (blocks?: PostBlock[]) => {
   if (!blocks) return [];
-  return blocks.filter(b => b.type === "image");
+  return blocks.filter((b) => b.type === "image");
 };
 
 const getDescriptionText = (blocks?: PostBlock[]) => {
   if (!blocks) return "";
   return blocks
-    .filter(b => b.type === "text" || b.type === "center")
-    .map(b => typeof b.content === "string" ? stripRichText(b.content) : "")
+    .filter((b) => b.type === "text" || b.type === "center")
+    .map((b) => (typeof b.content === "string" ? stripRichText(b.content) : ""))
     .join(" ");
 };
 
@@ -162,7 +159,6 @@ const handleImgError = (e: Event, spareUrl?: string) => {
   const target = e.target as HTMLImageElement;
   if (spareUrl) target.src = spareUrl;
 };
-
 
 watch(
   () => yamlLoadingFault.value,
@@ -189,17 +185,18 @@ watch(
     }
   },
 );
-
 </script>
 
 <template>
   <div v-if="!yamlLoading" class="post-container">
     <article
-      v-for="(post) in posts"
+      v-for="post in posts"
       :key="post.time"
       class="post-card"
-      @click="() => cardClick(post)" @mouseleave="onLeave"
-      @mouseenter="onEnter" @mousemove="onMove"
+      @click="() => cardClick(post)"
+      @mouseenter="onEnter"
+      @mouseleave="onLeave"
+      @mousemove="onMove"
     >
       <div class="content">
         <div class="post-header">
@@ -219,11 +216,14 @@ watch(
 
         <div class="post-body">
           <div v-if="getImageBlocks(post.blocks as PostBlock[]).length > 0" class="post-image">
-            <template v-for="(block, idx) in getImageBlocks(post.blocks as PostBlock[]).slice(0, 2)" :key="idx">
+            <template
+              v-for="(block, idx) in getImageBlocks(post.blocks as PostBlock[]).slice(0, 2)"
+              :key="idx"
+            >
               <img
                 v-if="Array.isArray(block.content) && block.content[0]?.src"
                 :alt="post.title"
-                :class="{ 'secondImg': idx === 1 }"
+                :class="{ secondImg: idx === 1 }"
                 :src="block.content[0].src"
                 loading="lazy"
                 @error="(e) => handleImgError(e, (block.content as ImageContent[])?.[0]?.spareUrl)"
@@ -285,17 +285,21 @@ watch(
           <span class="time-divider">|</span>
           <span>{{ formatTime(selectedPost.time) }}</span>
         </div>
-        <div v-for="(block, a) in (selectedPost.blocks as PostBlock[])" :key="a" class="postCardBody">
+        <div v-for="(block, a) in selectedPost.blocks as PostBlock[]" :key="a" class="postCardBody">
           <div v-if="block.type === 'image'" class="postCardImage">
-            <div v-for="img in (block.content as ImageContent[])" :key="img.src" class="postCardNImage">
+            <div
+              v-for="img in block.content as ImageContent[]"
+              :key="img.src"
+              class="postCardNImage"
+            >
               <n-image
-                v-if="img.src && changeSpareUrl===false"
+                v-if="img.src && changeSpareUrl === false"
                 :src="img.src"
                 class="postCardImg"
                 width="120"
               />
               <n-image
-                v-if="img.src && changeSpareUrl===true"
+                v-if="img.src && changeSpareUrl === true"
                 :src="img.spareUrl"
                 class="postCardImg"
                 width="120"
@@ -305,8 +309,7 @@ watch(
               </div>
             </div>
           </div>
-          <div
-            v-if="block.type === 'text'" class="postCardText">
+          <div v-if="block.type === 'text'" class="postCardText">
             <RichTextRenderer :tokens="parseRichText(block.content as string)" />
           </div>
         </div>
@@ -314,7 +317,6 @@ watch(
     </n-card>
   </n-modal>
 </template>
-
 
 <style lang="scss">
 @use "sass:color";
@@ -325,7 +327,6 @@ watch(
   justify-content: center;
   white-space: pre-line;
   text-align: center;
-
 }
 
 .n-modal-container .postModel {
@@ -345,7 +346,6 @@ watch(
     text-align: center;
   }
 }
-
 
 .postCardImg img {
   margin: 1em;
@@ -420,7 +420,6 @@ $transition-speed: 0.3s;
   }
 }
 
-
 .post-container {
   display: flex;
   flex-direction: row;
@@ -455,7 +454,9 @@ $transition-speed: 0.3s;
   --opacity: 0; // 默认光是隐藏的
   position: relative;
   overflow: hidden;
-  transition: transform 0.2s, background-color 0.3s;
+  transition:
+    transform 0.2s,
+    background-color 0.3s;
 
   @media (max-width: 900px) {
     height: 15.9rem;
@@ -466,14 +467,14 @@ $transition-speed: 0.3s;
   }
   // 1. 面光 (Surface Glow) - 柔和的大范围光晕
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
     background: radial-gradient(
-        800px circle at var(--mx) var(--my),
-        rgba(255, 255, 255, 0.15),
-        transparent 40%
+      800px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, 0.15),
+      transparent 40%
     );
     opacity: var(--opacity);
     transition: opacity 0.4s ease;
@@ -506,10 +507,10 @@ $transition-speed: 0.3s;
 
     // 4. 背景光斑逻辑（保持不变）
     background: radial-gradient(
-        150px circle at var(--mx) var(--my),
-        rgba(255, 255, 255, 1),
-        rgba(255, 255, 255, 0.3) 30%,
-        transparent 70%
+      150px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, 1),
+      rgba(255, 255, 255, 0.3) 30%,
+      transparent 70%
     );
 
     z-index: 2;
@@ -564,7 +565,6 @@ $transition-speed: 0.3s;
           display: block;
         }
       }
-
 
       .time-divider {
         display: flex;
@@ -624,7 +624,7 @@ $transition-speed: 0.3s;
       &.expanded-text p {
         @media (max-width: 900px) {
           -webkit-line-clamp: 11;
-          line-clamp: 11
+          line-clamp: 11;
         }
         @media (min-width: 900px) {
           -webkit-line-clamp: 8;
@@ -658,7 +658,6 @@ $transition-speed: 0.3s;
     }
   }
 }
-
 
 .postCardText {
   font-size: 1.1rem;
@@ -695,7 +694,6 @@ $transition-speed: 0.3s;
       }
     }
 
-
     .alert {
       margin-bottom: 0;
     }
@@ -704,10 +702,11 @@ $transition-speed: 0.3s;
       text-align: center;
       font-size: 3rem;
       color: white;
-      text-shadow: #383838 1px 0 0,
-      #383838 0 1px 0,
-      #383838 -1px 0 0,
-      #383838 0 -1px 0;
+      text-shadow:
+        #383838 1px 0 0,
+        #383838 0 1px 0,
+        #383838 -1px 0 0,
+        #383838 0 -1px 0;
       opacity: 0.8;
       animation: loading-pulse 1.5s infinite ease-in-out;
     }
@@ -715,7 +714,8 @@ $transition-speed: 0.3s;
 }
 
 @keyframes loading-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
   }
   50% {

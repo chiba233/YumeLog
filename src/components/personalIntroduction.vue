@@ -15,7 +15,6 @@ import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 const displayContent = useYamlText("main", "introduction.yaml", "introduction");
 
 const { onMove, onLeave, onEnter } = useCardGlow();
-
 </script>
 
 <style lang="scss" scoped>
@@ -37,7 +36,9 @@ const { onMove, onLeave, onEnter } = useCardGlow();
 
   border-radius: 16px;
   overflow: hidden;
-  transition: transform 0.2s, background-color 0.3s;
+  transition:
+    transform 0.2s,
+    background-color 0.3s;
 
   // 给一个极淡的静态边框，保证没有光的时候也有轮廓感
 
@@ -53,14 +54,14 @@ const { onMove, onLeave, onEnter } = useCardGlow();
 
   // 1. 面光 (Surface Glow) - 柔和的大范围光晕
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
     background: radial-gradient(
-        800px circle at var(--mx) var(--my),
-        rgba(255, 255, 255, 0.15),
-        transparent 40%
+      800px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, 0.15),
+      transparent 40%
     );
     opacity: var(--opacity);
     transition: opacity 0.4s ease;
@@ -93,10 +94,10 @@ const { onMove, onLeave, onEnter } = useCardGlow();
 
     // 4. 背景光斑逻辑（保持不变）
     background: radial-gradient(
-        200px circle at var(--mx) var(--my),
-        rgba(255, 255, 255, 1),
-        rgba(255, 255, 255, 0.3) 30%,
-        transparent 70%
+      200px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, 1),
+      rgba(255, 255, 255, 0.3) 30%,
+      transparent 70%
     );
 
     z-index: 2;

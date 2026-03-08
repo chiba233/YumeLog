@@ -4,8 +4,14 @@
   </a>
   <div class="allFriends">
     <div
-      v-for=" friend  in friends" :key="friend.name" class="friendBox" @click="openURL(friend.url)"
-      @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
+      v-for="friend in friends"
+      :key="friend.name"
+      class="friendBox"
+      @click="openURL(friend.url)"
+      @mouseenter="onEnter"
+      @mouseleave="onLeave"
+      @mousemove="onMove"
+    >
       <div class="content">
         <n-avatar :size="100" :src="friend.icon" bordered round></n-avatar>
         <a v-if="lang === 'zh'" class="friendName">
@@ -39,7 +45,7 @@ interface YamlResponse {
   friends: Friend[];
 }
 
-type I18nSource = Record<string, Record<string, string>>
+type I18nSource = Record<string, Record<string, string>>;
 
 const { onMove, onLeave, onEnter } = useCardGlow();
 const { getSingle } = useContentStore();
@@ -63,7 +69,6 @@ onMounted(async () => {
     friends.value = rawData.friends;
   }
 });
-
 </script>
 
 <style lang="scss">
@@ -74,10 +79,11 @@ $transition-speed: 0.3s;
   color: white;
   font-weight: lighter;
   text-align: center;
-  text-shadow: #383838 1px 0 0,
-  #383838 0 1px 0,
-  #383838 -1px 0 0,
-  #383838 0 -1px 0;
+  text-shadow:
+    #383838 1px 0 0,
+    #383838 0 1px 0,
+    #383838 -1px 0 0,
+    #383838 0 -1px 0;
   margin-bottom: 0.5rem;
   margin-top: 0.5rem;
   @media (min-width: 840px) {
@@ -104,7 +110,6 @@ $transition-speed: 0.3s;
   z-index: 10;
   width: 100%;
   justify-content: center;
-
 }
 
 .friendBox {
@@ -123,7 +128,9 @@ $transition-speed: 0.3s;
 
   border-radius: 16px;
   overflow: hidden;
-  transition: transform 0.2s, background-color 0.3s;
+  transition:
+    transform 0.2s,
+    background-color 0.3s;
 
   &:hover {
     transform: translateY(-4px);
@@ -131,14 +138,14 @@ $transition-speed: 0.3s;
   }
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
     background: radial-gradient(
-        800px circle at var(--mx) var(--my),
-        rgba(255, 255, 255, 0.15),
-        transparent 40%
+      800px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, 0.15),
+      transparent 40%
     );
     opacity: var(--opacity);
     transition: opacity 0.4s ease;
@@ -171,10 +178,10 @@ $transition-speed: 0.3s;
 
     // 4. 背景光斑逻辑（保持不变）
     background: radial-gradient(
-        50px circle at var(--mx) var(--my),
-        rgba(255, 255, 255, 1),
-        rgba(255, 255, 255, 0.3) 30%,
-        transparent 70%
+      50px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, 1),
+      rgba(255, 255, 255, 0.3) 30%,
+      transparent 70%
     );
 
     z-index: 2;
@@ -214,7 +221,7 @@ $transition-speed: 0.3s;
 
   .friendName {
     color: #191919;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, .3);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

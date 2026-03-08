@@ -13,11 +13,12 @@
       </template>
       <div>
         <n-image-group class="catImgCard">
-          <div v-for=" item in nekoImg" :key="item.imgName" class="catImgDIV">
+          <div v-for="item in nekoImg" :key="item.imgName" class="catImgDIV">
             <n-image
               :alt="item.imgName"
               :fallback-src="item.imgError"
-              :src="item.img" width="160"
+              :src="item.img"
+              width="160"
             ></n-image>
             <a>{{ item.imgName }}</a>
           </div>
@@ -98,7 +99,17 @@ import commonI18n from "@/data/I18N/commonI18n.json";
 import maiI18nData from "@/data/I18N/maiI18n.json";
 
 import { computed, onMounted, ref, shallowRef } from "vue";
-import { NButton, NCard, NCollapse, NCollapseItem, NIcon, NImage, NImageGroup, NImagePreview, NModal } from "naive-ui";
+import {
+  NButton,
+  NCard,
+  NCollapse,
+  NCollapseItem,
+  NIcon,
+  NImage,
+  NImageGroup,
+  NImagePreview,
+  NModal,
+} from "naive-ui";
 import axios from "axios";
 import { useAsyncState, useStorage } from "@vueuse/core";
 import { lang, themeColor } from "@/components/ts/useStorage.ts";
@@ -106,9 +117,20 @@ import { getMaiUrl, type UserDataType } from "./ts/maimaiScore";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 
 type PlatformId =
-  | "telegram" | "wechat" | "line" | "email" | "twitter"
-  | "github" | "tron" | "eth" | "areth" | "bsc"
-  | "polygon" | "solana" | "maimai" | "cat";
+  | "telegram"
+  | "wechat"
+  | "line"
+  | "email"
+  | "twitter"
+  | "github"
+  | "tron"
+  | "eth"
+  | "areth"
+  | "bsc"
+  | "polygon"
+  | "solana"
+  | "maimai"
+  | "cat";
 
 type InteractionType = "link" | "modal" | "func";
 
@@ -152,21 +174,21 @@ const maiStorage = useStorage<{ data: Partial<UserDataType>; updatedAt: number }
   { data: {}, updatedAt: 0 },
 );
 
-const { state: data } = useAsyncState<Partial<UserDataType>>(
-  async () => {
-    const now = Date.now();
-    if (Object.keys(maiStorage.value.data).length > 0 && now - maiStorage.value.updatedAt < 86400000) {
-      return maiStorage.value.data;
-    }
+const { state: data } = useAsyncState<Partial<UserDataType>>(async () => {
+  const now = Date.now();
+  if (
+    Object.keys(maiStorage.value.data).length > 0 &&
+    now - maiStorage.value.updatedAt < 86400000
+  ) {
+    return maiStorage.value.data;
+  }
 
-    const url = await getMaiUrl();
-    return axios.get<UserDataType>(url).then((res) => {
-      maiStorage.value = { data: res.data, updatedAt: now };
-      return res.data;
-    });
-  },
-  maiStorage.value.data,
-);
+  const url = await getMaiUrl();
+  return axios.get<UserDataType>(url).then((res) => {
+    maiStorage.value = { data: res.data, updatedAt: now };
+    return res.data;
+  });
+}, maiStorage.value.data);
 
 const iconMap: Record<PlatformId, string> = {
   telegram: TelegramIcon,
@@ -185,7 +207,7 @@ const iconMap: Record<PlatformId, string> = {
   cat: Cat,
 };
 
-type I18nSource = Record<string, Record<string, string>>
+type I18nSource = Record<string, Record<string, string>>;
 const catMemoryTitle = computed(() => {
   const source = commonI18n as I18nSource;
 
@@ -233,9 +255,7 @@ const maiSections: MaiSection[] = [
   {
     titleKey: "historyInfo",
     name: "3",
-    items: [
-      { label: "highestRating", value: "highestRating" },
-    ],
+    items: [{ label: "highestRating", value: "highestRating" }],
   },
 ];
 
@@ -250,11 +270,8 @@ const maiDisplay = computed(() => {
 const getStatValue = (key: string): string | number => {
   const stats = data.value as Record<string, string | number | undefined>;
   const result = stats[key];
-  return (result !== null && result !== undefined && result !== "")
-    ? result
-    : maiError.value;
+  return result !== null && result !== undefined && result !== "" ? result : maiError.value;
 };
-
 
 const handleContactClick = (item: PlatformConfig): void => {
   const links = socialLinks.value;
@@ -307,17 +324,20 @@ const nekoImg = ref<OriginalNekoBlock[]>([]);
 onMounted(async () => {
   const res = await loadSingleYaml<YamlResponse>("main", "neko.yaml");
   if (res && res.img) {
-    nekoImg.value = res.img.map((img: YamlNekoBlock): OriginalNekoBlock => ({
-      imgError: img.imgError,
-      img: img.img,
-      imgName: img.imgName,
-    }));
+    nekoImg.value = res.img.map(
+      (img: YamlNekoBlock): OriginalNekoBlock => ({
+        imgError: img.imgError,
+        img: img.img,
+        imgName: img.imgName,
+      }),
+    );
   }
 });
 </script>
 
 <style lang="scss">
-.n-modal-container .maiCard, .n-modal-container .catCard {
+.n-modal-container .maiCard,
+.n-modal-container .catCard {
   max-height: 84.4dvh;
   border-radius: 1.5em;
   background-color: rgba(255, 255, 255, 0.45);

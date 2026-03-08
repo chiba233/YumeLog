@@ -6,7 +6,6 @@ import { lang } from "@/components/ts/useStorage.ts";
 
 const btnWidth = ref<string>("auto");
 
-
 const syncWidth = () => {
   const buttons = document.querySelectorAll<HTMLElement>(".sync-btn");
   if (buttons.length === 0) return;

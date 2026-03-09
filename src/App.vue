@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { RouterView, useRoute, useRouter } from "vue-router";
-import { computed, onMounted, watch } from "vue";
+import { onMounted, watch } from "vue";
 import { NButton, NIcon, NMessageProvider } from "naive-ui";
 import { AnimalRabbit28Regular, Home12Regular } from "@vicons/fluent";
 import MessageProvider from "@/components/MessageProvider.vue";
@@ -65,22 +65,6 @@ fetch("/data/config/socialLinks.json")
   .catch((err) => {
     console.error(err);
   });
-const currentDisplayTitle = computed(() => {
-  const pageKey = (route.name as string) || "home";
-  const baseTitle = globalWebTitleMap.value[pageKey]?.[lang.value] || "My Website";
-  if (dynamicTitlePrefix.value) {
-    return `${dynamicTitlePrefix.value} - ${baseTitle}`;
-  }
-  return baseTitle;
-});
-
-watch(
-  currentDisplayTitle,
-  (newVal: string) => {
-    document.title = newVal;
-  },
-  { immediate: true },
-);
 
 watch(
   () => route.path,

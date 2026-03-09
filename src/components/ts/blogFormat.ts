@@ -111,11 +111,11 @@ const TAG_HANDLERS: Partial<Record<RichType, (tokens: TextToken[]) => TextToken>
 
 export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
   if (!text) return [];
-  if (depthLimit <= 0) return [{ type: "text", value: text }];
 
   const root: TextToken[] = [];
   const stack: { tag: string; tokens: TextToken[] }[] = [];
 
+  let ignoredDepth = 0;
   let buffer = "";
   let i = 0;
 
@@ -136,35 +136,47 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
 
   while (i < text.length) {
     const c = text[i];
+
     if (c === TAG_PREFIX[0] && text.startsWith(TAG_PREFIX, i)) {
       let j = i + TAG_PREFIX.length;
 
       while (j < text.length && isTagChar(text[j])) j++;
 
       if (text.startsWith(TAG_OPEN, j)) {
-        pushText(buffer);
-        buffer = "";
-
         const tag = text.slice(i + TAG_PREFIX.length, j);
 
-        if (stack.length >= depthLimit) {
-          buffer += TAG_PREFIX;
-          i += TAG_PREFIX.length;
+        if (stack.length >= depthLimit || ignoredDepth > 0) {
+          ignoredDepth++;
+          buffer += text.slice(i, j + TAG_OPEN.length);
+          if (stack.length === depthLimit && ignoredDepth === 1) {
+            console.error(
+              `[RichText] Max depth limit (${depthLimit}) reached at index ${i}. Nesting will be flattened.`,
+            );
+          }
+          i = j + TAG_OPEN.length;
           continue;
         }
 
-        stack.push({
-          tag,
-          tokens: [],
-        });
-
+        pushText(buffer);
+        buffer = "";
+        stack.push({ tag, tokens: [] });
         i = j + TAG_OPEN.length;
         continue;
       }
     }
 
     if (c === END_TAG[0] && text.startsWith(END_TAG, i)) {
+      if (ignoredDepth > 0) {
+        ignoredDepth--;
+        buffer += END_TAG;
+        i += END_TAG.length;
+        continue;
+      }
+
       if (stack.length === 0) {
+        console.error(
+          `[RichText] Unexpected closing tag ")$$" at index ${i}. No matching opening tag found.`,
+        );
         buffer += END_TAG;
         i += END_TAG.length;
         continue;
@@ -176,13 +188,15 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
       const node = stack.pop()!;
 
       if (!isRichType(node.tag)) {
+        console.warn(
+          `[RichText] Unknown tag "${node.tag}" at index ${i}. Flattening content for compatibility.`,
+        );
         current().push(...node.tokens);
         i += END_TAG.length;
         continue;
       }
 
       const handler = TAG_HANDLERS[node.tag];
-
       const token: TextToken = handler
         ? handler(node.tokens)
         : {
@@ -221,9 +235,9 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
     } else {
       parent.push({ type: "text", value: fallback });
     }
-
     parent.push(...node.tokens);
   }
+
   return root;
 };
 

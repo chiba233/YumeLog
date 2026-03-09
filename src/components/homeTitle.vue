@@ -17,7 +17,6 @@ import { computed } from "vue";
 
 const displayTitle = useYamlText("main", "title.yaml", "title");
 useHead({
-  title: computed(() => displayTitle.value || "Loading..."),
   meta: [
     {
       property: "og:title",

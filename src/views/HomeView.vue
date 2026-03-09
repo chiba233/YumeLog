@@ -16,6 +16,21 @@ import HomeTitle from "@/components/homeTitle.vue";
 import PersonalIntroductions from "@/components/personalIntroduction.vue";
 import ContactInformation from "@/components/contactInformation.vue";
 import MyFriends from "@/components/myFriends.vue";
+import { computed } from "vue";
+import { globalWebTitleMap } from "@/components/ts/useTitleState.ts";
+import { lang } from "@/components/ts/setupLang.ts";
+import { useHead } from "@vueuse/head";
+
+useHead({
+  title: computed(() => {
+    const currentLang = lang.value;
+    const homeTitle = globalWebTitleMap.value["home"]?.[currentLang];
+    if (!homeTitle) {
+      return "Loading...";
+    }
+    return globalWebTitleMap.value["home"]?.[currentLang] || "";
+  }),
+});
 </script>
 
 <style lang="scss">

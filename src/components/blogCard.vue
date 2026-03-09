@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Component, computed, defineAsyncComponent, onMounted, ref, shallowRef, watch } from "vue";
+import { Component, computed, defineAsyncComponent, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   changeSpareUrl,
@@ -23,6 +23,7 @@ import { $message } from "@/components/ts/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
 import { useContentStore } from "./ts/contentStore";
 import { useHead } from "@vueuse/head";
+import { globalWebTitleMap } from "@/components/ts/useTitleState";
 
 const { getPosts, getSingle } = useContentStore();
 
@@ -46,19 +47,50 @@ const showModal = ref<boolean>(false);
 const RichTextRenderer: Component = defineAsyncComponent(
   () => import("@/components/RichTextRenderer.vue"),
 );
+
 type WebTitleMap = Record<string, Record<string, string>>;
-const newWebTitle = shallowRef<WebTitleMap>({});
-const updatePageTitle = () => {
-  const currentLang = lang.value;
-  if (showModal.value && selectedPost.value) {
-    document.title =
-      selectedPost.value.title + " - " + newWebTitle.value["blog"]?.[currentLang] || "Blog";
-  } else {
-    document.title = newWebTitle.value["blog"]?.[currentLang] || "Default Title";
-  }
-};
-watch([showModal, lang, selectedPost], () => {
-  updatePageTitle();
+
+interface ProcessedPost extends Post {
+  displayDescription: string;
+}
+
+const processedPosts = computed<ProcessedPost[]>(() => {
+  return posts.value.map((post) => ({
+    ...post,
+    displayDescription: getDescriptionText(post.blocks as PostBlock[]),
+  }));
+});
+
+useHead({
+  title: computed(() => {
+    const currentLang = lang.value;
+    const blogTitle = globalWebTitleMap.value["blog"]?.[currentLang];
+    if (!blogTitle) {
+      return "Loading...";
+    }
+    if (showModal.value && selectedPost.value) {
+      return `${selectedPost.value.title} - ${globalWebTitleMap.value["blog"]?.[currentLang] || "Blog"}`;
+    }
+    return globalWebTitleMap.value["blog"]?.[currentLang] || "Blog";
+  }),
+  meta: computed(() => {
+    if (!showModal.value || !selectedPost.value) {
+      return [
+        { name: "description", content: globalWebTitleMap.value["blog"]?.[lang.value] || "Blog" },
+        { property: "og:title", content: globalWebTitleMap.value["blog"]?.[lang.value] || "Blog" },
+        { property: "og:type", content: "Blog" },
+      ];
+    }
+    const desc = getDescriptionText(selectedPost.value.blocks).slice(0, 160);
+    const firstImg =
+      (getImageBlocks(selectedPost.value.blocks)?.[0]?.content as ImageContent[])?.[0]?.src || "";
+    return [
+      { name: "description", content: desc },
+      { property: "og:description", content: desc },
+      { name: "article:published_time", content: selectedPost.value.time },
+      { name: "og:image", content: firstImg },
+    ];
+  }),
 });
 
 const syncModalWithRoute = async () => {
@@ -67,35 +99,6 @@ const syncModalWithRoute = async () => {
     const targetPost = posts.value.find((p: Post) => p.id === routeId);
     if (targetPost) {
       selectedPost.value = targetPost;
-      useHead({
-        title: `${selectedPost.value.title} | Blog`,
-        meta: [
-          {
-            property: "og:description",
-            content: getDescriptionText(selectedPost.value.blocks)
-              .replace(/\s+/g, " ")
-              .trim()
-              .slice(0, 160),
-          },
-          {
-            name: "description",
-            content: getDescriptionText(selectedPost.value.blocks)
-              .replace(/\s+/g, " ")
-              .trim()
-              .slice(0, 160),
-          },
-          {
-            name: "article:published_time",
-            content: selectedPost.value.time,
-          },
-          {
-            name: "og:image",
-            content:
-              (getImageBlocks(selectedPost.value.blocks)?.[0]?.content as ImageContent[])?.[0]
-                ?.src || "",
-          },
-        ],
-      });
       showModal.value = true;
     } else {
       $message.warning(blogDisplay.value.unknownPostId, true, 4000);
@@ -113,9 +116,8 @@ onMounted(async () => {
       getSingle<WebTitleMap>("main", "webTitle.json"),
     ]);
     if (postsData) posts.value = postsData;
-    if (titleData) newWebTitle.value = titleData;
+    if (titleData) globalWebTitleMap.value = titleData;
     await syncModalWithRoute();
-    updatePageTitle();
   } catch (err) {
     console.error("Initialization failed:", err);
   }
@@ -135,18 +137,6 @@ watch(
   async (isOpen: boolean) => {
     if (!isOpen && route.params.id) {
       await router.push({ name: "blog" });
-      useHead({
-        title: newWebTitle.value["blog"]?.[lang.value] || "Blog",
-        meta: [
-          { name: "description", content: undefined },
-          { property: "og:description", content: undefined },
-          { property: "og:image", content: undefined },
-          { name: "article:published_time", content: undefined },
-          { name: "og:image", content: undefined },
-          { property: "og:title", content: newWebTitle.value["blog"]?.[lang.value] || "Blog" },
-          { property: "og:type", content: "Blog" },
-        ],
-      });
     }
   },
 );
@@ -202,35 +192,25 @@ const handleImgError = (e: Event, spareUrl?: string) => {
 
 watch(
   () => yamlLoadingFault.value,
-  (v: boolean) => {
-    if (v) {
-      $message.warning(blogDisplay.value.partialLoadError, true, 4000);
-    }
-  },
+  (v) => v && $message.warning(blogDisplay.value.partialLoadError, true, 4000),
 );
 watch(
   () => listPrimaryError.value,
-  (v: boolean) => {
-    if (v) {
-      $message.warning(blogDisplay.value.listPrimaryError, true, 4000);
-    }
-  },
+  (v) => v && $message.warning(blogDisplay.value.listPrimaryError, true, 4000),
 );
-
 watch(
   () => changeSpareUrl.value,
-  (v: boolean) => {
-    if (v && !listPrimaryError.value) {
-      $message.warning(blogDisplay.value.changeToSpareUrl, true, 4000);
-    }
-  },
+  (v) =>
+    v &&
+    !listPrimaryError.value &&
+    $message.warning(blogDisplay.value.changeToSpareUrl, true, 4000),
 );
 </script>
 
 <template>
   <div v-if="!yamlLoading" class="post-container">
     <article
-      v-for="post in posts"
+      v-for="post in processedPosts"
       :key="post.time"
       class="post-card glass"
       @click="() => cardClick(post)"
@@ -240,12 +220,10 @@ watch(
     >
       <div class="content">
         <div class="post-header">
-          <h2 class="post-title commonText">
-            {{ post.title }}
-          </h2>
+          <h2 class="post-title commonText">{{ post.title }}</h2>
           <div class="post-meta">
             <n-icon v-if="post.pin" size="15">
-              <PushPinSharp></PushPinSharp>
+              <PushPinSharp />
             </n-icon>
             <span v-if="post.pin" class="time-divider">|</span>
             <time :datetime="post.time">{{ formatDate(post.time!) }}</time>
@@ -275,9 +253,7 @@ watch(
             :class="{ 'expanded-text': !getImageBlocks(post.blocks as PostBlock[]).length }"
             class="post-description"
           >
-            <p class="commonText">
-              {{ getDescriptionText(post.blocks as PostBlock[]) }}
-            </p>
+            <p class="commonText">{{ post.displayDescription }}</p>
           </div>
         </div>
       </div>
@@ -289,32 +265,26 @@ watch(
       <n-alert v-if="serverError" :title="blogDisplay.listFetchError" class="alert" type="error">
         {{ blogDisplay.serverFault }}
       </n-alert>
-
       <n-alert v-else-if="loadError" :title="blogDisplay.notFoundError" class="alert" type="error">
         {{ blogDisplay.notFoundError }}
       </n-alert>
-
       <n-alert v-else-if="yamlRetrying" class="alert" title="Warning" type="warning">
         {{ blogDisplay.yamlRetrying }} {{ blogDisplay.retry }} {{ faultTimes }}
       </n-alert>
-
       <n-alert v-else-if="listSpareError" class="alert" title="Warning" type="warning">
         {{ blogDisplay.listSpareError }}
       </n-alert>
-
-      <p v-else>
-        {{ blogDisplay.loading }}
-      </p>
+      <p v-else>{{ blogDisplay.loading }}</p>
     </div>
   </div>
 
-  <n-modal v-show="showModal" v-model:show="showModal">
-    <n-card v-if="selectedPost" :title="selectedPost!.title" class="postModel" size="huge">
+  <n-modal v-model:show="showModal">
+    <n-card v-if="selectedPost" :title="selectedPost.title" class="postModel" size="huge">
       <template #header-extra>
         <n-button circle tertiary @click="closePortal">
           <template #icon>
             <n-icon size="20">
-              <Cancel></Cancel>
+              <Cancel />
             </n-icon>
           </template>
         </n-button>
@@ -387,6 +357,7 @@ watch(
   font-size: 14px;
   text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
+
 .postCardImageDesc {
   display: flex;
   flex-direction: column;

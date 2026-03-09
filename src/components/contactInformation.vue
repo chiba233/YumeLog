@@ -117,6 +117,7 @@ import { themeColor } from "@/components/ts/useTheme.ts";
 import { getMaiUrl, type UserDataType } from "./ts/maimaiScore";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 import { socialRawData } from "@/components/ts/setupJson.ts";
+import { useHead } from "@vueuse/head";
 
 type PlatformId =
   | "telegram"
@@ -324,6 +325,28 @@ const loadCat = async () => {
     );
   }
 };
+
+const headLinks = computed(() => {
+  const links = socialLinks.value;
+  if (!platforms.value.length) return [];
+  return platforms.value
+    .filter((p) => p.type === "link" && links[p.id as keyof typeof links])
+    .map((p) => ({
+      rel: "me",
+      href: links[p.id as keyof typeof links],
+      title: p.label,
+    }));
+});
+
+useHead({
+  link: headLinks,
+  meta: [
+    {
+      name: "maimai-rating",
+      content: computed(() => data.value?.playerRating?.toString() || ""),
+    },
+  ],
+});
 </script>
 
 <style lang="scss">

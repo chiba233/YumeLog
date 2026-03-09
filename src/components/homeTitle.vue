@@ -12,8 +12,19 @@
 import { NAvatar } from "naive-ui";
 import icon from "../icons/icon.webp";
 import { useYamlText } from "@/components/ts/useYamlI18n.ts";
+import { useHead } from "@vueuse/head";
+import { computed } from "vue";
 
 const displayTitle = useYamlText("main", "title.yaml", "title");
+useHead({
+  title: computed(() => displayTitle.value || "Loading..."),
+  meta: [
+    {
+      property: "og:title",
+      content: computed(() => displayTitle.value || ""),
+    },
+  ],
+});
 </script>
 
 <style lang="scss">

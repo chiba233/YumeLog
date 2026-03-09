@@ -135,7 +135,8 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
 
 <style lang="scss">
 .n-modal-mask {
-  background-color: rgba(255, 255, 255, 0) !important;
+  background-color: rgba(var(--global-theme-rgb-deep), 0.2) !important;
+  backdrop-filter: blur(3px);
 }
 
 .n-modal-container .n-card {

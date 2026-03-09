@@ -11,9 +11,27 @@
 <script lang="ts" setup>
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useYamlText } from "@/components/ts/useYamlI18n.ts";
+import { useHead } from "@vueuse/head";
+import { computed } from "vue";
 
 const displayContent = useYamlText("main", "introduction.yaml", "introduction");
 
+useHead({
+  meta: [
+    {
+      name: "description",
+      content: computed(() => displayContent.value || ""),
+    },
+    {
+      property: "og:description",
+      content: computed(() => displayContent.value || ""),
+    },
+    {
+      property: "og:type",
+      content: "profile",
+    },
+  ],
+});
 const { onMove, onLeave, onEnter } = useCardGlow();
 </script>
 

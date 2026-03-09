@@ -5,12 +5,13 @@ import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
   plugins: [vue(), svgLoader()],
+
   resolve: {
     alias: {
-      // 这种写法在 TS 5 + Vite 7 中最稳定
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+
   css: {
     preprocessorOptions: {
       scss: {
@@ -18,6 +19,22 @@ export default defineConfig({
         implementation: "sass",
         silenceDeprecations: ["legacy-js-api"],
       } as any,
+    },
+  },
+
+  build: {
+    chunkSizeWarningLimit: 1000,
+
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vue: ["vue"],
+          naive: ["naive-ui"],
+          moment: ["moment"],
+          yaml: ["js-yaml"],
+          icons: ["@vicons/fluent", "@vicons/ionicons5", "@vicons/material"],
+        },
+      },
     },
   },
 });

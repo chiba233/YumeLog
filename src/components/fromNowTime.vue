@@ -126,13 +126,6 @@ const clickMemory = () => {
 <style lang="scss">
 .n-modal-container .fromTimeCard {
   max-height: 84.4dvh;
-  background-color: rgba(251, 238, 241, 0.6);
-  border-radius: 20px !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-
   .n-button {
     svg {
       color: var(--global-theme-color-deep) !important;

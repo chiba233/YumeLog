@@ -33,6 +33,7 @@ import friendsMessage from "@/data/I18N/friendsMessage.json";
 import { lang } from "@/components/ts/setupLang.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
+import { useHead } from "@vueuse/head";
 
 interface Friend {
   name: string;
@@ -61,6 +62,26 @@ const friendsTitle = computed(() => {
 function openURL(url: string) {
   window.open(url, "_blank");
 }
+
+useHead({
+  meta: [
+    {
+      name: "friends",
+      content: computed(() => {
+        const names = friends.value.map((f) => (lang.value === "zh" ? f.name : f.alias)).join(", ");
+        return `${friendsTitle.value.title}${names ? ": " + names : ""}`.slice(0, 160);
+      }),
+    },
+    { property: "og:title", content: computed(() => friendsTitle.value.title) },
+    {
+      property: "og:friends",
+      content: computed(() => {
+        const names = friends.value.map((f) => (lang.value === "zh" ? f.name : f.alias)).join(", ");
+        return `${friendsTitle.value.title}${names ? "：" + names : ""}`.slice(0, 160);
+      }),
+    },
+  ],
+});
 
 onMounted(async () => {
   const rawData = await getSingle<YamlResponse>("main", "friends.yaml");

@@ -22,6 +22,7 @@ import blogI18nData from "@/data/I18N/blogI18n.json";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
 import { useContentStore } from "./ts/contentStore";
+import { useHead } from "@vueuse/head";
 
 const { getPosts, getSingle } = useContentStore();
 
@@ -66,6 +67,35 @@ const syncModalWithRoute = async () => {
     const targetPost = posts.value.find((p: Post) => p.id === routeId);
     if (targetPost) {
       selectedPost.value = targetPost;
+      useHead({
+        title: `${selectedPost.value.title} | Blog`,
+        meta: [
+          {
+            property: "og:description",
+            content: getDescriptionText(selectedPost.value.blocks)
+              .replace(/\s+/g, " ")
+              .trim()
+              .slice(0, 160),
+          },
+          {
+            name: "description",
+            content: getDescriptionText(selectedPost.value.blocks)
+              .replace(/\s+/g, " ")
+              .trim()
+              .slice(0, 160),
+          },
+          {
+            name: "article:published_time",
+            content: selectedPost.value.time,
+          },
+          {
+            name: "og:image",
+            content:
+              (getImageBlocks(selectedPost.value.blocks)?.[0]?.content as ImageContent[])?.[0]
+                ?.src || "",
+          },
+        ],
+      });
       showModal.value = true;
     } else {
       $message.warning(blogDisplay.value.unknownPostId, true, 4000);
@@ -105,6 +135,18 @@ watch(
   async (isOpen: boolean) => {
     if (!isOpen && route.params.id) {
       await router.push({ name: "blog" });
+      useHead({
+        title: newWebTitle.value["blog"]?.[lang.value] || "Blog",
+        meta: [
+          { name: "description", content: undefined },
+          { property: "og:description", content: undefined },
+          { property: "og:image", content: undefined },
+          { name: "article:published_time", content: undefined },
+          { name: "og:image", content: undefined },
+          { property: "og:title", content: newWebTitle.value["blog"]?.[lang.value] || "Blog" },
+          { property: "og:type", content: "Blog" },
+        ],
+      });
     }
   },
 );
@@ -220,7 +262,7 @@ watch(
             >
               <img
                 v-if="Array.isArray(block.content) && block.content[0]?.src"
-                :alt="post.title"
+                :alt="block.content[0].desc"
                 :class="{ secondImg: idx === 1 }"
                 :src="block.content[0].src"
                 loading="lazy"
@@ -293,12 +335,14 @@ watch(
               <n-image
                 v-if="img.src && changeSpareUrl === false"
                 :src="img.src"
+                :alt="img.desc"
                 class="postCardImg"
                 width="120"
               />
               <n-image
                 v-if="img.src && changeSpareUrl === true"
                 :src="img.spareUrl"
+                :alt="img.desc"
                 class="postCardImg"
                 width="120"
               />
@@ -318,6 +362,7 @@ watch(
 
 <style lang="scss">
 @use "sass:color";
+
 .postCardImageDesc {
   display: flex;
   flex-direction: column;
@@ -345,6 +390,7 @@ watch(
 .postCardImg img {
   margin: 1em;
 }
+
 $text-color: #191919;
 $border-radius: 16px;
 

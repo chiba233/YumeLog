@@ -12,7 +12,7 @@
         </n-button>
       </template>
       <div class="catMainCard">
-        <n-image-group class="catImgCard">
+        <n-image-group>
           <div v-for="item in nekoImg" :key="item.imgName" class="catImgDIV">
             <n-image
               :alt="item.imgName"
@@ -56,8 +56,8 @@
     </n-card>
   </n-modal>
   <!-- 以下是WeCat -->
-  <n-image-preview v-model:show="showWechatModel" src="/wechat.webp" width="1"></n-image-preview>
-  <n-image-preview v-model:show="showLineModel" src="/line.webp" width="1"></n-image-preview>
+  <n-image-preview v-model:show="showWechatModel" src="/wechat.webp"></n-image-preview>
+  <n-image-preview v-model:show="showLineModel" src="/line.webp"></n-image-preview>
 
   <!-- 以下是联系人 -->
   <div class="contacts">

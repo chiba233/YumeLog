@@ -16,6 +16,16 @@ body {
     overflow: hidden;
 }
 
+html {
+    font-family: Inter,
+    system-ui,
+    -apple-system,
+    "PingFang SC",
+    "Hiragino Sans",
+    "Noto Sans CJK SC",
+    "Microsoft YaHei",
+    sans-serif;
+}
 html,
 body {
     overflow: hidden;

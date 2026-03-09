@@ -181,6 +181,7 @@ blocks:
       爆炸了)$$)$$
       $$bold(粗体$$underline(嵌套下划线$$link(http://baidu.com)$$)$$)$$
       $$link(https://baidu.com | $$bold($$underline(点我进入百度)$$)$$)$$
+  - type: "divider"  #分割线
   # 3. 图像渲染块 (支持容灾备用链接)
   - type: "image"
     content:

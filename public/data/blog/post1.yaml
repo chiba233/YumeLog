@@ -8,7 +8,7 @@ blocks:
   - type: "text"
     content: |
       $$center($$bold($$underline(这是测试)$$)$$)$$
-
+  - type: "divider"
   - type: "image"
     content:
       - src: /background0.webp

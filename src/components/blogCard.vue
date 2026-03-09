@@ -351,6 +351,9 @@ watch(
               </div>
             </div>
           </div>
+          <div v-if="block.type === 'divider'" class="divider">
+            <div class="separator-icon"><span>✦</span></div>
+          </div>
           <div v-if="block.type === 'text'" class="postCardText">
             <RichTextRenderer :tokens="parseRichText(block.content as string)" />
           </div>
@@ -363,6 +366,27 @@ watch(
 <style lang="scss">
 @use "sass:color";
 
+.separator-icon {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0.5rem 0;
+  font-weight: bold;
+}
+
+.separator-icon::before,
+.separator-icon::after {
+  content: "";
+  flex: 1;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+.separator-icon span {
+  padding: 0 20px;
+  font-size: 14px;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
 .postCardImageDesc {
   display: flex;
   flex-direction: column;
@@ -387,10 +411,6 @@ watch(
   }
 }
 
-.postCardImg img {
-  margin: 1em;
-}
-
 $text-color: #191919;
 $border-radius: 16px;
 
@@ -399,8 +419,8 @@ $border-radius: 16px;
   flex-direction: row !important;
   flex-wrap: wrap !important;
   justify-content: center !important;
-  margin: 1rem 0;
-  gap: 1.5rem;
+  margin: 0.5rem 0;
+  gap: 1rem;
 
   .postCardNImage {
     display: flex !important;
@@ -416,7 +436,7 @@ $border-radius: 16px;
     }
 
     .postCardImageDesc {
-      margin-top: 0.5rem;
+      margin-top: 0.3rem;
 
       span {
         word-break: break-all;

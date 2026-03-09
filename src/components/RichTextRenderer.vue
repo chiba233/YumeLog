@@ -105,7 +105,6 @@ const normalizeUrl = (raw: string): string | undefined => {
 [class^="rich-"]:not(.fw-link):not(.code-text) {
   @extend %common-style;
 }
-
 .fw-bold {
   font-weight: bold;
 }
@@ -115,7 +114,7 @@ const normalizeUrl = (raw: string): string | undefined => {
 }
 
 .center-text {
-  margin: 0.8rem;
+  margin: 0.5rem;
   display: block;
   text-align: center;
 }
@@ -195,7 +194,7 @@ a.fw-link {
   min-width: 45%;
   width: fit-content;
   display: block;
-  margin: 0.8rem auto;
+  margin: 0.5rem auto;
   clear: both;
 
   --n-border: none !important;

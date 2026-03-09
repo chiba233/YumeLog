@@ -6,7 +6,7 @@
     <div
       v-for="friend in friends"
       :key="friend.name"
-      class="friendBox"
+      class="friendBox glass"
       @click="openURL(friend.url)"
       @mouseenter="onEnter"
       @mouseleave="onLeave"
@@ -14,10 +14,10 @@
     >
       <div class="content">
         <n-avatar :size="100" :src="friend.icon" bordered round></n-avatar>
-        <a v-if="lang === 'zh'" class="friendName">
+        <a v-if="lang === 'zh'" class="friendName commonText">
           {{ friend.name }}
         </a>
-        <a v-if="lang != 'zh'" class="friendName">
+        <a v-if="lang != 'zh'" class="friendName commonText">
           {{ friend.alias }}
         </a>
       </div>
@@ -30,7 +30,7 @@
 import { computed, onMounted, ref } from "vue";
 import { NAvatar } from "naive-ui";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
-import { lang } from "@/components/ts/useStorage.ts";
+import { lang } from "@/components/ts/setupLang.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 
@@ -76,14 +76,14 @@ $transition-speed: 0.3s;
 .friendTitle {
   left: 0;
   right: 0;
-  color: white;
-  font-weight: lighter;
   text-align: center;
+  color: #eaeaea;
   text-shadow:
-    #383838 1px 0 0,
-    #383838 0 1px 0,
-    #383838 -1px 0 0,
-    #383838 0 -1px 0;
+    0.5px 0 0 rgba(0, 0, 0, 0.7),
+    -0.5px 0 0 rgba(0, 0, 0, 0.7),
+    0 0.5px 0 rgba(0, 0, 0, 0.7),
+    0 -0.5px 0 rgba(0, 0, 0, 0.7);
+  font-weight: 350;
   margin-bottom: 0.5rem;
   margin-top: 0.5rem;
   @media (min-width: 840px) {
@@ -113,12 +113,7 @@ $transition-speed: 0.3s;
 }
 
 .friendBox {
-  background-color: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
   cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 
   --mx: -100px;
   --my: -100px;
@@ -134,6 +129,9 @@ $transition-speed: 0.3s;
 
   &:hover {
     transform: translateY(-4px);
+    transition:
+      transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
   }
 
@@ -220,8 +218,6 @@ $transition-speed: 0.3s;
   }
 
   .friendName {
-    color: #191919;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

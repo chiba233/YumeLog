@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import commonI18n from "@/data/I18N/commonI18n.json";
-import { lang } from "@/components/ts/useStorage";
+import { lang } from "@/components/ts/setupLang.ts";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

@@ -2,7 +2,7 @@
 import FromNowTime from "@/components/fromNowTime.vue";
 import I18NComponents from "@/components/i18nComponents.vue";
 import { nextTick, onMounted, ref, watch } from "vue";
-import { lang } from "@/components/ts/useStorage.ts";
+import { lang } from "@/components/ts/setupLang.ts";
 
 const btnWidth = ref<string>("auto");
 

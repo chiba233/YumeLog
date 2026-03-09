@@ -1,28 +1,30 @@
 <script lang="ts" setup>
-import { RouterView, useRoute, useRouter } from "vue-router"; // 👈 追加了 useRoute！
-import { computed, onMounted, watch } from "vue"; // 删除了无用的 ref
+import { RouterView, useRoute, useRouter } from "vue-router";
+import { computed, onMounted, watch } from "vue";
 import { NButton, NIcon, NMessageProvider } from "naive-ui";
 import { AnimalRabbit28Regular, Home12Regular } from "@vicons/fluent";
 import MessageProvider from "@/components/MessageProvider.vue";
 import TopBar from "@/components/topBar.vue";
-import { lang, themeColor } from "@/components/ts/useStorage.ts";
+import { lang } from "@/components/ts/setupLang.ts";
+import { themeColor } from "@/components/ts/useTheme.ts";
 import { dynamicTitlePrefix, globalWebTitleMap } from "./components/ts/useTitleState";
 import commonI18n from "@/data/I18N/commonI18n.json";
+import { SocialConfig, socialRawData } from "@/components/ts/setupJson.ts";
 
 type ColorData = Record<string, string>;
-
 const router = useRouter();
 const route = useRoute();
 
 onMounted(async () => {
   try {
-    const [colorRes, titleRes] = await Promise.all([
+    const [colorRes, titleRes, socialLinks] = await Promise.all([
       fetch("/data/config/colorData.json"),
       fetch("/data/main/webTitle.json"),
+      fetch("/data/config/socialLinks.json"),
     ]);
 
     if (colorRes.ok) {
-      const colorData = await colorRes.json() as ColorData;
+      const colorData = (await colorRes.json()) as ColorData;
       const keys = Object.keys(colorData);
       if (keys.length > 0) {
         const randomIndex = Math.floor(Math.random() * keys.length);
@@ -39,18 +41,30 @@ onMounted(async () => {
     } else {
       console.warn("颜色配置加载异常");
     }
+    if (socialLinks.ok) {
+      socialRawData.value = (await socialLinks.json()) as SocialConfig;
+    } else {
+      console.warn("社交链接加载异常");
+    }
 
     if (titleRes.ok) {
-      globalWebTitleMap.value = await titleRes.json() as Record<string, Record<string, string>>;
+      globalWebTitleMap.value = (await titleRes.json()) as Record<string, Record<string, string>>;
     } else {
       console.warn("标题配置加载异");
     }
-
   } catch (e) {
     console.error("全局初始化失败:", e);
   }
 });
 
+fetch("/data/config/socialLinks.json")
+  .then((res) => res.json() as Promise<SocialConfig>)
+  .then((data) => {
+    socialRawData.value = data;
+  })
+  .catch((err) => {
+    console.error(err);
+  });
 const currentDisplayTitle = computed(() => {
   const pageKey = (route.name as string) || "home";
   const baseTitle = globalWebTitleMap.value[pageKey]?.[lang.value] || "My Website";
@@ -60,13 +74,20 @@ const currentDisplayTitle = computed(() => {
   return baseTitle;
 });
 
-watch(currentDisplayTitle, (newVal: string) => {
-  document.title = newVal;
-}, { immediate: true });
+watch(
+  currentDisplayTitle,
+  (newVal: string) => {
+    document.title = newVal;
+  },
+  { immediate: true },
+);
 
-watch(() => route.path, () => {
-  dynamicTitlePrefix.value = "";
-});
+watch(
+  () => route.path,
+  () => {
+    dynamicTitlePrefix.value = "";
+  },
+);
 
 const goTo = (name: string) => router.push({ name });
 
@@ -96,7 +117,7 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
                 <Home12Regular />
               </n-icon>
             </template>
-            <a>{{ homeLabel[lang] || homeLabel.en }}</a>
+            <a class="commonText">{{ homeLabel[lang] || homeLabel.en }}</a>
           </n-button>
           <n-button :color="themeColor" class="cButton" round @click="goTo('blog')">
             <template #icon>
@@ -104,7 +125,7 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
                 <AnimalRabbit28Regular />
               </n-icon>
             </template>
-            <a>{{ blogLabel[lang] || blogLabel.en }}</a>
+            <a class="commonText">{{ blogLabel[lang] || blogLabel.en }}</a>
           </n-button>
         </div>
       </div>
@@ -113,6 +134,47 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
 </template>
 
 <style lang="scss">
+.n-modal-mask {
+  background-color: rgba(255, 255, 255, 0) !important;
+}
+
+.n-modal-container .n-card {
+  background-color: rgba(251, 238, 241, 0.6);
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+  backdrop-filter: blur(25px);
+}
+
+:root {
+  --glass-bg: rgba(248, 240, 244, 0.35);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.35);
+  --glass-blur: blur(20px);
+  --glass-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.themeText {
+  color: var(--global-theme-color-deep) !important;
+  paint-order: stroke fill;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+}
+
+.commonText {
+  color: #2b2628;
+  text-shadow:
+    0 1px 1px rgba(255, 255, 255, 0.25),
+    0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
 .topBar {
   animation: upToDown 0.7s linear 0s 1;
 }
@@ -172,8 +234,6 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
     }
 
     a {
-      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
-      color: #191919;
       @media (max-width: 300px) {
         display: none;
       }
@@ -231,7 +291,9 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
     --n-content-text-color: #333 !important;
     --n-icon-color: #d03050 !important;
-    transition: transform 0.3s cubic-bezier(.4, 0, .2, 1), opacity 0.3s !important;
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.3s !important;
   }
 }
 </style>

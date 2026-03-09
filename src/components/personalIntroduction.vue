@@ -1,7 +1,7 @@
 <template>
-  <div class="textBox" @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
+  <div class="textBox glass" @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
     <div class="content">
-      <div class="detailText">
+      <div class="detailText commonText">
         {{ displayContent }}
       </div>
     </div>
@@ -25,14 +25,6 @@ const { onMove, onLeave, onEnter } = useCardGlow();
   --opacity: 0; // 默认光是隐藏的
 
   position: relative;
-  // 基础磨砂玻璃背景
-  background-color: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-
-  // 基础边框 (未被照亮时)
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 
   border-radius: 16px;
   overflow: hidden;
@@ -114,8 +106,6 @@ const { onMove, onLeave, onEnter } = useCardGlow();
   }
 
   .detailText {
-    color: #191919;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
     text-align: center;
     word-break: break-word;
     white-space: pre-wrap;

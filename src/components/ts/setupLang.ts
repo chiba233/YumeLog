@@ -22,7 +22,6 @@ fetch("/data/config/i18nLang.json")
 
 const rawLang = navigator.language.substring(0, 2);
 export const lang: Ref<string> = useStorage("useLang", rawLang);
-export const themeColor: Ref<string> = useStorage("setColor", "");
 
 watch(
   langMap,

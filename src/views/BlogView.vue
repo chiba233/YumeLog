@@ -8,12 +8,11 @@
 </template>
 
 <script lang="ts" setup>
-import { lang } from "@/components/ts/useStorage.ts";
+import { lang } from "@/components/ts/setupLang.ts";
 import BlogCard from "@/components/blogCard.vue";
 import commonI18n from "@/data/I18N/commonI18n.json";
 
 const titleI18N = commonI18n.blogWelcome as Record<string, string>;
-
 </script>
 <style lang="scss" scoped>
 .root {
@@ -30,12 +29,13 @@ const titleI18N = commonI18n.blogWelcome as Record<string, string>;
       display: flex;
       flex-wrap: wrap;
       align-content: center;
-      color: white;
-      text-shadow: #383838 1px 0 0,
-      #383838 0 1px 0,
-      #383838 -1px 0 0,
-      #383838 0 -1px 0;
-      font-weight: lighter;
+      color: #eaeaea;
+      text-shadow:
+        0.5px 0 0 rgba(0, 0, 0, 0.7),
+        -0.5px 0 0 rgba(0, 0, 0, 0.7),
+        0 0.5px 0 rgba(0, 0, 0, 0.7),
+        0 -0.5px 0 rgba(0, 0, 0, 0.7);
+      font-weight: 350;
       @media (min-width: 730px) {
         font-size: 2.5em;
       }

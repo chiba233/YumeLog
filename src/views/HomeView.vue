@@ -2,12 +2,12 @@
   <div class="content">
     <HomeTitle />
     <div class="detailsDIV">
-          <PersonalIntroductions />
+      <PersonalIntroductions />
     </div>
     <div class="contactsDIV">
-          <ContactInformation />
+      <ContactInformation />
     </div>
-        <MyFriends />
+    <MyFriends />
   </div>
 </template>
 

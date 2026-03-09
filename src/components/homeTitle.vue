@@ -40,14 +40,14 @@ const displayTitle = useYamlText("main", "title.yaml", "title");
     display: flex;
     flex-wrap: wrap;
     align-content: center;
-    color: white;
-    text-align: center;
+    color: #eaeaea;
     text-shadow:
-      #383838 1px 0 0,
-      #383838 0 1px 0,
-      #383838 -1px 0 0,
-      #383838 0 -1px 0;
-    font-weight: lighter;
+      0.5px 0 0 rgba(0, 0, 0, 0.7),
+      -0.5px 0 0 rgba(0, 0, 0, 0.7),
+      0 0.5px 0 rgba(0, 0, 0, 0.7),
+      0 -0.5px 0 rgba(0, 0, 0, 0.7);
+    font-weight: 350;
+    text-align: center;
     @media (min-width: 840px) {
       font-size: 1.9em;
       margin-left: 1.5em;

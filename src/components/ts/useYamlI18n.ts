@@ -1,5 +1,5 @@
 import { computed, ref } from "vue";
-import { lang } from "@/components/ts/useStorage.ts";
+import { lang } from "@/components/ts/setupLang.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 
 interface I18nBlock {

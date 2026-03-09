@@ -57,6 +57,9 @@ const normalizeUrl = (raw: string): string | undefined => {
       :is="tagMap[token.type] || 'span'"
       v-else
       :bordered="true"
+      :href="token.type === 'link' ? getUrl(token) : undefined"
+      :rel="token.type === 'link' ? 'noopener noreferrer' : undefined"
+      :target="token.type === 'link' ? '_blank' : undefined"
       :class="[
         `fw-${token.type}`,
         {
@@ -69,10 +72,7 @@ const normalizeUrl = (raw: string): string | undefined => {
           'rich-warning-block': token.type === 'warning',
         },
       ]"
-      :href="token.type === 'link' ? getUrl(token) : undefined"
-      :rel="token.type === 'link' ? 'noopener noreferrer' : undefined"
       :show-icon="token.type === 'info' || token.type === 'warning'"
-      :target="token.type === 'link' ? '_blank' : undefined"
       :title="token.title"
       :type="token.type === 'info' || token.type === 'warning' ? token.type : undefined"
     >
@@ -92,9 +92,12 @@ const normalizeUrl = (raw: string): string | undefined => {
   word-break: break-word;
   font-size: 1.2rem;
   white-space: pre-wrap;
-  color: inherit;
+  color: #2b2628;
+  text-shadow:
+    0 1px 1px rgba(255, 255, 255, 0.25),
+    0 2px 4px rgba(0, 0, 0, 0.08);
   letter-spacing: 0.02em;
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 .rich-text-content:not(.fw-link):not(.code-text),
@@ -150,7 +153,7 @@ a.fw-link {
   }
 
   &:has(.code-text) {
-    text-decoration-color: #fd80bd !important;
+    text-decoration-color: var(--global-theme-color-deep) !important;
   }
 }
 
@@ -162,30 +165,34 @@ a.fw-link {
   }
 
   &:has(.code-text) {
-    text-decoration-color: #fd80bd !important;
+    text-decoration-color: var(--global-theme-color-deep) !important;
   }
 }
 
 .code-text {
   font-family: "SFMono-Regular", Consolas, monospace;
-  background: rgba(27, 31, 35, 0.15);
+  background-color: rgba(var(--global-theme-rgb-deep), 0.13) !important;
   padding: 0.15em 0.35em;
   border-radius: 4px;
   font-size: 0.85em;
   font-weight: 600;
   display: inline-block !important;
   text-decoration: none !important;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+  -webkit-text-stroke: 0.5px var(--global-theme-color-deep);
+  paint-order: stroke fill;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
 
   &,
   & * {
-    color: #fd80bd !important;
+    color: var(--global-theme-color-deep) !important;
   }
 }
 
 .rich-warning-block,
 .rich-alert-block {
   max-width: 98%;
+  min-width: 45%;
   width: fit-content;
   display: block;
   margin: 0.8rem auto;
@@ -200,7 +207,7 @@ a.fw-link {
   .code-text {
     &,
     & * {
-      color: #fd80bd !important;
+      color: var(--global-theme-color-deep) !important;
     }
   }
 

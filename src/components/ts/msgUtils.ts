@@ -7,9 +7,14 @@ export const setGlobalMessage = (instance: MessageApiInjection) => {
 };
 
 export const $message = {
-  info: (content: string, closable: boolean, duration: number) => message?.info(content, { closable, duration }),
-  success: (content: string, closable: boolean, duration: number) => message?.success(content, { closable, duration }),
-  error: (content: string, closable: boolean, duration: number) => message?.error(content, { closable, duration }),
-  warning: (content: string, closable: boolean, duration: number) => message?.warning(content, { closable, duration }),
-  loading: (content: string, closable: boolean, duration: number) => message?.loading(content, { closable, duration }),
+  info: (content: string, closable: boolean, duration: number) =>
+    message?.info(content, { closable, duration }),
+  success: (content: string, closable: boolean, duration: number) =>
+    message?.success(content, { closable, duration }),
+  error: (content: string, closable: boolean, duration: number) =>
+    message?.error(content, { closable, duration }),
+  warning: (content: string, closable: boolean, duration: number) =>
+    message?.warning(content, { closable, duration }),
+  loading: (content: string, closable: boolean, duration: number) =>
+    message?.loading(content, { closable, duration }),
 };

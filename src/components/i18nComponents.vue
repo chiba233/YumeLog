@@ -19,17 +19,21 @@
           <LangIcon />
         </n-icon>
       </template>
-      <a v-if="i18nLang.length > 0"> {{ i18nLang.find((it) => it.value === lang)?.label }}</a>
+      <a v-if="i18nLang.length > 0" class="commonText">
+        {{ i18nLang.find((it) => it.value === lang)?.label }}</a
+      >
     </n-button>
   </n-popselect>
 </template>
 
 <script lang="ts" setup>
-import LangIcon from "../icons/langIcon.svg";
-import { NButton, NIcon, NPopselect, type SelectOption } from "naive-ui";
-import { lang, themeColor } from "@/components/ts/useStorage.ts";
 import { onMounted, shallowRef, watchEffect } from "vue";
+import { lang } from "@/components/ts/setupLang.ts";
+import { themeColor, useTheme } from "@/components/ts/useTheme.ts";
+import { NButton, NIcon, NPopselect, type SelectOption } from "naive-ui";
+import LangIcon from "../icons/langIcon.svg";
 
+useTheme(90);
 interface Props {
   btnWidth?: string;
 }
@@ -47,21 +51,8 @@ onMounted(async () => {
     });
 });
 
-const darkenColor = (color: string, amount: number) => {
-  const hex = color.replace("#", "");
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  const clamp = (val: number) => Math.min(Math.max(val, 0), 255);
-  return `${clamp(r - amount)}, ${clamp(g - amount)}, ${clamp(b - amount)}`;
-};
-
 watchEffect(() => {
   document.documentElement.lang = lang.value;
-  document.documentElement.style.setProperty("--global-theme-color", themeColor.value);
-  const rgbDeep = darkenColor(themeColor.value, 90);
-  document.documentElement.style.setProperty("--global-theme-rgb-deep", rgbDeep);
-  document.documentElement.style.setProperty("--global-theme-color-deep", `rgb(${rgbDeep})`);
 });
 </script>
 
@@ -159,6 +150,7 @@ watchEffect(() => {
     }
   }
 }
+
 .buttonI18 {
   margin-right: 1em;
   height: 2.2em;
@@ -181,8 +173,6 @@ watchEffect(() => {
   }
 
   a {
-    color: #191919;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
     white-space: nowrap;
     @media (max-width: 300px) {
       display: none;

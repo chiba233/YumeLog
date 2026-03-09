@@ -17,7 +17,6 @@ export const getMaiUrl = async (): Promise<string> => {
   return `https://${config.baseUrl}/api/game/maimai2/profile?aimeId=${config.aimeID}`;
 };
 
-
 export type UserDataType = {
   userName: string; // "好DDX"
   iconId: number; // 10

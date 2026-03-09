@@ -20,7 +20,7 @@
               :src="item.img"
               width="160"
             ></n-image>
-            <a>{{ item.imgName }}</a>
+            <a class="themeText">{{ item.imgName }}</a>
           </div>
         </n-image-group>
       </div>
@@ -47,9 +47,9 @@
           :title="maiDisplay[section.titleKey]"
         >
           <div v-for="item in section.items" :key="item.label" class="maiCardDiv">
-            <a>{{ maiDisplay[item.label] }}</a>
-            <a class="connecter">:</a>
-            <a>{{ getStatValue(item.value) }}</a>
+            <a class="themeText">{{ maiDisplay[item.label] }}</a>
+            <a class="connecter themeText">:</a>
+            <a class="themeText">{{ getStatValue(item.value) }}</a>
           </div>
         </n-collapse-item>
       </n-collapse>
@@ -74,7 +74,7 @@
           <component :is="iconMap[item.id]" />
         </n-icon>
       </template>
-      <a>{{ getLabel(item) }}</a>
+      <a class="commonText">{{ getLabel(item) }}</a>
     </n-button>
   </div>
 </template>
@@ -98,7 +98,7 @@ import Cancel from "@/icons/cancel.svg";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import maiI18nData from "@/data/I18N/maiI18n.json";
 
-import { computed, onMounted, ref, shallowRef } from "vue";
+import { computed, ref } from "vue";
 import {
   NButton,
   NCard,
@@ -112,9 +112,11 @@ import {
 } from "naive-ui";
 import axios from "axios";
 import { useAsyncState, useStorage } from "@vueuse/core";
-import { lang, themeColor } from "@/components/ts/useStorage.ts";
+import { lang } from "@/components/ts/setupLang.ts";
+import { themeColor } from "@/components/ts/useTheme.ts";
 import { getMaiUrl, type UserDataType } from "./ts/maimaiScore";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
+import { socialRawData } from "@/components/ts/setupJson.ts";
 
 type PlatformId =
   | "telegram"
@@ -140,27 +142,11 @@ interface PlatformConfig {
   type: InteractionType;
 }
 
-interface SocialConfig {
-  platforms: PlatformConfig[];
-  socialLinks: Record<string, string>;
-}
-
-const platformRawData = shallowRef<SocialConfig | null>(null);
-
-fetch("/data/config/socialLinks.json")
-  .then((res) => res.json() as Promise<SocialConfig>)
-  .then((data) => {
-    platformRawData.value = data;
-  })
-  .catch((err) => {
-    console.error(err);
-  });
-
 const platforms = computed(() => {
-  return platformRawData.value?.platforms ?? [];
+  return socialRawData.value?.platforms ?? [];
 });
 const socialLinks = computed(() => {
-  return platformRawData.value?.socialLinks ?? {};
+  return socialRawData.value?.socialLinks ?? {};
 });
 
 const showCatModel = ref<boolean>(false);
@@ -290,7 +276,11 @@ const handleContactClick = (item: PlatformConfig): void => {
     },
     func: () => {
       if (item.id === "maimai") showMaiModal.value = true;
-      if (item.id === "cat") showCatModel.value = true;
+      if (item.id === "cat") {
+        void loadCat().then(() => {
+          showCatModel.value = true;
+        });
+      }
     },
   };
 
@@ -321,7 +311,8 @@ interface OriginalNekoBlock {
 }
 
 const nekoImg = ref<OriginalNekoBlock[]>([]);
-onMounted(async () => {
+const loadCat = async () => {
+  if (nekoImg.value.length) return;
   const res = await loadSingleYaml<YamlResponse>("main", "neko.yaml");
   if (res && res.img) {
     nekoImg.value = res.img.map(
@@ -332,18 +323,38 @@ onMounted(async () => {
       }),
     );
   }
-});
+};
 </script>
 
 <style lang="scss">
 .n-modal-container .maiCard,
 .n-modal-container .catCard {
   max-height: 84.4dvh;
-  border-radius: 1.5em;
-  background-color: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+
+  .n-button {
+    svg {
+      color: var(--global-theme-color-deep) !important;
+    }
+  }
+
+  .n-card-header__main {
+    color: var(--global-theme-color-deep) !important;
+    paint-order: stroke fill;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .n-collapse-item__header-main {
+    color: var(--global-theme-color-deep) !important;
+    -webkit-text-stroke: 0.15px var(--global-theme-color-deep);
+    paint-order: stroke fill;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+
+    svg {
+      color: var(--global-theme-color-deep) !important;
+    }
+  }
 
   .n-card__content {
     overflow-y: auto;
@@ -379,9 +390,8 @@ onMounted(async () => {
     margin-bottom: 0.2rem;
     text-align: center;
     font-size: 0.85rem;
-    color: #e6e6e6;
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
     text-decoration: none;
+    -webkit-text-stroke: 0.15px var(--global-theme-color-deep);
   }
 }
 
@@ -415,8 +425,7 @@ onMounted(async () => {
     object-fit: scale-down;
 
     a {
-      color: #191919;
-      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+      -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
     }
   }
 }
@@ -428,9 +437,9 @@ onMounted(async () => {
   flex-wrap: wrap;
 
   .cButton {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    background: rgba(248, 240, 244, 0.35);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 
     &:hover {
       background: rgba(255, 255, 255, 0.5);
@@ -453,8 +462,6 @@ onMounted(async () => {
     margin: 0.5rem;
 
     a {
-      color: #191919;
-      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
       margin-left: 4px;
     }
 

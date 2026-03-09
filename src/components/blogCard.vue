@@ -13,7 +13,7 @@ import {
   yamlLoadingFault,
   yamlRetrying,
 } from "@/components/ts/getYaml.ts";
-import { formatTime, lang } from "@/components/ts/useStorage";
+import { formatDate, formatTime, lang } from "@/components/ts/setupLang.ts";
 import Cancel from "@/icons/cancel.svg";
 import { NAlert, NButton, NCard, NIcon, NImage, NModal } from "naive-ui";
 import { parseRichText, stripRichText } from "@/components/ts/blogFormat.ts";
@@ -22,11 +22,9 @@ import blogI18nData from "@/data/I18N/blogI18n.json";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
 import { useContentStore } from "./ts/contentStore";
-import { formatDate } from "@/components/ts/useStorage.ts";
 
 const { getPosts, getSingle } = useContentStore();
 
-// ... (interface 和其他变量声明保持完全一致)
 interface ImageContent {
   src: string;
   spareUrl?: string;
@@ -192,7 +190,7 @@ watch(
     <article
       v-for="post in posts"
       :key="post.time"
-      class="post-card"
+      class="post-card glass"
       @click="() => cardClick(post)"
       @mouseenter="onEnter"
       @mouseleave="onLeave"
@@ -200,7 +198,7 @@ watch(
     >
       <div class="content">
         <div class="post-header">
-          <h2 class="post-title">
+          <h2 class="post-title commonText">
             {{ post.title }}
           </h2>
           <div class="post-meta">
@@ -235,7 +233,7 @@ watch(
             :class="{ 'expanded-text': !getImageBlocks(post.blocks as PostBlock[]).length }"
             class="post-description"
           >
-            <p>
+            <p class="commonText">
               {{ getDescriptionText(post.blocks as PostBlock[]) }}
             </p>
           </div>
@@ -280,7 +278,7 @@ watch(
         </n-button>
       </template>
       <div class="postCardMain">
-        <div class="postCardMeta">
+        <div class="postCardMeta themeText">
           <time :datetime="selectedPost.time">{{ formatDate(selectedPost.time) }}</time>
           <span class="time-divider">|</span>
           <span>{{ formatTime(selectedPost.time) }}</span>
@@ -305,7 +303,7 @@ watch(
                 width="120"
               />
               <div v-if="img.desc" class="postCardImageDesc">
-                <span>{{ img.desc }}</span>
+                <span class="themeText">{{ img.desc }}</span>
               </div>
             </div>
           </div>
@@ -320,7 +318,6 @@ watch(
 
 <style lang="scss">
 @use "sass:color";
-
 .postCardImageDesc {
   display: flex;
   flex-direction: column;
@@ -330,16 +327,14 @@ watch(
 }
 
 .n-modal-container .postModel {
-  border-radius: 1.5em;
-  background-color: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
   max-height: 84.4dvh;
 
   .n-card__content {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    scrollbar-gutter: stable both-edges;
   }
 
   .n-card-header__main {
@@ -350,11 +345,8 @@ watch(
 .postCardImg img {
   margin: 1em;
 }
-
-$card-bg: rgba(255, 255, 255, 0.3);
 $text-color: #191919;
 $border-radius: 16px;
-$transition-speed: 0.3s;
 
 .postCardImage {
   display: flex !important;
@@ -384,8 +376,7 @@ $transition-speed: 0.3s;
         word-break: break-all;
         white-space: pre-line;
         font-size: 0.9rem;
-        color: color.adjust($text-color, $lightness: 80%);
-        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
+        -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
         text-align: center;
         display: block;
       }
@@ -412,10 +403,10 @@ $transition-speed: 0.3s;
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.5em;
+      margin-bottom: 0.5em;
       font-size: 0.92rem;
-      color: color.adjust($text-color, $lightness: 90%);
-      margin-bottom: 0.5rem;
+      -webkit-text-stroke: 0.1px var(--global-theme-color-deep);
     }
   }
 }
@@ -440,12 +431,8 @@ $transition-speed: 0.3s;
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  background: $card-bg;
-  backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: $border-radius;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   padding: 0.8rem;
 
   // 核心变量
@@ -521,6 +508,9 @@ $transition-speed: 0.3s;
 
   &:hover {
     transform: translateY(-4px);
+    transition:
+      transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
   }
 
@@ -535,7 +525,6 @@ $transition-speed: 0.3s;
 
       font-size: 1.25rem;
       font-weight: 700;
-      color: $text-color;
       margin: 0 0 0.5rem 0;
       line-height: 1.2;
 
@@ -635,8 +624,6 @@ $transition-speed: 0.3s;
       p {
         max-height: 100%;
         margin: 0;
-        color: $text-color;
-        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
         line-height: 1.4;
         font-size: 0.8rem;
         word-break: break-all;
@@ -662,7 +649,6 @@ $transition-speed: 0.3s;
 .postCardText {
   font-size: 1.1rem;
   white-space: pre-line;
-  color: $text-color;
 }
 
 .loading-state {
@@ -701,12 +687,13 @@ $transition-speed: 0.3s;
     p {
       text-align: center;
       font-size: 3rem;
-      color: white;
+      color: #eaeaea;
+      font-weight: 350;
       text-shadow:
-        #383838 1px 0 0,
-        #383838 0 1px 0,
-        #383838 -1px 0 0,
-        #383838 0 -1px 0;
+        0.5px 0 0 rgba(0, 0, 0, 0.7),
+        -0.5px 0 0 rgba(0, 0, 0, 0.7),
+        0 0.5px 0 rgba(0, 0, 0, 0.7),
+        0 -0.5px 0 rgba(0, 0, 0, 0.7);
       opacity: 0.8;
       animation: loading-pulse 1.5s infinite ease-in-out;
     }

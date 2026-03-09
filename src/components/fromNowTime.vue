@@ -12,7 +12,7 @@
           <Clock></Clock>
         </n-icon>
       </template>
-      <a>{{ buttonTitle }}</a>
+      <a class="commonText">{{ buttonTitle }}</a>
     </n-button>
     <n-modal v-model:show="showModal">
       <n-card :title="boxTitle" class="fromTimeCard" size="huge">
@@ -25,7 +25,7 @@
             </template>
           </n-button>
         </template>
-        <div v-for="item in fromNow" :key="item.time" class="timeCard">
+        <div v-for="item in fromNow" :key="item.time" class="timeCard themeText">
           <div class="thatDay">
             <a>{{ formatDate(item.time) }}</a>
           </div>
@@ -46,7 +46,8 @@ import { NButton, NCard, NIcon, NModal } from "naive-ui";
 import Clock from "../icons/clock.svg";
 import { computed, onMounted, ref } from "vue";
 import Cancel from "../icons/cancel.svg";
-import { formatDate, formatTime, lang, themeColor } from "@/components/ts/useStorage.ts";
+import { formatDate, formatTime, lang } from "@/components/ts/setupLang.ts";
+import { themeColor } from "@/components/ts/useTheme.ts";
 import fromNowI18 from "@/data/I18N/fromNowI18n.json";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 
@@ -125,12 +126,37 @@ const clickMemory = () => {
 <style lang="scss">
 .n-modal-container .fromTimeCard {
   max-height: 84.4dvh;
-  border-radius: 1.5em;
-  background-color: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(251, 238, 241, 0.6);
+  border-radius: 20px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 
+  .n-button {
+    svg {
+      color: var(--global-theme-color-deep) !important;
+    }
+  }
+
+  .n-card-header__main {
+    color: var(--global-theme-color-deep) !important;
+    paint-order: stroke fill;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .n-collapse-item__header-main {
+    color: var(--global-theme-color-deep) !important;
+    -webkit-text-stroke: 0.15px var(--global-theme-color-deep);
+    paint-order: stroke fill;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+
+    svg {
+      color: var(--global-theme-color-deep) !important;
+    }
+  }
   .n-card__content {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -167,8 +193,6 @@ const clickMemory = () => {
   }
 
   a {
-    color: #191919;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
     white-space: nowrap;
     @media (max-width: 300px) {
       display: none;
@@ -194,13 +218,12 @@ const clickMemory = () => {
     flex-direction: column;
     border-radius: 10px;
     text-align: center;
-    background-color: rgba(89, 89, 89, 0.2);
+    background-color: rgba(var(--global-theme-rgb-deep), 0.13) !important;
     margin: 0.5rem auto;
     padding: 0.5rem;
 
     a {
-      color: #191919;
-      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+      -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
     }
   }
 }

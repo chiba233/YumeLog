@@ -172,7 +172,7 @@ a.fw-link {
 .code-text {
   font-family: "SFMono-Regular", Consolas, monospace;
   background-color: rgba(var(--global-theme-rgb-deep), 0.13) !important;
-  padding: 0.15em 0.35em;
+  padding: 0 0.35rem;
   border-radius: 4px;
   font-size: 0.85em;
   font-weight: 600;

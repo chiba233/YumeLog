@@ -12,7 +12,7 @@
 import { NAvatar } from "naive-ui";
 import icon from "../icons/icon.webp";
 import { useYamlText } from "@/components/ts/useYamlI18n.ts";
-import { useHead } from "@vueuse/head";
+import { useHead } from "@unhead/vue";
 import { computed } from "vue";
 
 const displayTitle = useYamlText("main", "title.yaml", "title");

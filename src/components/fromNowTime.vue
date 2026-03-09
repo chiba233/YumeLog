@@ -125,7 +125,7 @@ const clickMemory = () => {
 
 <style lang="scss">
 .n-modal-container .fromTimeCard {
-  max-height: 84.4dvh;
+  max-height: 92dvh;
   .n-button {
     svg {
       color: var(--global-theme-color-deep) !important;

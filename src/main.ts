@@ -1,12 +1,12 @@
 import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
-import { createHead } from "@vueuse/head";
 import "./assets/main.css";
+import { createHead } from "@unhead/vue/client";
 
 const app = createApp(App);
-const head = createHead();
-app.use(head);
+
+app.use(createHead());
 app.use(router);
 
 app.mount("#app");

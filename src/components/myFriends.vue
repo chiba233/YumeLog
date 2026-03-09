@@ -33,7 +33,7 @@ import friendsMessage from "@/data/I18N/friendsMessage.json";
 import { lang } from "@/components/ts/setupLang.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
-import { useHead } from "@vueuse/head";
+import { useHead } from "@unhead/vue";
 
 interface Friend {
   name: string;

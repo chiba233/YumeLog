@@ -11,7 +11,7 @@
           </template>
         </n-button>
       </template>
-      <div>
+      <div class="catMainCard">
         <n-image-group class="catImgCard">
           <div v-for="item in nekoImg" :key="item.imgName" class="catImgDIV">
             <n-image
@@ -27,7 +27,7 @@
     </n-card>
   </n-modal>
   <!-- maiCard -->
-  <n-modal v-model:show="showMaiModal">
+  <n-modal v-model:show="showMaiModal" :block-scroll="false">
     <n-card :title="maiDisplay.titleName" class="maiCard" size="huge">
       <template #header-extra>
         <n-button circle tertiary @click="showMaiModal = false">
@@ -117,7 +117,7 @@ import { themeColor } from "@/components/ts/useTheme.ts";
 import { getMaiUrl, type UserDataType } from "./ts/maimaiScore";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 import { socialRawData } from "@/components/ts/setupJson.ts";
-import { useHead } from "@vueuse/head";
+import { useHead } from "@unhead/vue";
 
 type PlatformId =
   | "telegram"
@@ -352,7 +352,7 @@ useHead({
 <style lang="scss">
 .n-modal-container .maiCard,
 .n-modal-container .catCard {
-  max-height: 84.4dvh;
+  max-height: 92dvh;
 
   .n-button {
     svg {
@@ -389,12 +389,13 @@ useHead({
   }
 }
 
-.catCard .n-card__content div:has(> .catImgDIV) {
+.catMainCard {
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: wrap !important;
   gap: 0.3em 0.65rem;
   justify-content: center !important;
+  width: 100%;
 }
 
 .catImgDIV {

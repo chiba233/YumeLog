@@ -19,7 +19,7 @@ import MyFriends from "@/components/myFriends.vue";
 import { computed } from "vue";
 import { globalWebTitleMap } from "@/components/ts/useTitleState.ts";
 import { lang } from "@/components/ts/setupLang.ts";
-import { useHead } from "@vueuse/head";
+import { useHead } from "@unhead/vue";
 
 useHead({
   title: computed(() => {

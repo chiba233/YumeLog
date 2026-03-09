@@ -11,7 +11,7 @@
 <script lang="ts" setup>
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useYamlText } from "@/components/ts/useYamlI18n.ts";
-import { useHead } from "@vueuse/head";
+import { useHead } from "@unhead/vue";
 import { computed } from "vue";
 
 const displayContent = useYamlText("main", "introduction.yaml", "introduction");

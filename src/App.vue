@@ -121,6 +121,11 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
 .n-modal-mask {
   background-color: rgba(var(--global-theme-rgb-deep), 0.2) !important;
   backdrop-filter: blur(3px);
+  max-height: 100dvh;
+}
+
+.n-scrollbar-content {
+  max-height: 100dvh;
 }
 
 .n-modal-container .n-card {
@@ -129,6 +134,33 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
   backdrop-filter: blur(25px);
+
+  .n-card-content {
+    flex: 1;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+
+    display: block;
+    min-height: 0;
+    scrollbar-gutter: stable both-edges;
+
+    &::-webkit-scrollbar {
+      width: 6px !important;
+      display: block !important;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(var(--global-theme-rgb-deep), 0.3);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: rgba(var(--global-theme-rgb-deep), 0.1);
+    }
+
+    padding: 1.3rem !important;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 :root {
@@ -170,6 +202,20 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
   overflow-y: auto;
   position: relative;
   -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    width: 6px !important;
+    display: block !important;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(248, 240, 244, 0.45);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(248, 240, 244, 0.1);
+  }
 
   .main {
     height: 100dvh;

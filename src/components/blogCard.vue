@@ -22,7 +22,7 @@ import blogI18nData from "@/data/I18N/blogI18n.json";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
 import { useContentStore } from "./ts/contentStore";
-import { useHead } from "@vueuse/head";
+import { useHead } from "@unhead/vue";
 import { globalWebTitleMap } from "@/components/ts/useTitleState";
 
 const { getPosts, getSingle } = useContentStore();
@@ -335,7 +335,6 @@ watch(
 
 <style lang="scss">
 @use "sass:color";
-
 .separator-icon {
   display: flex;
   align-items: center;
@@ -366,19 +365,16 @@ watch(
   text-align: center;
 }
 
-.n-modal-container .postModel {
-  max-height: 84.4dvh;
+.n-modal-container {
+  .postModel.n-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-height: 92dvh;
 
-  .n-card__content {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    scrollbar-gutter: stable both-edges;
-  }
-
-  .n-card-header__main {
-    text-align: center;
+    :deep(.n-card-header) {
+      flex-shrink: 0;
+    }
   }
 }
 
@@ -424,13 +420,14 @@ $border-radius: 16px;
 .postModel {
   margin-bottom: 4em;
   margin-top: 4em;
-  max-width: 85%;
+  max-width: 92%;
   @media (max-width: 900px) {
     max-width: 98%;
   }
 
   .postCardMain {
     flex-direction: column;
+    min-height: 0;
     display: flex;
     width: 100%;
     justify-content: center;

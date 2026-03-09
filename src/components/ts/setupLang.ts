@@ -1,10 +1,15 @@
 import { useStorage } from "@vueuse/core";
-import moment from "moment";
-import "moment/dist/locale/ja";
-import "moment/dist/locale/zh-cn";
-import "moment/dist/locale/en-au";
-import "moment/dist/locale/th.js";
+import dayjs, { Dayjs } from "dayjs";
+import "dayjs/locale/ja";
+import "dayjs/locale/zh-cn";
+import "dayjs/locale/en-au";
+import "dayjs/locale/th";
 import { ref, type Ref, watch } from "vue";
+import relativeTime from "dayjs/plugin/relativeTime";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+
+dayjs.extend(localizedFormat);
+dayjs.extend(relativeTime);
 
 export interface SelectOption {
   label: string;
@@ -48,16 +53,16 @@ const localeMap: Record<string, string> = {
 };
 
 // 导出一个专门格式化时间的工具
-export const formatTime = (date?: string | number | Date | moment.Moment): string => {
+export const formatTime = (date?: string | number | Date | Dayjs): string => {
   if (!date) return "error";
   const locale = localeMap[lang.value] || localeMap.en;
-  moment.locale(locale);
-  return moment(date).fromNow();
+  dayjs.locale(locale);
+  return dayjs(date).fromNow();
 };
 
-export const formatDate = (date?: string | number | Date | moment.Moment): string => {
+export const formatDate = (date?: string | number | Date | Dayjs): string => {
   if (!date) return "error";
   const locale = localeMap[lang.value] || localeMap.en;
-  moment.locale(locale);
-  return moment(date).format("LL - dddd");
+  dayjs.locale(locale);
+  return dayjs(date).format("LL - dddd");
 };

@@ -88,23 +88,36 @@ const TAG_HANDLERS: Partial<Record<RichType, (tokens: TextToken[]) => TextToken>
 
   info: (tokens) => {
     const parts = splitTokensByPipe(tokens);
+    if (parts.length === 1) {
+      return {
+        type: "info",
+        title: "Info:",
+        value: parts[0],
+      };
+    }
     const titlePart = parts.shift() ?? [];
-
     return {
       type: "info",
       title: extractText(titlePart).trim(),
-      value: parts.length ? parts.flat() : titlePart,
+      value: parts.flat(),
     };
   },
 
   warning: (tokens) => {
     const parts = splitTokensByPipe(tokens);
+    if (parts.length === 1) {
+      return {
+        type: "warning",
+        title: "Warning:",
+        value: parts[0],
+      };
+    }
     const titlePart = parts.shift() ?? [];
 
     return {
       type: "warning",
       title: extractText(titlePart).trim(),
-      value: parts.length ? parts.flat() : titlePart,
+      value: parts.flat(),
     };
   },
 };

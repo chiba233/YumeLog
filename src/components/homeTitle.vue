@@ -62,16 +62,16 @@ useHead({
       -0.5px 0 0 rgba(0, 0, 0, 0.7),
       0 0.5px 0 rgba(0, 0, 0, 0.7),
       0 -0.5px 0 rgba(0, 0, 0, 0.7);
-    font-weight: 450;
+    font-weight: normal;
     margin: 0;
     text-align: center;
     @media (min-width: 840px) {
-      font-size: 1.9em;
+      font-size: 2em;
       margin-left: 1.5em;
     }
     @media (max-width: 840px) {
       padding-top: 0.5em;
-      font-size: 1.7em;
+      font-size: 1.8em;
     }
   }
 

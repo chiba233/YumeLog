@@ -131,8 +131,8 @@ const { onMove, onLeave, onEnter } = useCardGlow();
     white-space: pre-wrap;
     font-size: 1.15em;
     letter-spacing: 0.02em;
-    line-height: 1.5;
-    font-weight: 450;
+    line-height: 1.45;
+    font-weight: normal;
   }
 }
 </style>

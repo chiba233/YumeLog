@@ -114,7 +114,7 @@ const normalizeUrl = (raw: string): string | undefined => {
 }
 
 .fw-thin {
-  font-weight: 300;
+  font-weight: lighter;
 }
 
 .center-text {
@@ -178,10 +178,10 @@ a.fw-link {
   padding: 0 0.35rem;
   border-radius: 4px;
   font-size: 0.85em;
-  font-weight: 600;
+  font-weight: bold;
   display: inline-block !important;
   text-decoration: none !important;
-  -webkit-text-stroke: 0.5px var(--global-theme-color-deep);
+  -webkit-text-stroke: 0.1px var(--global-theme-color-deep);
   paint-order: stroke fill;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;

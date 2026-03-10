@@ -422,8 +422,8 @@ $border-radius: 16px;
       span {
         word-break: break-all;
         white-space: pre-line;
-        font-size: 0.9rem;
-        -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
+        font-size: 0.92rem;
+        -webkit-text-stroke: 0.1px var(--global-theme-color-deep);
         text-align: center;
         display: block;
       }
@@ -445,7 +445,7 @@ $border-radius: 16px;
     display: flex;
     width: 100%;
     justify-content: center;
-    font-size: 1.05rem;
+    font-size: 1.2rem;
 
     .postCardMeta {
       display: flex;
@@ -453,7 +453,7 @@ $border-radius: 16px;
       align-items: center;
       gap: 0.5em;
       margin-bottom: 0.5em;
-      font-size: 0.92rem;
+      font-size: 0.95rem;
       -webkit-text-stroke: 0.1px var(--global-theme-color-deep);
     }
   }
@@ -494,11 +494,9 @@ $border-radius: 16px;
     background-color 0.3s;
 
   @media (max-width: 900px) {
-    height: 15.9rem;
   }
   @media (min-width: 900px) {
     width: 25rem;
-    height: 12.3rem;
   }
   // 1. 面光 (Surface Glow) - 柔和的大范围光晕
   &::before {
@@ -564,18 +562,16 @@ $border-radius: 16px;
 
   .post-header {
     text-align: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
     width: 100%;
 
     .post-title {
       display: block;
       min-width: 0;
-
       font-size: 1.25rem;
-      font-weight: 700;
-      margin: 0 0 0.5rem 0;
+      font-weight: bold;
+      margin: 0 0 0.4rem 0;
       line-height: 1.2;
-
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -587,7 +583,7 @@ $border-radius: 16px;
       align-items: center;
       color: color.adjust($text-color, $lightness: 80%);
       text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
-      font-size: 15px;
+      font-size: 1em;
       gap: 0.3rem;
       line-height: 1;
 
@@ -600,6 +596,8 @@ $border-radius: 16px;
 
         svg {
           display: block;
+          stroke: rgba(0, 0, 0, 0.5);
+          stroke-width: 1px;
         }
       }
 
@@ -615,11 +613,10 @@ $border-radius: 16px;
   .post-body {
     display: flex;
     gap: 0.5rem;
-    align-items: flex-start;
+    align-items: center;
     overflow: hidden;
     flex: 1;
 
-    // 移动端自动转为垂直布局
     @media (max-width: 900px) {
       flex-direction: column;
       align-items: center;
@@ -628,9 +625,6 @@ $border-radius: 16px;
     .post-image {
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100%;
-      width: 120px;
 
       img {
         width: 120px;
@@ -639,8 +633,7 @@ $border-radius: 16px;
         object-fit: cover;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        margin-left: 0.25rem;
-        margin-right: 0.25rem;
+        margin: 0 0.25rem;
       }
 
       .secondImg {
@@ -736,7 +729,7 @@ $border-radius: 16px;
       text-align: center;
       font-size: 3rem;
       color: #eaeaea;
-      font-weight: 500;
+      font-weight: normal;
       text-shadow:
         0.5px 0 0 rgba(0, 0, 0, 0.7),
         -0.5px 0 0 rgba(0, 0, 0, 0.7),

@@ -122,6 +122,7 @@ figure {
   margin: 0;
   padding: 0;
 }
+
 .n-modal-mask {
   background-color: rgba(var(--global-theme-rgb-deep), 0.2) !important;
   backdrop-filter: blur(3px);
@@ -169,7 +170,7 @@ figure {
 
 :root {
   --glass-bg: rgba(248, 240, 244, 0.35);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.35);
+  --glass-border: 1.25px solid rgba(248, 240, 244, 0.35);
   --glass-blur: blur(20px);
   --glass-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -189,7 +190,12 @@ figure {
 }
 
 .glass {
-  background: var(--glass-bg);
+  background:
+    linear-gradient(
+      rgba(var(--global-theme-rgb-deep), 0.03),
+      rgba(var(--global-theme-rgb-deep), 0.03)
+    ),
+    var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: var(--glass-border);

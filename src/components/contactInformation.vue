@@ -67,7 +67,7 @@
       v-for="item in platforms"
       :key="item.id"
       :color="themeColor"
-      class="cButton"
+      class="cButton glass"
       round
       @click="handleContactClick(item)"
     >
@@ -420,7 +420,7 @@ useHead({
     font-size: 0.85rem;
     text-decoration: none;
     -webkit-text-stroke: 0.15px var(--global-theme-color-deep);
-    font-weight: 450;
+    font-weight: Normal;
   }
 }
 
@@ -466,9 +466,8 @@ useHead({
   flex-wrap: wrap;
 
   .cButton {
-    background: rgba(248, 240, 244, 0.35);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    height: 2.2em;
+    margin: 0.5rem;
 
     &:hover {
       background: rgba(255, 255, 255, 0.5);
@@ -482,20 +481,14 @@ useHead({
     &:active {
       background: rgba(255, 255, 255, 0.5);
     }
-  }
-
-  .n-button {
-    height: 2.2em;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    margin: 0.5rem;
 
     a {
-      margin-left: 4px;
+      font-weight: normal;
+      margin-left: 3px;
     }
 
     @media (min-width: 550px) {
-      width: 8.8em;
+      width: 9.2em;
     }
     @media (max-width: 550px) {
       .n-icon {

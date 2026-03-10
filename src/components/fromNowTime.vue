@@ -212,12 +212,12 @@ const clickMemory = () => {
     padding: 0.5rem;
 
     strong {
-      font-weight: 450;
+      font-weight: Normal;
       -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
     }
 
     time {
-      font-weight: 450;
+      font-weight: Normal;
       -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
     }
   }

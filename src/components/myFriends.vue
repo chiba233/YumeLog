@@ -90,6 +90,7 @@ onMounted(async () => {
 
 <style lang="scss">
 $transition-speed: 0.3s;
+
 .friendTitle {
   left: 0;
   right: 0;
@@ -100,14 +101,14 @@ $transition-speed: 0.3s;
     -0.5px 0 0 rgba(0, 0, 0, 0.7),
     0 0.5px 0 rgba(0, 0, 0, 0.7),
     0 -0.5px 0 rgba(0, 0, 0, 0.7);
-  font-weight: 450;
+  font-weight: normal;
   margin-bottom: 0.5rem;
   margin-top: 0.5rem;
   @media (min-width: 840px) {
-    font-size: 1.9em;
+    font-size: 2em;
   }
   @media (max-width: 840px) {
-    font-size: 1.7em;
+    font-size: 1.8em;
   }
 }
 
@@ -235,7 +236,7 @@ $transition-speed: 0.3s;
   }
 
   .friendName {
-    font-weight: 450;
+    font-weight: normal;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

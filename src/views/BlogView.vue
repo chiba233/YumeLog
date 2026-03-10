@@ -35,13 +35,13 @@ const titleI18N = commonI18n.blogWelcome as Record<string, string>;
         -0.5px 0 0 rgba(0, 0, 0, 0.7),
         0 0.5px 0 rgba(0, 0, 0, 0.7),
         0 -0.5px 0 rgba(0, 0, 0, 0.7);
-      font-weight: 450;
+      font-weight: normal;
       margin: 0;
-      @media (min-width: 730px) {
-        font-size: 2.5em;
-      }
-      @media (max-width: 730px) {
+      @media (min-width: 840px) {
         font-size: 2em;
+      }
+      @media (max-width: 840px) {
+        font-size: 1.8em;
       }
     }
   }

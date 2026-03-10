@@ -25,7 +25,42 @@ html {
     "Noto Sans CJK SC",
     "Microsoft YaHei",
     sans-serif;
+
+    [lang^="zh"] {
+        font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans CN", sans-serif;
+
+        &.commonText, .rich-text-content {
+            letter-spacing: 0.01em;
+        }
+    }
+
+    [lang="ja"] {
+        font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans CJK JP", "Source Han Sans JP", sans-serif;
+        line-height: 1.75;
+        letter-spacing: 0.04em;
+        font-feature-settings: "palt";
+    }
+
+    [lang^="en"] {
+
+        font-family: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.5;
+        letter-spacing: 0;
+        hyphens: auto;
+    }
+
+    [lang="th"] {
+        font-family: "Inter", "Noto Sans Thai", "Kanit", "Ladda", "Tahoma", sans-serif;
+
+        line-height: 1.85;
+        letter-spacing: 0.02em;
+
+        &.commonText, .rich-text-content {
+            font-size: 1.1em;
+        }
+    }
 }
+
 html,
 body {
     overflow: hidden;

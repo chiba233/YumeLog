@@ -1,7 +1,7 @@
 <template>
   <div class="root">
     <div class="title">
-      <a>{{ titleI18N[lang] || titleI18N.en }}</a>
+      <h1 :lang="lang">{{ titleI18N[lang] || titleI18N.en }}</h1>
     </div>
     <blog-card></blog-card>
   </div>
@@ -25,7 +25,7 @@ const titleI18N = commonI18n.blogWelcome as Record<string, string>;
     align-items: center;
     text-align: center;
 
-    a {
+    h1 {
       display: flex;
       flex-wrap: wrap;
       align-content: center;
@@ -35,7 +35,8 @@ const titleI18N = commonI18n.blogWelcome as Record<string, string>;
         -0.5px 0 0 rgba(0, 0, 0, 0.7),
         0 0.5px 0 rgba(0, 0, 0, 0.7),
         0 -0.5px 0 rgba(0, 0, 0, 0.7);
-      font-weight: 350;
+      font-weight: 450;
+      margin: 0;
       @media (min-width: 730px) {
         font-size: 2.5em;
       }

@@ -14,13 +14,15 @@
       <div class="catMainCard">
         <n-image-group>
           <div v-for="item in nekoImg" :key="item.imgName" class="catImgDIV">
-            <n-image
-              :alt="item.imgName"
-              :fallback-src="item.imgError"
-              :src="item.img"
-              width="160"
-            ></n-image>
-            <a class="themeText">{{ item.imgName }}</a>
+            <figure>
+              <n-image
+                :alt="item.imgName"
+                :fallback-src="item.imgError"
+                :src="item.img"
+                width="160"
+              ></n-image>
+              <figcaption :lang="lang" class="themeText">{{ item.imgName }}</figcaption>
+            </figure>
           </div>
         </n-image-group>
       </div>
@@ -47,9 +49,9 @@
           :title="maiDisplay[section.titleKey]"
         >
           <div v-for="item in section.items" :key="item.label" class="maiCardDiv">
-            <a class="themeText">{{ maiDisplay[item.label] }}</a>
-            <a class="connecter themeText">:</a>
-            <a class="themeText">{{ getStatValue(item.value) }}</a>
+            <span :lang="lang" class="themeText">{{ maiDisplay[item.label] }}</span>
+            <span :lang="lang" class="connecter themeText">:</span>
+            <span :lang="lang" class="themeText">{{ getStatValue(item.value) }}</span>
           </div>
         </n-collapse-item>
       </n-collapse>
@@ -74,7 +76,9 @@
           <component :is="iconMap[item.id]" />
         </n-icon>
       </template>
-      <a class="commonText">{{ getLabel(item) }}</a>
+      <a :lang="lang" class="commonText">
+        {{ getLabel(item) }}
+      </a>
     </n-button>
   </div>
 </template>
@@ -409,13 +413,14 @@ useHead({
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  a {
+  figcaption {
     margin-top: 0.4rem;
     margin-bottom: 0.2rem;
     text-align: center;
     font-size: 0.85rem;
     text-decoration: none;
     -webkit-text-stroke: 0.15px var(--global-theme-color-deep);
+    font-weight: 450;
   }
 }
 
@@ -438,7 +443,7 @@ useHead({
     padding-left: 0.2em;
   }
 
-  a {
+  span {
     padding-bottom: 1em;
   }
 
@@ -448,7 +453,7 @@ useHead({
     height: auto;
     object-fit: scale-down;
 
-    a {
+    span {
       -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
     }
   }

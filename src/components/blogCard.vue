@@ -220,15 +220,15 @@ watch(
     >
       <div class="content">
         <div class="post-header">
-          <h2 class="post-title commonText">{{ post.title }}</h2>
+          <h2 :lang="post?.lang as string" class="post-title commonText">{{ post.title }}</h2>
           <div class="post-meta">
             <n-icon v-if="post.pin" size="15">
               <PushPinSharp />
             </n-icon>
             <span v-if="post.pin" class="time-divider">|</span>
-            <time :datetime="post.time">{{ formatDate(post.time!) }}</time>
+            <time :datetime="post.time" :lang="lang">{{ formatDate(post.time!) }}</time>
             <span class="time-divider">|</span>
-            <span>{{ formatTime(post.time) }}</span>
+            <span :lang="lang">{{ formatTime(post.time) }}</span>
           </div>
         </div>
 
@@ -253,7 +253,9 @@ watch(
             :class="{ 'expanded-text': !getImageBlocks(post.blocks as PostBlock[]).length }"
             class="post-description"
           >
-            <p class="commonText">{{ post.displayDescription }}</p>
+            <p :lang="post?.lang as string" class="commonText">
+              {{ post.displayDescription }}
+            </p>
           </div>
         </div>
       </div>
@@ -274,12 +276,18 @@ watch(
       <n-alert v-else-if="listSpareError" class="alert" title="Warning" type="warning">
         {{ blogDisplay.listSpareError }}
       </n-alert>
-      <p v-else>{{ blogDisplay.loading }}</p>
+      <p v-else :lang="lang">{{ blogDisplay.loading }}</p>
     </div>
   </div>
 
   <n-modal v-model:show="showModal">
-    <n-card v-if="selectedPost" :title="selectedPost.title" class="postModel" size="huge">
+    <n-card
+      v-if="selectedPost"
+      :lang="selectedPost?.lang as string"
+      :title="selectedPost.title"
+      class="postModel"
+      size="huge"
+    >
       <template #header-extra>
         <n-button circle tertiary @click="closePortal">
           <template #icon>
@@ -291,9 +299,11 @@ watch(
       </template>
       <div class="postCardMain">
         <div class="postCardMeta themeText">
-          <time :datetime="selectedPost.time">{{ formatDate(selectedPost.time) }}</time>
+          <time :datetime="selectedPost.time" :lang="lang"
+            >{{ formatDate(selectedPost.time) }}
+          </time>
           <span class="time-divider">|</span>
-          <span>{{ formatTime(selectedPost.time) }}</span>
+          <span :lang="lang">{{ formatTime(selectedPost.time) }}</span>
         </div>
         <div v-for="(block, a) in selectedPost.blocks as PostBlock[]" :key="a" class="postCardBody">
           <div v-if="block.type === 'image'" class="postCardImage">
@@ -317,7 +327,7 @@ watch(
                 width="120"
               />
               <div v-if="img.desc" class="postCardImageDesc">
-                <span class="themeText">{{ img.desc }}</span>
+                <span :lang="selectedPost?.lang as string" class="themeText">{{ img.desc }}</span>
               </div>
             </div>
           </div>
@@ -325,7 +335,10 @@ watch(
             <div class="separator-icon"><span>✦</span></div>
           </div>
           <div v-if="block.type === 'text'" class="postCardText">
-            <RichTextRenderer :tokens="parseRichText(block.content as string)" />
+            <RichTextRenderer
+              :lang="selectedPost?.lang as string"
+              :tokens="parseRichText(block.content as string)"
+            />
           </div>
         </div>
       </div>
@@ -335,6 +348,7 @@ watch(
 
 <style lang="scss">
 @use "sass:color";
+
 .separator-icon {
   display: flex;
   align-items: center;

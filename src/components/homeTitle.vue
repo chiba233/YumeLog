@@ -1,10 +1,9 @@
 <template>
   <div class="dashboardTitle">
     <n-avatar :src="icon" bordered class="titleIcon" round></n-avatar>
-    <a class="titleText">
+    <h1 :lang="lang" class="titleText">
       {{ displayTitle }}
-    </a>
-    <div class="a"></div>
+    </h1>
   </div>
 </template>
 
@@ -14,10 +13,17 @@ import icon from "../icons/icon.webp";
 import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 import { useHead } from "@unhead/vue";
 import { computed } from "vue";
+import { lang } from "@/components/ts/setupLang.ts";
+
+const iconUrl = new URL("../icons/icon.webp", import.meta.url).href;
 
 const displayTitle = useYamlText("main", "title.yaml", "title");
 useHead({
   meta: [
+    {
+      property: "og:image",
+      content: iconUrl,
+    },
     {
       property: "og:title",
       content: computed(() => displayTitle.value || ""),
@@ -56,7 +62,8 @@ useHead({
       -0.5px 0 0 rgba(0, 0, 0, 0.7),
       0 0.5px 0 rgba(0, 0, 0, 0.7),
       0 -0.5px 0 rgba(0, 0, 0, 0.7);
-    font-weight: 350;
+    font-weight: 450;
+    margin: 0;
     text-align: center;
     @media (min-width: 840px) {
       font-size: 1.9em;
@@ -81,14 +88,6 @@ useHead({
       width: 4em;
       height: 4em;
       flex-shrink: 0;
-    }
-  }
-
-  .a {
-    display: none;
-    @media (min-width: 730px) {
-      width: 6em;
-      height: 6em;
     }
   }
 }

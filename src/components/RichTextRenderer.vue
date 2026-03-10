@@ -16,6 +16,7 @@ interface TextToken {
 
 defineProps<{
   tokens: TextToken[];
+  lang?: string;
 }>();
 
 type RenderTarget = string | Component;
@@ -49,13 +50,14 @@ const normalizeUrl = (raw: string): string | undefined => {
 
 <template>
   <template v-for="(token, index) in tokens" :key="index">
-    <span v-if="token.type === 'text'" class="rich-text-content">
+    <span v-if="token.type === 'text'" :lang="lang" class="rich-text-content">
       {{ token.value }}
     </span>
 
     <component
       :is="tagMap[token.type] || 'span'"
       v-else
+      :lang="lang"
       :bordered="true"
       :href="token.type === 'link' ? getUrl(token) : undefined"
       :rel="token.type === 'link' ? 'noopener noreferrer' : undefined"
@@ -79,6 +81,7 @@ const normalizeUrl = (raw: string): string | undefined => {
       <RichTextRenderer
         v-if="Array.isArray(token.value) && token.value.length"
         :tokens="token.value"
+        :lang="lang"
       />
       <template v-else-if="typeof token.value === 'string'">
         {{ token.value }}
@@ -105,6 +108,7 @@ const normalizeUrl = (raw: string): string | undefined => {
 [class^="rich-"]:not(.fw-link):not(.code-text) {
   @extend %common-style;
 }
+
 .fw-bold {
   font-weight: bold;
 }

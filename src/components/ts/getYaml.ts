@@ -9,6 +9,7 @@ interface YamlConfigItem {
   url: string;
   spareUrl?: string;
   spareListUrl?: string;
+  lang?: string;
 }
 
 type YamlUrlConfig = Record<string, YamlConfigItem>;

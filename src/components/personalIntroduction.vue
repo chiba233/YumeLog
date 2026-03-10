@@ -1,9 +1,9 @@
 <template>
   <div class="textBox glass" @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
     <div class="content">
-      <div class="detailText commonText">
-        {{ displayContent }}
-      </div>
+      <article>
+        <p :lang="lang" class="detailText commonText">{{ displayContent }}</p>
+      </article>
     </div>
   </div>
 </template>
@@ -13,6 +13,7 @@ import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 import { useHead } from "@unhead/vue";
 import { computed } from "vue";
+import { lang } from "@/components/ts/setupLang.ts";
 
 const displayContent = useYamlText("main", "introduction.yaml", "introduction");
 
@@ -124,12 +125,14 @@ const { onMove, onLeave, onEnter } = useCardGlow();
   }
 
   .detailText {
+    margin: 0;
     text-align: center;
     word-break: break-word;
     white-space: pre-wrap;
     font-size: 1.15em;
     letter-spacing: 0.02em;
     line-height: 1.5;
+    font-weight: 450;
   }
 }
 </style>

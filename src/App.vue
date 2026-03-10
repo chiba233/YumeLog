@@ -101,7 +101,7 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
                 <Home12Regular />
               </n-icon>
             </template>
-            <a class="commonText">{{ homeLabel[lang] || homeLabel.en }}</a>
+            <a :lang="lang" class="commonText">{{ homeLabel[lang] || homeLabel.en }}</a>
           </n-button>
           <n-button :color="themeColor" class="cButton" round @click="goTo('blog')">
             <template #icon>
@@ -109,7 +109,7 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
                 <AnimalRabbit28Regular />
               </n-icon>
             </template>
-            <a class="commonText">{{ blogLabel[lang] || blogLabel.en }}</a>
+            <a :lang="lang" class="commonText">{{ blogLabel[lang] || blogLabel.en }}</a>
           </n-button>
         </div>
       </div>
@@ -118,6 +118,10 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
 </template>
 
 <style lang="scss">
+figure {
+  margin: 0;
+  padding: 0;
+}
 .n-modal-mask {
   background-color: rgba(var(--global-theme-rgb-deep), 0.2) !important;
   backdrop-filter: blur(3px);

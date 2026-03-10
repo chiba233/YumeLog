@@ -1,7 +1,7 @@
 <template>
-  <a class="friendTitle">
+  <h2 class="friendTitle">
     {{ friendsTitle.title }}
-  </a>
+  </h2>
   <div class="allFriends">
     <div
       v-for="friend in friends"
@@ -14,17 +14,13 @@
     >
       <div class="content">
         <n-avatar :size="100" :src="friend.icon" bordered round></n-avatar>
-        <a v-if="lang === 'zh'" class="friendName commonText">
-          {{ friend.name }}
-        </a>
-        <a v-if="lang != 'zh'" class="friendName commonText">
-          {{ friend.alias }}
-        </a>
+        <span :lang="lang" class="friendName commonText">
+          {{ lang === "zh" ? friend.name : friend.alias }}
+        </span>
       </div>
     </div>
   </div>
 </template>
-)
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from "vue";
@@ -104,7 +100,7 @@ $transition-speed: 0.3s;
     -0.5px 0 0 rgba(0, 0, 0, 0.7),
     0 0.5px 0 rgba(0, 0, 0, 0.7),
     0 -0.5px 0 rgba(0, 0, 0, 0.7);
-  font-weight: 350;
+  font-weight: 450;
   margin-bottom: 0.5rem;
   margin-top: 0.5rem;
   @media (min-width: 840px) {
@@ -239,6 +235,7 @@ $transition-speed: 0.3s;
   }
 
   .friendName {
+    font-weight: 450;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

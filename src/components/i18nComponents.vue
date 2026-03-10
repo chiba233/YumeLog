@@ -19,7 +19,7 @@
           <LangIcon />
         </n-icon>
       </template>
-      <a v-if="i18nLang.length > 0" class="commonText">
+      <a v-if="i18nLang.length > 0" :lang="lang" class="commonText">
         {{ i18nLang.find((it) => it.value === lang)?.label }}</a
       >
     </n-button>

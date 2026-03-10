@@ -12,7 +12,7 @@
           <Clock></Clock>
         </n-icon>
       </template>
-      <a class="commonText">{{ buttonTitle }}</a>
+      <a :lang="lang" class="commonText">{{ buttonTitle }}</a>
     </n-button>
     <n-modal v-model:show="showModal">
       <n-card :title="boxTitle" class="fromTimeCard" size="huge">
@@ -26,15 +26,9 @@
           </n-button>
         </template>
         <div v-for="item in fromNow" :key="item.time" class="timeCard themeText">
-          <div class="thatDay">
-            <a>{{ formatDate(item.time) }}</a>
-          </div>
-
-          <a>{{ getName(item) }}</a>
-
-          <div>
-            <a>{{ formatTime(String(item.time)) }}</a>
-          </div>
+          <time :lang="lang">{{ formatDate(item.time) }}</time>
+          <strong :lang="lang">{{ getName(item) }}</strong>
+          <time :lang="lang">{{ formatTime(String(item.time)) }}</time>
         </div>
       </n-card>
     </n-modal>
@@ -126,6 +120,7 @@ const clickMemory = () => {
 <style lang="scss">
 .n-modal-container .fromTimeCard {
   max-height: 92dvh;
+
   .n-button {
     svg {
       color: var(--global-theme-color-deep) !important;
@@ -150,6 +145,7 @@ const clickMemory = () => {
       color: var(--global-theme-color-deep) !important;
     }
   }
+
   .n-card__content {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -215,7 +211,13 @@ const clickMemory = () => {
     margin: 0.5rem auto;
     padding: 0.5rem;
 
-    a {
+    strong {
+      font-weight: 450;
+      -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
+    }
+
+    time {
+      font-weight: 450;
       -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
     }
   }

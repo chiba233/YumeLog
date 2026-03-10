@@ -68,12 +68,12 @@ useHead({
     const currentLang = lang.value;
     const blogTitle = globalWebTitleMap.value["blog"]?.[currentLang];
     if (!blogTitle) {
-      return "Loading...";
+      return webTitle.blog.en;
     }
     if (showModal.value && selectedPost.value) {
       return `${selectedPost.value.title} - ${globalWebTitleMap.value["blog"]?.[currentLang] || "Blog"}`;
     }
-    return globalWebTitleMap.value["blog"]?.[currentLang] || "Blog";
+    return globalWebTitleMap.value["blog"]?.[currentLang] || webTitle.blog.en || "Blog";
   }),
   meta: computed(() => {
     if (!showModal.value || !selectedPost.value) {

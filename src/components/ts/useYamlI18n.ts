@@ -1,4 +1,4 @@
-import { computed, onMounted, ref } from "vue"; // 记得引入 onMounted
+import { computed, onServerPrefetch, ref } from "vue"; // 记得引入 onMounted
 import { lang } from "@/components/ts/setupLang.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 
@@ -13,7 +13,6 @@ export const useYamlText = (type: string, fileName: string, keyName: string = "b
   const introData = ref<DynamicIntroduction | null>(null);
   const { getSingle } = useContentStore();
   const loadData = async () => {
-    if (typeof window === "undefined") return;
     try {
       const res = await getSingle<DynamicIntroduction>(type, fileName);
       if (res) introData.value = res;
@@ -21,9 +20,12 @@ export const useYamlText = (type: string, fileName: string, keyName: string = "b
       console.error("YAML加载失败:", e);
     }
   };
-  onMounted(async () => {
-    await loadData();
-  });
+  const loadPromise = loadData();
+  if (import.meta.env.SSR) {
+    onServerPrefetch(async () => {
+      await loadPromise;
+    });
+  }
   return computed(() => {
     if (!introData.value || !Array.isArray(introData.value[keyName])) {
       return "...";

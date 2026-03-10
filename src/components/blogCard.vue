@@ -736,7 +736,7 @@ $border-radius: 16px;
       text-align: center;
       font-size: 3rem;
       color: #eaeaea;
-      font-weight: 350;
+      font-weight: 500;
       text-shadow:
         0.5px 0 0 rgba(0, 0, 0, 0.7),
         -0.5px 0 0 rgba(0, 0, 0, 0.7),

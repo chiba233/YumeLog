@@ -709,7 +709,7 @@ $border-radius: 16px;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       --n-title-text-color: rgb(31, 34, 37) !important;
       --n-content-text-color: rgb(51, 54, 57) !important;
       --n-padding: 13px !important;

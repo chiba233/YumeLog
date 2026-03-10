@@ -7,31 +7,31 @@ import { lang } from "@/components/ts/setupLang.ts";
 const btnWidth = ref<string>("auto");
 
 const syncWidth = () => {
+  if (import.meta.env.SSR) return;
+
   const buttons = document.querySelectorAll<HTMLElement>(".sync-btn");
-  if (buttons.length === 0) return;
+  if (!buttons.length) return;
 
   let max = 0;
+
   buttons.forEach((el) => {
     const oldWidth = el.style.width;
     const oldMinWidth = el.style.minWidth;
+
     el.style.width = "auto";
     el.style.minWidth = "auto";
 
     const w = el.offsetWidth;
     if (w > max) max = w;
+
     el.style.width = oldWidth;
     el.style.minWidth = oldMinWidth;
   });
 
-  if (max > 0) {
-    const newWidth = `${max + 1}px`;
-    if (btnWidth.value !== newWidth) {
-      btnWidth.value = newWidth;
-    }
-  } else {
-    btnWidth.value = "auto";
-  }
+  btnWidth.value = max > 0 ? `${max + 1}px` : "auto";
 };
+
+onMounted(syncWidth);
 
 watch(lang, () => {
   void nextTick(() => {

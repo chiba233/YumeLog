@@ -18,12 +18,14 @@ export interface SelectOption {
 
 export const langMap: Ref<SelectOption[]> = ref([]);
 
-fetch("/data/config/i18nLang.json")
-  .then((res) => res.json())
-  .then((langData: SelectOption[]) => {
-    langMap.value = langData;
-  })
-  .catch((err) => console.error("I18n config load failed:", err));
+if (!import.meta.env.SSR) {
+  fetch("/data/config/i18nLang.json")
+    .then((res) => res.json())
+    .then((langData: SelectOption[]) => {
+      langMap.value = langData;
+    })
+    .catch((err) => console.error("I18n config load failed:", err));
+}
 
 const rawLang = navigator.language.substring(0, 2);
 export const lang: Ref<string> = useStorage("useLang", rawLang);

@@ -24,6 +24,8 @@ import { PushPinSharp } from "@vicons/material";
 import { useContentStore } from "./ts/contentStore";
 import { useHead } from "@unhead/vue";
 import { globalWebTitleMap } from "@/components/ts/useTitleState";
+import ClientOnly from "@/components/ClientOnly.vue";
+import webTitle from "@/data/I18N/webTitle.json";
 
 const { getPosts, getSingle } = useContentStore();
 
@@ -76,14 +78,22 @@ useHead({
   meta: computed(() => {
     if (!showModal.value || !selectedPost.value) {
       return [
-        { name: "description", content: globalWebTitleMap.value["blog"]?.[lang.value] || "Blog" },
-        { property: "og:title", content: globalWebTitleMap.value["blog"]?.[lang.value] || "Blog" },
+        {
+          name: "description",
+          content: globalWebTitleMap.value["blog"]?.[lang.value] || webTitle.blog.en || "Blog",
+        },
+        {
+          property: "og:title",
+          content: globalWebTitleMap.value["blog"]?.[lang.value] || webTitle.blog.en || "Blog",
+        },
         { property: "og:type", content: "Blog" },
       ];
     }
     const desc = getDescriptionText(selectedPost.value.blocks).slice(0, 160);
     const firstImg =
-      (getImageBlocks(selectedPost.value.blocks)?.[0]?.content as ImageContent[])?.[0]?.src || "";
+      (getImageBlocks(selectedPost.value.blocks)?.[0]?.content as ImageContent[])?.[0]?.src ||
+      webTitle.blog.en ||
+      "Blog";
     return [
       { name: "description", content: desc },
       { property: "og:description", content: desc },
@@ -279,71 +289,76 @@ watch(
       <p v-else :lang="lang">{{ blogDisplay.loading }}</p>
     </div>
   </div>
-
-  <n-modal v-model:show="showModal">
-    <n-card
-      v-if="selectedPost"
-      :lang="selectedPost?.lang as string"
-      :title="selectedPost.title"
-      class="postModel"
-      size="huge"
-    >
-      <template #header-extra>
-        <n-button circle tertiary @click="closePortal">
-          <template #icon>
-            <n-icon size="20">
-              <Cancel />
-            </n-icon>
-          </template>
-        </n-button>
-      </template>
-      <div class="postCardMain">
-        <div class="postCardMeta themeText">
-          <time :datetime="selectedPost.time" :lang="lang"
-            >{{ formatDate(selectedPost.time) }}
-          </time>
-          <span class="time-divider">|</span>
-          <span :lang="lang">{{ formatTime(selectedPost.time) }}</span>
-        </div>
-        <div v-for="(block, a) in selectedPost.blocks as PostBlock[]" :key="a" class="postCardBody">
-          <div v-if="block.type === 'image'" class="postCardImage">
-            <div
-              v-for="img in block.content as ImageContent[]"
-              :key="img.src"
-              class="postCardNImage"
-            >
-              <n-image
-                v-if="img.src && changeSpareUrl === false"
-                :src="img.src"
-                :alt="img.desc"
-                class="postCardImg"
-                width="120"
-              />
-              <n-image
-                v-if="img.src && changeSpareUrl === true"
-                :src="img.spareUrl"
-                :alt="img.desc"
-                class="postCardImg"
-                width="120"
-              />
-              <div v-if="img.desc" class="postCardImageDesc">
-                <span :lang="selectedPost?.lang as string" class="themeText">{{ img.desc }}</span>
+  <ClientOnly>
+    <n-modal v-model:show="showModal">
+      <n-card
+        v-if="selectedPost"
+        :lang="selectedPost?.lang as string"
+        :title="selectedPost.title"
+        class="postModel"
+        size="huge"
+      >
+        <template #header-extra>
+          <n-button circle tertiary @click="closePortal">
+            <template #icon>
+              <n-icon size="20">
+                <Cancel />
+              </n-icon>
+            </template>
+          </n-button>
+        </template>
+        <div class="postCardMain">
+          <div class="postCardMeta themeText">
+            <time :datetime="selectedPost.time" :lang="lang"
+              >{{ formatDate(selectedPost.time) }}
+            </time>
+            <span class="time-divider">|</span>
+            <span :lang="lang">{{ formatTime(selectedPost.time) }}</span>
+          </div>
+          <div
+            v-for="(block, a) in selectedPost.blocks as PostBlock[]"
+            :key="a"
+            class="postCardBody"
+          >
+            <div v-if="block.type === 'image'" class="postCardImage">
+              <div
+                v-for="img in block.content as ImageContent[]"
+                :key="img.src"
+                class="postCardNImage"
+              >
+                <n-image
+                  v-if="img.src && changeSpareUrl === false"
+                  :alt="img.desc"
+                  :src="img.src"
+                  class="postCardImg"
+                  width="120"
+                />
+                <n-image
+                  v-if="img.src && changeSpareUrl === true"
+                  :alt="img.desc"
+                  :src="img.spareUrl"
+                  class="postCardImg"
+                  width="120"
+                />
+                <div v-if="img.desc" class="postCardImageDesc">
+                  <span :lang="selectedPost?.lang as string" class="themeText">{{ img.desc }}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div v-if="block.type === 'divider'" class="divider">
-            <div class="separator-icon"><span>✦</span></div>
-          </div>
-          <div v-if="block.type === 'text'" class="postCardText">
-            <RichTextRenderer
-              :lang="selectedPost?.lang as string"
-              :tokens="parseRichText(block.content as string)"
-            />
+            <div v-if="block.type === 'divider'" class="divider">
+              <div class="separator-icon"><span>✦</span></div>
+            </div>
+            <div v-if="block.type === 'text'" class="postCardText">
+              <RichTextRenderer
+                :lang="selectedPost?.lang as string"
+                :tokens="parseRichText(block.content as string)"
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </n-card>
-  </n-modal>
+      </n-card>
+    </n-modal>
+  </ClientOnly>
 </template>
 
 <style lang="scss">
@@ -414,6 +429,7 @@ $border-radius: 16px;
     .postCardImg img {
       margin: 0 !important;
       border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .postCardImageDesc {

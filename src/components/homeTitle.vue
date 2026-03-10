@@ -1,6 +1,8 @@
 <template>
   <div class="dashboardTitle">
-    <n-avatar :src="icon" bordered class="titleIcon" round></n-avatar>
+    <ClientOnly>
+      <n-avatar :src="icon" bordered class="titleIcon" round></n-avatar>
+    </ClientOnly>
     <h1 :lang="lang" class="titleText">
       {{ displayTitle }}
     </h1>
@@ -14,6 +16,7 @@ import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 import { useHead } from "@unhead/vue";
 import { computed } from "vue";
 import { lang } from "@/components/ts/setupLang.ts";
+import ClientOnly from "@/components/ClientOnly.vue";
 
 const iconUrl = new URL("../icons/icon.webp", import.meta.url).href;
 

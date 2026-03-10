@@ -1,85 +1,92 @@
 <template>
-  <n-modal v-model:show="showCatModel">
-    <!-- catCard -->
-    <n-card :title="catMemoryTitle.catMemory" class="catCard" size="huge">
-      <template #header-extra>
-        <n-button circle tertiary @click="showCatModel = false">
-          <template #icon>
-            <n-icon size="20">
-              <Cancel></Cancel>
-            </n-icon>
-          </template>
-        </n-button>
-      </template>
-      <div class="catMainCard">
-        <n-image-group>
-          <div v-for="item in nekoImg" :key="item.imgName" class="catImgDIV">
-            <figure>
-              <n-image
-                :alt="item.imgName"
-                :fallback-src="item.imgError"
-                :src="item.img"
-                width="160"
-              ></n-image>
-              <figcaption :lang="lang" class="themeText">{{ item.imgName }}</figcaption>
-            </figure>
-          </div>
-        </n-image-group>
-      </div>
-    </n-card>
-  </n-modal>
+  <ClientOnly>
+    <n-modal v-model:show="showCatModel">
+      <!-- catCard -->
+      <n-card :title="catMemoryTitle.catMemory" class="catCard" size="huge">
+        <template #header-extra>
+          <n-button circle tertiary @click="showCatModel = false">
+            <template #icon>
+              <n-icon size="20">
+                <Cancel></Cancel>
+              </n-icon>
+            </template>
+          </n-button>
+        </template>
+        <div class="catMainCard">
+          <n-image-group>
+            <div v-for="item in nekoImg" :key="item.imgName" class="catImgDIV">
+              <figure>
+                <n-image
+                  :alt="item.imgName"
+                  :fallback-src="item.imgError"
+                  :src="item.img"
+                  width="160"
+                ></n-image>
+                <figcaption :lang="lang" class="themeText">{{ item.imgName }}</figcaption>
+              </figure>
+            </div>
+          </n-image-group>
+        </div>
+      </n-card>
+    </n-modal>
+  </ClientOnly>
   <!-- maiCard -->
-  <n-modal v-model:show="showMaiModal" :block-scroll="false">
-    <n-card :title="maiDisplay.titleName" class="maiCard" size="huge">
-      <template #header-extra>
-        <n-button circle tertiary @click="showMaiModal = false">
-          <template #icon>
-            <n-icon size="20">
-              <Cancel />
-            </n-icon>
-          </template>
-        </n-button>
-      </template>
+  <ClientOnly>
+    <n-modal v-model:show="showMaiModal" :block-scroll="false">
+      <n-card :title="maiDisplay.titleName" class="maiCard" size="huge">
+        <template #header-extra>
+          <n-button circle tertiary @click="showMaiModal = false">
+            <template #icon>
+              <n-icon size="20">
+                <Cancel />
+              </n-icon>
+            </template>
+          </n-button>
+        </template>
 
-      <n-collapse :default-expanded-names="['1']" accordion class="maiCollapse">
-        <n-collapse-item
-          v-for="section in maiSections"
-          :key="section.name"
-          :name="section.name"
-          :title="maiDisplay[section.titleKey]"
-        >
-          <div v-for="item in section.items" :key="item.label" class="maiCardDiv">
-            <span :lang="lang" class="themeText">{{ maiDisplay[item.label] }}</span>
-            <span :lang="lang" class="connecter themeText">:</span>
-            <span :lang="lang" class="themeText">{{ getStatValue(item.value) }}</span>
-          </div>
-        </n-collapse-item>
-      </n-collapse>
-    </n-card>
-  </n-modal>
+        <n-collapse :default-expanded-names="['1']" accordion class="maiCollapse">
+          <n-collapse-item
+            v-for="section in maiSections"
+            :key="section.name"
+            :name="section.name"
+            :title="maiDisplay[section.titleKey]"
+          >
+            <div v-for="item in section.items" :key="item.label" class="maiCardDiv">
+              <span :lang="lang" class="themeText">{{ maiDisplay[item.label] }}</span>
+              <span :lang="lang" class="connecter themeText">:</span>
+              <span :lang="lang" class="themeText">{{ getStatValue(item.value) }}</span>
+            </div>
+          </n-collapse-item>
+        </n-collapse>
+      </n-card>
+    </n-modal>
+  </ClientOnly>
+
   <!-- 以下是WeCat -->
   <n-image-preview v-model:show="showWechatModel" src="/wechat.webp"></n-image-preview>
   <n-image-preview v-model:show="showLineModel" src="/line.webp"></n-image-preview>
 
   <!-- 以下是联系人 -->
   <div class="contacts">
-    <n-button
-      v-for="item in platforms"
-      :key="item.id"
-      :color="themeColor"
-      class="cButton glass"
-      round
-      @click="handleContactClick(item)"
-    >
-      <template #icon>
-        <n-icon size="23">
-          <component :is="iconMap[item.id]" />
-        </n-icon>
-      </template>
-      <a :lang="lang" class="commonText">
-        {{ getLabel(item) }}
-      </a>
-    </n-button>
+    <ClientOnly>
+      <n-button
+        v-for="item in platforms"
+        :key="item.id"
+        :color="themeColor"
+        class="cButton glass"
+        round
+        @click="handleContactClick(item)"
+      >
+        <template #icon>
+          <n-icon size="23">
+            <component :is="iconMap[item.id]" />
+          </n-icon>
+        </template>
+        <a :lang="lang" class="commonText">
+          {{ getLabel(item) }}
+        </a>
+      </n-button>
+    </ClientOnly>
   </div>
 </template>
 
@@ -122,6 +129,7 @@ import { getMaiUrl, type UserDataType } from "./ts/maimaiScore";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 import { socialRawData } from "@/components/ts/setupJson.ts";
 import { useHead } from "@unhead/vue";
+import ClientOnly from "@/components/ClientOnly.vue";
 
 type PlatformId =
   | "telegram"

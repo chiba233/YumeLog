@@ -52,6 +52,7 @@ onMounted(async () => {
 });
 
 watchEffect(() => {
+  if (import.meta.env.SSR) return;
   document.documentElement.lang = lang.value;
 });
 </script>

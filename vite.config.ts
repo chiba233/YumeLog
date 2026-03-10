@@ -27,12 +27,10 @@ export default defineConfig({
 
     rollupOptions: {
       output: {
-        manualChunks: {
-          vue: ["vue"],
-          naive: ["naive-ui"],
-          moment: ["moment"],
-          yaml: ["js-yaml"],
-          icons: ["@vicons/fluent", "@vicons/ionicons5", "@vicons/material"],
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            return "vendor";
+          }
         },
       },
     },

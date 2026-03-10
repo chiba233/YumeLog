@@ -3,6 +3,7 @@
     <div class="title">
       <h1 :lang="lang">{{ titleI18N[lang] || titleI18N.en }}</h1>
     </div>
+
     <blog-card></blog-card>
   </div>
 </template>

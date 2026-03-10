@@ -13,7 +13,9 @@
       @mousemove="onMove"
     >
       <div class="content">
-        <n-avatar :size="100" :src="friend.icon" bordered round></n-avatar>
+        <ClientOnly>
+          <n-avatar :size="100" :src="friend.icon" bordered round></n-avatar>
+        </ClientOnly>
         <span :lang="lang" class="friendName commonText">
           {{ lang === "zh" ? friend.name : friend.alias }}
         </span>
@@ -30,6 +32,7 @@ import { lang } from "@/components/ts/setupLang.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 import { useHead } from "@unhead/vue";
+import ClientOnly from "@/components/ClientOnly.vue";
 
 interface Friend {
   name: string;

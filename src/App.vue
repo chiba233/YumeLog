@@ -1,21 +1,21 @@
 <script lang="ts" setup>
-import { RouterView, useRoute, useRouter } from "vue-router";
-import { onMounted, watch } from "vue";
+import { RouterView, useRouter } from "vue-router";
+import { onMounted } from "vue";
 import { NButton, NIcon, NMessageProvider } from "naive-ui";
 import { AnimalRabbit28Regular, Home12Regular } from "@vicons/fluent";
 import MessageProvider from "@/components/MessageProvider.vue";
 import TopBar from "@/components/topBar.vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import { themeColor } from "@/components/ts/useTheme.ts";
-import { dynamicTitlePrefix, globalWebTitleMap } from "./components/ts/useTitleState";
+import { globalWebTitleMap } from "./components/ts/useTitleState";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { SocialConfig, socialRawData } from "@/components/ts/setupJson.ts";
+import ClientOnly from "@/components/ClientOnly.vue";
 
 type ColorData = Record<string, string>;
 const router = useRouter();
-const route = useRoute();
-
 onMounted(async () => {
+  if (typeof window === "undefined") return;
   try {
     const [colorRes, titleRes, socialLinks] = await Promise.all([
       fetch("/data/config/colorData.json"),
@@ -41,6 +41,7 @@ onMounted(async () => {
     } else {
       console.warn("颜色配置加载异常");
     }
+
     if (socialLinks.ok) {
       socialRawData.value = (await socialLinks.json()) as SocialConfig;
     } else {
@@ -53,25 +54,9 @@ onMounted(async () => {
       console.warn("标题配置加载异");
     }
   } catch (e) {
-    console.error("全局初始化失败:", e);
+    console.error("Global initialization failed:", e);
   }
 });
-
-fetch("/data/config/socialLinks.json")
-  .then((res) => res.json() as Promise<SocialConfig>)
-  .then((data) => {
-    socialRawData.value = data;
-  })
-  .catch((err) => {
-    console.error(err);
-  });
-
-watch(
-  () => route.path,
-  () => {
-    dynamicTitlePrefix.value = "";
-  },
-);
 
 const goTo = (name: string) => router.push({ name });
 
@@ -82,7 +67,9 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
 <template>
   <n-message-provider>
     <MessageProvider>
-      <top-bar class="topBar"></top-bar>
+      <ClientOnly>
+        <top-bar class="topBar"></top-bar>
+      </ClientOnly>
       <div class="viewport">
         <div class="main">
           <router-view v-slot="{ Component }">
@@ -92,27 +79,28 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
           </router-view>
         </div>
       </div>
-
-      <div class="copyright">
-        <div class="cardButton">
-          <n-button :color="themeColor" class="cButton" round @click="goTo('home')">
-            <template #icon>
-              <n-icon size="23">
-                <Home12Regular />
-              </n-icon>
-            </template>
-            <a :lang="lang" class="commonText">{{ homeLabel[lang] || homeLabel.en }}</a>
-          </n-button>
-          <n-button :color="themeColor" class="cButton" round @click="goTo('blog')">
-            <template #icon>
-              <n-icon size="23">
-                <AnimalRabbit28Regular />
-              </n-icon>
-            </template>
-            <a :lang="lang" class="commonText">{{ blogLabel[lang] || blogLabel.en }}</a>
-          </n-button>
+      <ClientOnly>
+        <div class="copyright">
+          <div class="cardButton">
+            <n-button :color="themeColor" class="cButton" round @click="goTo('home')">
+              <template #icon>
+                <n-icon size="23">
+                  <Home12Regular />
+                </n-icon>
+              </template>
+              <a :lang="lang" class="commonText">{{ homeLabel[lang] || homeLabel.en }}</a>
+            </n-button>
+            <n-button :color="themeColor" class="cButton" round @click="goTo('blog')">
+              <template #icon>
+                <n-icon size="23">
+                  <AnimalRabbit28Regular />
+                </n-icon>
+              </template>
+              <a :lang="lang" class="commonText">{{ blogLabel[lang] || blogLabel.en }}</a>
+            </n-button>
+          </div>
         </div>
-      </div>
+      </ClientOnly>
     </MessageProvider>
   </n-message-provider>
 </template>

@@ -29,7 +29,7 @@ useHead({
     },
     {
       property: "og:type",
-      content: "profile",
+      content: "website",
     },
   ],
 });

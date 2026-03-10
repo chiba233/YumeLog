@@ -21,12 +21,19 @@ import ClientOnly from "@/components/ClientOnly.vue";
 const iconUrl = new URL("../icons/icon.webp", import.meta.url).href;
 
 const displayTitle = useYamlText("main", "title.yaml", "title");
+
+if (!import.meta.env.SSR) {
+  useHead({
+    meta: [
+      {
+        property: "og:image",
+        content: iconUrl,
+      },
+    ],
+  });
+}
 useHead({
   meta: [
-    {
-      property: "og:image",
-      content: iconUrl,
-    },
     {
       property: "og:title",
       content: computed(() => displayTitle.value || ""),

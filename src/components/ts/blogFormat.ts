@@ -213,9 +213,9 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
       const token: TextToken = handler
         ? handler(node.tokens)
         : {
-          type: node.tag,
-          value: node.tokens,
-        };
+            type: node.tag,
+            value: node.tokens,
+          };
 
       current().push(token);
 

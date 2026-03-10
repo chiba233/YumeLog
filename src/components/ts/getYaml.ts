@@ -18,11 +18,21 @@ let memoizedConfig: Promise<YamlUrlConfig> | undefined;
 let cacheTime = 0;
 const TTL = 600000;
 
+const getFetchUrl = (path: string) => {
+  if (/^https?:\/\//.test(path)) {
+    return path;
+  }
+  const base = import.meta.env.SSR ? import.meta.env.VITE_SITE_URL : window.location.origin;
+  const normalizedBase = base.replace(/\/+$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+};
+
 export function getYamlConfig(): Promise<YamlUrlConfig> {
   const now = Date.now();
   if (!memoizedConfig || now - cacheTime > TTL) {
     cacheTime = now;
-    memoizedConfig = fetch("/data/config/yamlUrl.json")
+    memoizedConfig = fetch(getFetchUrl("/data/config/yamlUrl.json"))
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load config");
         return res.json();
@@ -211,11 +221,13 @@ export const loadSingleYaml = async <T>(type: string, fileName: string): Promise
   if (!configItem) return null;
 
   const { url: baseUrl, spareUrl } = configItem;
-  let res = await fetchWithRetry(`${baseUrl}${fileName}`, undefined, 2, 500);
+
+  let res = await fetchWithRetry(getFetchUrl(`${baseUrl}${fileName}`), undefined, 2, 500);
 
   if ((!res || !res.ok) && spareUrl) {
     changeSpareUrl.value = true;
-    res = await fetchWithRetry(`${spareUrl}${fileName}`, undefined, 2, 500);
+
+    res = await fetchWithRetry(getFetchUrl(`${spareUrl}${fileName}`), undefined, 2, 500);
   }
 
   if (res && res.ok) {
@@ -232,5 +244,6 @@ export const loadSingleYaml = async <T>(type: string, fileName: string): Promise
       return null;
     }
   }
+
   return null;
 };

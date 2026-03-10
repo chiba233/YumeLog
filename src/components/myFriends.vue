@@ -25,7 +25,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import { NAvatar } from "naive-ui";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
 import { lang } from "@/components/ts/setupLang.ts";
@@ -81,14 +81,11 @@ useHead({
     },
   ],
 });
+const rawData = await getSingle<YamlResponse>("main", "friends.yaml");
 
-onMounted(async () => {
-  const rawData = await getSingle<YamlResponse>("main", "friends.yaml");
-
-  if (rawData && rawData.friends) {
-    friends.value = rawData.friends;
-  }
-});
+if (rawData && rawData.friends) {
+  friends.value = rawData.friends;
+}
 </script>
 
 <style lang="scss">

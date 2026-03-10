@@ -13,17 +13,35 @@ import { SocialConfig, socialRawData } from "@/components/ts/setupJson.ts";
 import ClientOnly from "@/components/ClientOnly.vue";
 
 type ColorData = Record<string, string>;
-const router = useRouter();
-onMounted(async () => {
-  if (typeof window === "undefined") return;
-  try {
-    const [colorRes, titleRes, socialLinks] = await Promise.all([
-      fetch("/data/config/colorData.json"),
-      fetch("/data/main/webTitle.json"),
-      fetch("/data/config/socialLinks.json"),
-    ]);
 
-    if (colorRes.ok) {
+const router = useRouter();
+const base = import.meta.env.SSR ? import.meta.env.VITE_SITE_URL : "";
+
+const initData = async () => {
+  try {
+    const fetchTasks: Promise<Response>[] = [
+      fetch(`${base}/data/main/webTitle.json`),
+      fetch(`${base}/data/config/socialLinks.json`),
+    ];
+
+    if (!import.meta.env.SSR) {
+      fetchTasks.push(fetch(`${base}/data/config/colorData.json`));
+    }
+
+    const results = await Promise.all(fetchTasks);
+    const titleRes = results[0];
+    const socialRes = results[1];
+    const colorRes = results[2];
+
+    if (socialRes?.ok) {
+      socialRawData.value = (await socialRes.json()) as SocialConfig;
+    }
+
+    if (titleRes?.ok) {
+      globalWebTitleMap.value = (await titleRes.json()) as Record<string, Record<string, string>>;
+    }
+
+    if (!import.meta.env.SSR && colorRes?.ok) {
       const colorData = (await colorRes.json()) as ColorData;
       const keys = Object.keys(colorData);
       if (keys.length > 0) {
@@ -33,29 +51,28 @@ onMounted(async () => {
 
         if (selectedColor) {
           themeColor.value = selectedColor;
-          const bg = document.getElementById("bg");
-          if (bg) bg.style.backgroundImage = `url(/background${randomIndex}.webp)`;
-          document.body.style.backgroundColor = selectedColor;
+          applyThemeToDOM(randomIndex, selectedColor);
         }
       }
-    } else {
-      console.warn("颜色配置加载异常");
-    }
-
-    if (socialLinks.ok) {
-      socialRawData.value = (await socialLinks.json()) as SocialConfig;
-    } else {
-      console.warn("社交链接加载异常");
-    }
-
-    if (titleRes.ok) {
-      globalWebTitleMap.value = (await titleRes.json()) as Record<string, Record<string, string>>;
-    } else {
-      console.warn("标题配置加载异");
     }
   } catch (e) {
-    console.error("Global initialization failed:", e);
+    console.error("Initialization failed:", e);
   }
+};
+
+const applyThemeToDOM = (index: number, color: string) => {
+  if (typeof document === "undefined") return;
+  const bg = document.getElementById("bg");
+  if (bg) bg.style.backgroundImage = `url(/background${index}.webp)`;
+  document.body.style.backgroundColor = color;
+};
+
+if (import.meta.env.SSR) {
+  void initData();
+}
+
+onMounted(async () => {
+  await initData();
 });
 
 const goTo = (name: string) => router.push({ name });
@@ -63,7 +80,6 @@ const goTo = (name: string) => router.push({ name });
 const homeLabel = commonI18n.bottomToolBarHome as Record<string, string>;
 const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
 </script>
-
 <template>
   <n-message-provider>
     <MessageProvider>

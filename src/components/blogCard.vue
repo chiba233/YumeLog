@@ -25,7 +25,6 @@ import { useContentStore } from "./ts/contentStore";
 import { useHead } from "@unhead/vue";
 import { globalWebTitleMap } from "@/components/ts/useTitleState";
 import ClientOnly from "@/components/ClientOnly.vue";
-import webTitle from "@/data/I18N/webTitle.json";
 
 const { getPosts, getSingle } = useContentStore();
 
@@ -66,25 +65,21 @@ const processedPosts = computed<ProcessedPost[]>(() => {
 useHead({
   title: computed(() => {
     const currentLang = lang.value;
-    const blogTitle = globalWebTitleMap.value["blog"]?.[currentLang];
-    if (!blogTitle) {
-      return webTitle.blog.en;
-    }
     if (showModal.value && selectedPost.value) {
       return `${selectedPost.value.title} - ${globalWebTitleMap.value["blog"]?.[currentLang] || "Blog"}`;
     }
-    return globalWebTitleMap.value["blog"]?.[currentLang] || webTitle.blog.en || "Blog";
+    return globalWebTitleMap.value["blog"]?.[currentLang] || "Blog";
   }),
   meta: computed(() => {
     if (!showModal.value || !selectedPost.value) {
       return [
         {
           name: "description",
-          content: globalWebTitleMap.value["blog"]?.[lang.value] || webTitle.blog.en || "Blog",
+          content: globalWebTitleMap.value["blog"]?.[lang.value] || "Blog",
         },
         {
           property: "og:title",
-          content: globalWebTitleMap.value["blog"]?.[lang.value] || webTitle.blog.en || "Blog",
+          content: globalWebTitleMap.value["blog"]?.[lang.value] || "Blog",
         },
         { property: "og:type", content: "Blog" },
       ];
@@ -92,7 +87,6 @@ useHead({
     const desc = getDescriptionText(selectedPost.value.blocks).slice(0, 160);
     const firstImg =
       (getImageBlocks(selectedPost.value.blocks)?.[0]?.content as ImageContent[])?.[0]?.src ||
-      webTitle.blog.en ||
       "Blog";
     return [
       { name: "description", content: desc },

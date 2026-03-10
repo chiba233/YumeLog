@@ -68,25 +68,23 @@
 
   <!-- 以下是联系人 -->
   <div class="contacts">
-    <ClientOnly>
-      <n-button
-        v-for="item in platforms"
-        :key="item.id"
-        :color="themeColor"
-        class="cButton glass"
-        round
-        @click="handleContactClick(item)"
-      >
-        <template #icon>
-          <n-icon size="23">
-            <component :is="iconMap[item.id]" />
-          </n-icon>
-        </template>
-        <a :lang="lang" class="commonText">
-          {{ getLabel(item) }}
-        </a>
-      </n-button>
-    </ClientOnly>
+    <n-button
+      v-for="item in platforms ?? []"
+      :key="item.id"
+      :color="themeColor"
+      class="cButton glass"
+      round
+      @click="handleContactClick(item)"
+    >
+      <template #icon>
+        <n-icon size="23">
+          <component :is="iconMap[item.id]" />
+        </n-icon>
+      </template>
+      <a :lang="lang" class="commonText">
+        {{ getLabel(item) }}
+      </a>
+    </n-button>
   </div>
 </template>
 

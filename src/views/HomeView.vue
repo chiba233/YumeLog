@@ -7,7 +7,9 @@
     <div class="contactsDIV">
       <ContactInformation />
     </div>
-    <MyFriends />
+    <Suspense>
+      <MyFriends />
+    </Suspense>
   </div>
 </template>
 
@@ -23,7 +25,6 @@ import { useRoute } from "vue-router";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang";
 import { $message } from "@/components/ts/msgUtils";
-import webTitle from "@/data/I18N/webTitle.json";
 
 const route = useRoute();
 onMounted(() => {
@@ -38,10 +39,6 @@ onMounted(() => {
 useHead({
   title: computed(() => {
     const currentLang = lang.value;
-    const homeTitle = globalWebTitleMap.value["home"]?.[currentLang];
-    if (!homeTitle) {
-      return webTitle.home.en;
-    }
     return globalWebTitleMap.value["home"]?.[currentLang] || "Home";
   }),
 });

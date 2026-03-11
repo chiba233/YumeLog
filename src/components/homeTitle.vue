@@ -3,9 +3,9 @@
     <ClientOnly>
       <n-avatar :src="icon" bordered class="titleIcon" round></n-avatar>
     </ClientOnly>
-    <h1 :lang="lang" class="titleText">
+    <h2 :lang="lang" class="titleText">
       {{ displayTitle }}
-    </h1>
+    </h2>
   </div>
 </template>
 
@@ -14,7 +14,6 @@ import { NAvatar } from "naive-ui";
 import icon from "../icons/icon.webp";
 import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 import { useHead } from "@unhead/vue";
-import { computed } from "vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import ClientOnly from "@/components/ClientOnly.vue";
 
@@ -32,14 +31,14 @@ if (!import.meta.env.SSR) {
     ],
   });
 }
-useHead({
+useHead(() => ({
   meta: [
     {
       property: "og:title",
-      content: computed(() => displayTitle.value || ""),
+      content: displayTitle.value.slice(0, 160),
     },
   ],
-});
+}));
 </script>
 
 <style lang="scss">

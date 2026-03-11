@@ -5,10 +5,16 @@ import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
   plugins: [vue(), svgLoader()],
-
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+  ssgOptions: {
+    script: "async",
+    formatting: "minify",
+    onPageRendered(route, html) {
+      return html.replace(/(<html[^>]*\slang=")([^"]*)(")/gi, "$1lang$3");
     },
   },
 
@@ -24,13 +30,10 @@ export default defineConfig({
 
   build: {
     chunkSizeWarningLimit: 1000,
-
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes("node_modules")) {
-            return "vendor";
-          }
+          if (id.includes("node_modules")) return "vendor";
         },
       },
     },

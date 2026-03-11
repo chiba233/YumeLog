@@ -61,7 +61,7 @@ const initData = async () => {
 };
 
 const applyThemeToDOM = (index: number, color: string) => {
-  if (typeof document === "undefined") return;
+  if (import.meta.env.SSR) return;
   const bg = document.getElementById("bg");
   if (bg) bg.style.backgroundImage = `url(/background${index}.webp)`;
   document.body.style.backgroundColor = color;
@@ -98,7 +98,7 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
       <ClientOnly>
         <div class="copyright">
           <div class="cardButton">
-            <n-button :color="themeColor" class="cButton" round @click="goTo('home')">
+            <n-button :color="themeColor" class="bottomButton" round @click="goTo('home')">
               <template #icon>
                 <n-icon size="23">
                   <Home12Regular />
@@ -106,7 +106,7 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
               </template>
               <a :lang="lang" class="commonText">{{ homeLabel[lang] || homeLabel.en }}</a>
             </n-button>
-            <n-button :color="themeColor" class="cButton" round @click="goTo('blog')">
+            <n-button :color="themeColor" class="bottomButton" round @click="goTo('blog')">
               <template #icon>
                 <n-icon size="23">
                   <AnimalRabbit28Regular />
@@ -259,7 +259,7 @@ figure {
     gap: 1em;
   }
 
-  .cButton {
+  .bottomButton {
     width: 100%;
     height: 2.2em;
     border: 1px solid rgba(255, 255, 255, 0.2);

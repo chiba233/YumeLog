@@ -21,15 +21,19 @@ useHead({
   meta: [
     {
       name: "description",
-      content: computed(() => displayContent.value || ""),
+      content: computed(() => displayContent.value.slice(0, 160) || ""),
     },
     {
       property: "og:description",
-      content: computed(() => displayContent.value || ""),
+      content: computed(() => displayContent.value.slice(0, 160) || ""),
     },
     {
       property: "og:type",
       content: "website",
+    },
+    {
+      property: "twitter:description",
+      content: computed(() => displayContent.value.slice(0, 160) || ""),
     },
   ],
 });

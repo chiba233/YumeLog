@@ -1,5 +1,8 @@
 <template>
   <div class="content">
+    <h1 aria-hidden="false" class="sr-only">
+      {{ globalWebTitleMap["home"]?.[lang] }}
+    </h1>
     <HomeTitle />
     <div class="detailsDIV">
       <PersonalIntroductions />
@@ -45,6 +48,17 @@ useHead({
 </script>
 
 <style lang="scss">
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
 .content {
   width: 100%;
   display: flex;

@@ -107,7 +107,7 @@ import Cancel from "@/icons/cancel.svg";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import maiI18nData from "@/data/I18N/maiI18n.json";
 
-import { computed, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import {
   NButton,
   NCard,
@@ -125,33 +125,15 @@ import { lang } from "@/components/ts/setupLang.ts";
 import { themeColor } from "@/components/ts/useTheme.ts";
 import { getMaiUrl, type UserDataType } from "./ts/maimaiScore";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
-import { socialRawData } from "@/components/ts/setupJson.ts";
+import {
+  InteractionType,
+  maiSections,
+  PlatformConfig,
+  PlatformId,
+  socialRawData,
+} from "@/components/ts/setupJson.ts";
 import { useHead } from "@unhead/vue";
 import ClientOnly from "@/components/ClientOnly.vue";
-
-type PlatformId =
-  | "telegram"
-  | "wechat"
-  | "line"
-  | "email"
-  | "twitter"
-  | "github"
-  | "tron"
-  | "eth"
-  | "areth"
-  | "bsc"
-  | "polygon"
-  | "solana"
-  | "maimai"
-  | "cat";
-
-type InteractionType = "link" | "modal" | "func";
-
-interface PlatformConfig {
-  id: PlatformId;
-  label: string;
-  type: InteractionType;
-}
 
 const platforms = computed(() => {
   return socialRawData.value?.platforms ?? [];
@@ -159,7 +141,33 @@ const platforms = computed(() => {
 const socialLinks = computed(() => {
   return socialRawData.value?.socialLinks ?? {};
 });
-
+const syncContactWidth = () => {
+  if (import.meta.env.SSR) return;
+  const buttons = document.querySelectorAll<HTMLElement>(".cButton");
+  if (!buttons.length) return;
+  let max = 0;
+  buttons.forEach((el) => {
+    const oldWidth = el.style.width;
+    const oldMinWidth = el.style.minWidth;
+    el.style.width = "auto";
+    el.style.minWidth = "auto";
+    const w = el.offsetWidth;
+    if (w > max) max = w;
+    el.style.width = oldWidth;
+    el.style.minWidth = oldMinWidth;
+  });
+  buttons.forEach((el) => {
+    el.style.minWidth = `${max}px`;
+  });
+};
+watch(
+  [platforms, lang],
+  async () => {
+    await nextTick();
+    syncContactWidth();
+  },
+  { immediate: true },
+);
 const showCatModel = ref<boolean>(false);
 const showMaiModal = ref<boolean>(false);
 const showWechatModel = ref<boolean>(false);
@@ -213,48 +221,6 @@ const catMemoryTitle = computed(() => {
     cat: source.cat[lang.value] ?? source.cat.en,
   };
 });
-
-interface MaiSectionItem {
-  label: string;
-  value: string;
-}
-
-interface MaiSection {
-  titleKey: string;
-  name: string;
-  items: MaiSectionItem[];
-}
-
-const maiSections: MaiSection[] = [
-  {
-    titleKey: "mainInfo",
-    name: "1",
-    items: [
-      { label: "dxName", value: "userName" },
-      { label: "dxRatingName", value: "playerRating" },
-      { label: "dxLastPlay", value: "lastPlayDate" },
-      { label: "dxPlayCount", value: "playCount" },
-      { label: "dxVersion", value: "lastDataVersion" },
-    ],
-  },
-  {
-    titleKey: "otherInfo",
-    name: "2",
-    items: [
-      { label: "BasicDeluxscore", value: "totalBasicDeluxscore" },
-      { label: "AdvancedDeluxscore", value: "totalAdvancedDeluxscore" },
-      { label: "ExpertDeluxscore", value: "totalExpertDeluxscore" },
-      { label: "MasterDeluxscore", value: "totalMasterDeluxscore" },
-      { label: "ReMasterDeluxscore", value: "totalReMasterDeluxscore" },
-      { label: "totalDeluxscore", value: "totalDeluxscore" },
-    ],
-  },
-  {
-    titleKey: "historyInfo",
-    name: "3",
-    items: [{ label: "highestRating", value: "highestRating" }],
-  },
-];
 
 const maiDisplay = computed(() => {
   const source = maiI18nData as Record<string, Record<string, string>>;
@@ -475,17 +441,11 @@ useHead({
     height: 2.2em;
     margin: 0.5rem;
 
+    &:focus,
+    &:active,
     &:hover {
       background: rgba(255, 255, 255, 0.5);
-    }
-
-    &:focus {
-      background: rgba(255, 255, 255, 0.5);
       outline: none;
-    }
-
-    &:active {
-      background: rgba(255, 255, 255, 0.5);
     }
 
     a {
@@ -494,13 +454,13 @@ useHead({
     }
 
     @media (min-width: 550px) {
-      width: 9.2em;
     }
     @media (max-width: 550px) {
       .n-icon {
         margin-left: 6px;
       }
-      width: 3.9em;
+      min-width: 0 !important;
+      width: 3.9em !important;
       display: flex;
       justify-content: center;
       align-content: center;

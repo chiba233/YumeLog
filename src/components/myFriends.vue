@@ -62,30 +62,56 @@ function openURL(url: string) {
   window.open(url, "_blank");
 }
 
-useHead({
-  meta: [
-    {
-      name: "friends",
-      content: computed(() => {
-        const names = friends.value.map((f) => (lang.value === "zh" ? f.name : f.alias)).join(", ");
-        return `${friendsTitle.value.title}${names ? ": " + names : ""}`.slice(0, 160);
-      }),
-    },
-    { property: "og:title", content: computed(() => friendsTitle.value.title) },
-    {
-      property: "og:friends",
-      content: computed(() => {
-        const names = friends.value.map((f) => (lang.value === "zh" ? f.name : f.alias)).join(", ");
-        return `${friendsTitle.value.title}${names ? "：" + names : ""}`.slice(0, 160);
-      }),
-    },
-  ],
-});
+const getAutoHostname = () => {
+  if (import.meta.env.SSR) {
+    if (import.meta.env.VITE_SITE_URL) {
+      return import.meta.env.VITE_SITE_URL.replace(/\/+$/, "");
+    }
+    return "https://your-production-domain.com";
+  }
+  return window.location.origin;
+};
+const baseOrigin = getAutoHostname();
+
+const toAbsolute = (path: string) => {
+  if (!path) return "";
+  if (/^https?:\/\//.test(path)) return path;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${baseOrigin}${cleanPath}`;
+};
+
 const rawData = await getSingle<YamlResponse>("main", "friends.yaml");
 
 if (rawData && rawData.friends) {
   friends.value = rawData.friends;
 }
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      key: "friends-jsonld",
+      innerHTML: computed(() => {
+        return JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "@id": `${baseOrigin}#friends-list`,
+          name: friendsTitle.value.title,
+          numberOfItems: friends.value?.length || 0,
+          itemListElement: (friends.value || []).map((f, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            item: {
+              "@type": "Person",
+              name: lang.value === "zh" ? f.name : f.alias,
+              image: toAbsolute(f.icon),
+              url: f.url,
+            },
+          })),
+        });
+      }),
+    },
+  ],
+});
 </script>
 
 <style lang="scss">

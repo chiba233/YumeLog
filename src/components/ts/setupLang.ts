@@ -27,7 +27,7 @@ if (!import.meta.env.SSR) {
     .catch((err) => console.error("I18n config load failed:", err));
 }
 
-const rawLang = import.meta.env.SSR ? "en" : navigator.language.slice(0, 2);
+const rawLang = import.meta.env.SSR ? "zh" : navigator.language.slice(0, 2);
 export const lang: Ref<string> = useStorage("useLang", rawLang);
 
 watch(

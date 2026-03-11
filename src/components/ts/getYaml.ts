@@ -19,13 +19,16 @@ let cacheTime = 0;
 const TTL = 600000;
 
 const getFetchUrl = (path: string) => {
-  if (/^https?:\/\//.test(path)) {
-    return path;
-  }
   const base = import.meta.env.SSR ? import.meta.env.VITE_SITE_URL : window.location.origin;
   const normalizedBase = base.replace(/\/+$/, "");
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${normalizedBase}${normalizedPath}`;
+  if (import.meta.env.SSR) {
+    if (/^https?:\/\//.test(path)) {
+      return path;
+    }
+    return `${normalizedBase}${normalizedPath}`;
+  }
+  return normalizedPath;
 };
 
 export function getYamlConfig(): Promise<YamlUrlConfig> {
@@ -226,7 +229,6 @@ export const loadSingleYaml = async <T>(type: string, fileName: string): Promise
 
   if ((!res || !res.ok) && spareUrl) {
     changeSpareUrl.value = true;
-
     res = await fetchWithRetry(getFetchUrl(`${spareUrl}${fileName}`), undefined, 2, 500);
   }
 

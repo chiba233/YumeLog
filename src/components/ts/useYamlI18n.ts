@@ -1,6 +1,7 @@
 import { computed, onServerPrefetch, ref } from "vue"; // 记得引入 onMounted
 import { lang } from "@/components/ts/setupLang.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
+import { $message } from "@/components/ts/msgUtils.ts";
 
 interface I18nBlock {
   type: string;
@@ -17,7 +18,7 @@ export const useYamlText = (type: string, fileName: string, keyName: string = "b
       const res = await getSingle<DynamicIntroduction>(type, fileName);
       if (res) introData.value = res;
     } catch (e) {
-      console.error("YAML加载失败:", e);
+      $message.error(`YAML加载失败: ${e instanceof Error ? e.message : String(e)}`, true, 3000);
     }
   };
   const loadPromise = loadData();

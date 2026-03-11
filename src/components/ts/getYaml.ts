@@ -1,6 +1,9 @@
 import yaml from "js-yaml";
 import { ref } from "vue";
 import pLimit from "p-limit";
+import { $message } from "@/components/ts/msgUtils.ts";
+import commonI18n from "@/data/I18N/commonI18n.json";
+import { lang } from "@/components/ts/setupLang.ts";
 
 const limit = pLimit(6);
 
@@ -19,17 +22,24 @@ let cacheTime = 0;
 const TTL = 600000;
 
 const getFetchUrl = (path: string) => {
+  if (!import.meta.env.SSR) {
+    return path;
+  }
+  if (/^https?:\/\//.test(path)) {
+    return path;
+  }
+
   const base = import.meta.env.SSR ? import.meta.env.VITE_SITE_URL : window.location.origin;
+
   const normalizedBase = base.replace(/\/+$/, "");
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  if (import.meta.env.SSR) {
-    if (/^https?:\/\//.test(path)) {
-      return path;
-    }
-    return `${normalizedBase}${normalizedPath}`;
-  }
-  return normalizedPath;
+
+  return `${normalizedBase}${normalizedPath}`;
 };
+
+type I18nMap = Record<string, string>;
+const configLoadFailed = commonI18n.configLoadFailed as I18nMap;
+const pathEntry = commonI18n.configPathFetchFailed as I18nMap;
 
 export function getYamlConfig(): Promise<YamlUrlConfig> {
   const now = Date.now();
@@ -37,11 +47,14 @@ export function getYamlConfig(): Promise<YamlUrlConfig> {
     cacheTime = now;
     memoizedConfig = fetch(getFetchUrl("/data/config/yamlUrl.json"))
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to load config");
+        if (!res.ok)
+          $message.error(configLoadFailed[lang.value] ?? configLoadFailed["en"], true, 3000);
         return res.json();
       })
       .then((data) => data as YamlUrlConfig)
       .catch((err) => {
+        const pathMsg = (pathEntry[lang.value] || pathEntry.en).replace("{err}", String(err));
+        $message.error(pathMsg, true, 3000);
         memoizedConfig = undefined;
         throw err;
       });
@@ -121,7 +134,7 @@ export const loadAllPosts = async <T extends BaseContent>(type: string): Promise
 
   const configItem = config[type];
   if (!configItem) {
-    console.error(`[Config Error]: Type "${type}" not found in YamlUrlConfig.`);
+    $message.warning(`[Config Error]: Type "${type}" not found in YamlUrlConfig.`, true, 3000);
     return [] as T[];
   }
 
@@ -136,7 +149,7 @@ export const loadAllPosts = async <T extends BaseContent>(type: string): Promise
   changeSpareUrl.value = false;
   faultTimes.value = 0;
 
-  let listRes: Response | null = await fetchWithRetry(listUrl, undefined, 2, 500);
+  let listRes: Response | null = await fetchWithRetry(getFetchUrl(listUrl), undefined, 2, 500);
 
   if ((!listRes || !listRes.ok) && spareListUrl) {
     listPrimaryError.value = true;
@@ -211,41 +224,57 @@ export const loadAllPosts = async <T extends BaseContent>(type: string): Promise
     return validData;
   } catch (e: unknown) {
     const errMsg = e instanceof Error ? e.message : String(e);
-    console.error("[Post Processing Error]:", errMsg);
+    $message.error(`[Post Processing Error]: ${errMsg}`, true, 3000);
 
     serverError.value = true;
     return [] as T[];
   }
 };
 
-export const loadSingleYaml = async <T>(type: string, fileName: string): Promise<T | null> => {
+export const loadSingleYaml = async <T extends object>(
+  type: string,
+  fileName: string,
+): Promise<T | null> => {
+  changeSpareUrl.value = false;
   const config = await getYamlConfig();
   const configItem = config[type];
-  if (!configItem) return null;
+
+  if (!configItem) {
+    console.warn(`[Config Error]: Type "${type}" not found.`);
+    return null;
+  }
 
   const { url: baseUrl, spareUrl } = configItem;
 
-  let res = await fetchWithRetry(getFetchUrl(`${baseUrl}${fileName}`), undefined, 2, 500);
+  // 拼接路径时注意斜杠，防止出现 // 的情况
+  const fullUrl = `${baseUrl.endsWith("/") ? baseUrl : baseUrl + "/"}${fileName}`;
+  let res = await fetchWithRetry(getFetchUrl(fullUrl), undefined, 2, 500);
 
   if ((!res || !res.ok) && spareUrl) {
     changeSpareUrl.value = true;
-    res = await fetchWithRetry(getFetchUrl(`${spareUrl}${fileName}`), undefined, 2, 500);
+    const spareFullUrl = `${spareUrl.endsWith("/") ? spareUrl : spareUrl + "/"}${fileName}`;
+    res = await fetchWithRetry(getFetchUrl(spareFullUrl), undefined, 2, 500);
   }
 
   if (res && res.ok) {
     try {
-      const parsed: unknown = yaml.load(await res.text());
+      const text = await res.text();
+      // 使用 FAILSAFE_SCHEMA 更加稳健
+      const parsed = yaml.load(text, { schema: yaml.FAILSAFE_SCHEMA });
 
+      // 这里的逻辑判断决定了 T 必须是对象
       if (parsed === null || typeof parsed !== "object") {
         return null;
       }
-
       return parsed as T;
     } catch (e: unknown) {
-      console.error("[Single YAML Parse Error]", e instanceof Error ? e.message : e);
+      $message.error(
+        `[Single YAML Parse Error] ${e instanceof Error ? e.message : String(e)}`,
+        true,
+        3000,
+      );
       return null;
     }
   }
-
   return null;
 };

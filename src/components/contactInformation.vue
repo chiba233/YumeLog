@@ -1,6 +1,11 @@
 <template>
   <ClientOnly>
-    <n-modal v-model:show="showCatModel">
+    <n-modal
+      v-model:show="showCatModel"
+      @mouseenter="onEnter"
+      @mouseleave="onLeave"
+      @mousemove="onMove"
+    >
       <!-- catCard -->
       <n-card :title="catMemoryTitle.catMemory" class="catCard" size="huge">
         <template #header-extra>
@@ -32,7 +37,13 @@
   </ClientOnly>
   <!-- maiCard -->
   <ClientOnly>
-    <n-modal v-model:show="showMaiModal" :block-scroll="false">
+    <n-modal
+      v-model:show="showMaiModal"
+      :block-scroll="false"
+      @mouseenter="onEnter"
+      @mouseleave="onLeave"
+      @mousemove="onMove"
+    >
       <n-card :title="maiDisplay.titleName" class="maiCard" size="huge">
         <template #header-extra>
           <n-button circle tertiary @click="showMaiModal = false">
@@ -63,8 +74,9 @@
   </ClientOnly>
 
   <!-- 以下是WeCat -->
-  <n-image-preview v-model:show="showWechatModel" src="/wechat.webp"></n-image-preview>
-  <n-image-preview v-model:show="showLineModel" src="/line.webp"></n-image-preview>
+  <n-image-preview v-model:show="showWechatModel" src="/wechat.webp" />
+
+  <n-image-preview v-model:show="showLineModel" src="/line.webp" />
 
   <!-- 以下是联系人 -->
   <div class="contacts">
@@ -124,9 +136,7 @@ import { useAsyncState, useStorage } from "@vueuse/core";
 import { lang } from "@/components/ts/setupLang.ts";
 import { themeColor } from "@/components/ts/useTheme.ts";
 import { getMaiUrl, type UserDataType } from "./ts/maimaiScore";
-import { loadSingleYaml } from "@/components/ts/getYaml.ts";
 import {
-  InteractionType,
   maiSections,
   PlatformConfig,
   PlatformId,
@@ -134,7 +144,21 @@ import {
 } from "@/components/ts/setupJson.ts";
 import { useHead } from "@unhead/vue";
 import ClientOnly from "@/components/ClientOnly.vue";
+import { useCardGlow } from "@/components/ts/animationCalculate.ts";
+import {
+  loadCat,
+  nekoImg,
+  showCatModel,
+  showLineModel,
+  showMaiModal,
+  showWechatModel,
+} from "./ts/useGlobalState.ts";
+import { $message } from "./ts/msgUtils.ts";
+import { useRouteModal } from "./ts/useRouteModal.ts";
 
+type I18nMap = Record<string, string>;
+
+const { onMove, onLeave, onEnter } = useCardGlow();
 const platforms = computed(() => {
   return socialRawData.value?.platforms ?? [];
 });
@@ -168,10 +192,7 @@ watch(
   },
   { immediate: true },
 );
-const showCatModel = ref<boolean>(false);
-const showMaiModal = ref<boolean>(false);
-const showWechatModel = ref<boolean>(false);
-const showLineModel = ref<boolean>(false);
+
 const maiError = ref<string>("Error");
 
 const maiStorage = useStorage<{ data: Partial<UserDataType>; updatedAt: number }>(
@@ -215,10 +236,12 @@ const iconMap: Record<PlatformId, string> = {
 type I18nSource = Record<string, Record<string, string>>;
 const catMemoryTitle = computed(() => {
   const source = commonI18n as I18nSource;
-
   return {
     catMemory: source.catMemoryTitle[lang.value] ?? source.catMemoryTitle.en,
     cat: source.cat[lang.value] ?? source.cat.en,
+    wechat: source.weChat[lang.value] ?? source.weChat.en,
+    email: source.email[lang.value] ?? source.email.en,
+    twitter: source.twitter[lang.value] ?? source.twitter.en,
   };
 });
 
@@ -236,70 +259,43 @@ const getStatValue = (key: string): string | number => {
   return result !== null && result !== undefined && result !== "" ? result : maiError.value;
 };
 
-const handleContactClick = (item: PlatformConfig): void => {
-  const links = socialLinks.value;
-  const url = links[item.id as keyof typeof links];
-  const actions: Record<InteractionType, () => void> = {
-    link: () => {
-      if (url) {
-        window.open(url);
-      } else {
-        console.warn(`找不到 ID 为 ${item.id} 的社交链接！`);
-      }
+const { openModal } = useRouteModal({
+  paramKey: "modalId",
+  modals: {
+    maimai: showMaiModal,
+    cat: showCatModel,
+    wechat: showWechatModel,
+    line: showLineModel,
+  },
+  loadHandlers: {
+    cat: async () => {
+      console.log("正在通过 Hook 加载数据...");
+      await loadCat();
     },
-    modal: () => {
-      if (item.id === "wechat") showWechatModel.value = true;
-      if (item.id === "line") showLineModel.value = true;
-    },
-    func: () => {
-      if (item.id === "maimai") showMaiModal.value = true;
-      if (item.id === "cat") {
-        void loadCat().then(() => {
-          showCatModel.value = true;
-        });
-      }
-    },
-  };
-
-  const action = actions[item.type];
-  if (action) action();
+  },
+});
+const handleContactClick = async (item: PlatformConfig): Promise<void> => {
+  if (item.type === "link") {
+    const url = socialLinks.value[item.id as keyof typeof socialLinks.value];
+    if (url) {
+      window.open(url);
+    } else {
+      const socialEntry = commonI18n.socialLinkNotFound as I18nMap;
+      const socialMsg = (socialEntry[lang.value] || socialEntry.en).replace("{id}", item.id);
+      $message.warning(socialMsg, true, 3000);
+    }
+    return;
+  }
+  await openModal(item.id);
 };
 
 const getLabel = (item: PlatformConfig): string => {
   if (item.id === "maimai") return `DX ${data.value?.playerRating ?? maiError.value}`;
   if (item.id === "cat") return catMemoryTitle.value.cat;
+  if (item.id === "wechat") return catMemoryTitle.value.wechat;
+  if (item.id === "email") return catMemoryTitle.value.email;
+  if (item.id === "twitter") return catMemoryTitle.value.twitter;
   return item.label;
-};
-
-interface YamlNekoBlock {
-  imgError: string;
-  img: string;
-  imgName: string;
-}
-
-interface YamlResponse {
-  img: YamlNekoBlock[];
-}
-
-interface OriginalNekoBlock {
-  imgError: string;
-  img: string;
-  imgName: string;
-}
-
-const nekoImg = ref<OriginalNekoBlock[]>([]);
-const loadCat = async () => {
-  if (nekoImg.value.length) return;
-  const res = await loadSingleYaml<YamlResponse>("main", "neko.yaml");
-  if (res && res.img) {
-    nekoImg.value = res.img.map(
-      (img: YamlNekoBlock): OriginalNekoBlock => ({
-        imgError: img.imgError,
-        img: img.img,
-        imgName: img.imgName,
-      }),
-    );
-  }
 };
 
 const headLinks = computed(() => {
@@ -323,12 +319,68 @@ useHead({
     },
   ],
 });
+watch([showWechatModel, showLineModel], async ([wechat, line]) => {
+  if (!wechat && !line) return;
+
+  await nextTick();
+
+  const overlay = document.querySelector(".n-image-preview-overlay");
+  overlay?.classList.add("contacts-overlay");
+});
 </script>
 
 <style lang="scss">
 .n-modal-container .maiCard,
 .n-modal-container .catCard {
   max-height: 92dvh;
+  --mx: -100px;
+  --my: -100px;
+  --opacity: 0;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.2s,
+    background-color 0.3s;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(
+      300px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, 0.12),
+      transparent 65%
+    );
+    opacity: var(--opacity);
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    -webkit-mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+    mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+    -webkit-mask-clip: content-box, border-box;
+    mask-clip: content-box, border-box;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    background: radial-gradient(
+      180px circle at var(--mx) var(--my),
+      rgba(251, 238, 241, 0.75),
+      rgba(251, 238, 241, 0.25) 30%,
+      transparent 70%
+    );
+
+    z-index: 2;
+    opacity: var(--opacity);
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
 
   .n-button {
     svg {
@@ -381,6 +433,7 @@ useHead({
   justify-content: end;
 
   img {
+    z-index: 3;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
@@ -431,6 +484,12 @@ useHead({
   }
 }
 
+.contacts-overlay {
+  background-color: rgba(var(--global-theme-rgb-deep), 0.2) !important;
+  backdrop-filter: blur(3px);
+  max-height: 100dvh;
+}
+
 .contacts {
   display: flex;
   justify-content: center;
@@ -440,6 +499,7 @@ useHead({
   .cButton {
     height: 2.2em;
     margin: 0.5rem;
+    border: 1px solid rgba(251, 238, 241, 0.2);
 
     &:focus,
     &:active,

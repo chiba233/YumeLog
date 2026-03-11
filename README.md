@@ -1,8 +1,9 @@
 # 🌙 yumeLog (ユメログ)
 
-一个基于 **Vue 3** + **TypeScript** + **Naive UI** 构建的极简高颜值个人主页与博客系统。
+一个基于 **Vue 3** + **TypeScript** + **Naive UI** + **Vite SSG** 构建的极简高颜值个人主页与博客系统。
 
 本项目为静态网页， 你可以在几乎任何托管平台直接托管，实现低成本部署。
+虽然是静态网页，网页是全SEO完备的，不光是`head/meta`信息 每次编译还都会使用`vite-SSG`将全部页面包括每篇编译时存在的博文的html预编译以便搜索引擎索引！
 
 本项目拒绝臃肿的富文本与传统 Markdown 引擎，**全手动实现了一套轻量级文本解析器**，并深度集成了 MaiMai
 玩家专属成绩展示模块。致力于打造兼具硬核技术与个人美学的专属数字空间。
@@ -84,6 +85,7 @@
 
 * **前端框架**: Vue 3 (Composition API)
 * **开发语言**: TypeScript (Strict Mode)
+* **SEO工具**：Vite SSG
 * **组件库**: Naive UI (针对毛玻璃美学与移动端进行了深度样式重写与微调)
 * **构建工具**: Vite
 * **数据处理**: js-yaml (仅用于解析结构，DOM 渲染由自研 Parser 引擎全权接管)
@@ -111,19 +113,27 @@
 
     pnpm run host
 
-### 4. 生产环境构建
+## 4. 生产环境构建
 
-执行以下命令将进行严格的类型检查并生成优化后的静态资源（存放在 dist 目录）：
+### 执行以下命令将进行严格的类型检查并生成SEO优化后的静态资源（存放在 dist 目录）：
 
-    pnpm build
+    vue-tsc --noEmit && vite build && pnpm run ssg
 
-### 5. 代码质量检查
+### 如果你并不希望执行Vite-SSG优化，请执行以下命令进行编译（存放在 dist 目录）：
 
-# 运行 ESLint 自动修复
+    vite build
+
+### 如果你已经拥有dist，只是希望进行Vite-SSG优化，请执行以下命令进行编译（存放在 dist 目录）：
+
+    vite-ssg build
+
+## 5. 代码质量检查
+
+### 运行 ESLint 自动修复
 
     pnpm lint
 
-# 运行 TypeScript 类型检查
+### 运行 TypeScript 类型检查
 
     pnpm type-check
 

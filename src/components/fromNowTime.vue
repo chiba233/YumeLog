@@ -5,7 +5,7 @@
       :style="{ '--dynamic-width': props.btnWidth }"
       class="buttonClock sync-btn"
       round
-      @click="clickMemory"
+      @click="openModal('fromNow')"
     >
       <template #icon>
         <n-icon size="20">
@@ -14,10 +14,15 @@
       </template>
       <a :lang="lang" class="commonText">{{ buttonTitle }}</a>
     </n-button>
-    <n-modal v-model:show="showModal">
+    <n-modal
+      v-model:show="showFromNowModal"
+      @mouseenter="onEnter"
+      @mouseleave="onLeave"
+      @mousemove="onMove"
+    >
       <n-card :title="boxTitle" class="fromTimeCard" size="huge">
         <template #header-extra>
-          <n-button circle tertiary @click="showModal = false">
+          <n-button circle tertiary @click="showFromNowModal = false">
             <template #icon>
               <n-icon size="20">
                 <Cancel></Cancel>
@@ -44,6 +49,18 @@ import { formatDate, formatTime, lang } from "@/components/ts/setupLang.ts";
 import { themeColor } from "@/components/ts/useTheme.ts";
 import fromNowI18 from "@/data/I18N/fromNowI18n.json";
 import { useContentStore } from "@/components/ts/contentStore.ts";
+import { useCardGlow } from "@/components/ts/animationCalculate.ts";
+import { useRouteModal } from "@/components/ts/useRouteModal.ts";
+
+const showFromNowModal = ref(false);
+const { openModal } = useRouteModal({
+  paramKey: "modalId",
+  modals: {
+    fromNow: showFromNowModal,
+  },
+});
+
+const { onMove, onLeave, onEnter } = useCardGlow();
 
 interface Props {
   btnWidth?: string;
@@ -110,16 +127,59 @@ const boxTitle = computed(() => {
 const buttonTitle = computed(() => {
   return data[lang.value]?.button || data["zh"]?.button;
 });
-
-const showModal = ref(false);
-const clickMemory = () => {
-  showModal.value = showModal.value === false;
-};
 </script>
 
 <style lang="scss">
 .n-modal-container .fromTimeCard {
   max-height: 92dvh;
+  --mx: -100px;
+  --my: -100px;
+  --opacity: 0;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.2s,
+    background-color 0.3s;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(
+      800px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, 0.15),
+      transparent 40%
+    );
+    opacity: var(--opacity);
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    -webkit-mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+    mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+    -webkit-mask-clip: content-box, border-box;
+    mask-clip: content-box, border-box;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    background: radial-gradient(
+      150px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, 1),
+      rgba(255, 255, 255, 0.3) 30%,
+      transparent 70%
+    );
+
+    z-index: 2;
+    opacity: var(--opacity);
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
 
   .n-button {
     svg {
@@ -165,7 +225,7 @@ const clickMemory = () => {
   pointer-events: auto;
   margin-left: 1em;
   height: 2.2em;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(251, 238, 241, 0.2);
   min-width: var(--dynamic-width, auto);
   width: auto;
   @media (min-width: 301px) {
@@ -202,6 +262,7 @@ const clickMemory = () => {
   }
 
   .timeCard {
+    z-index: 3;
     max-width: 100%;
     display: flex;
     flex-direction: column;

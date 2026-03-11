@@ -7,6 +7,7 @@ import "dayjs/locale/th";
 import { ref, type Ref, watch } from "vue";
 import relativeTime from "dayjs/plugin/relativeTime";
 import localizedFormat from "dayjs/plugin/localizedFormat";
+import { $message } from "@/components/ts/msgUtils.ts";
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -17,14 +18,14 @@ export interface SelectOption {
 }
 
 export const langMap: Ref<SelectOption[]> = ref([]);
-
+export type TranslationEntry = Record<string, string>;
 if (!import.meta.env.SSR) {
   fetch("/data/config/i18nLang.json")
     .then((res) => res.json())
     .then((langData: SelectOption[]) => {
       langMap.value = langData;
     })
-    .catch((err) => console.error("I18n config load failed:", err));
+    .catch((err) => $message.error(`I18n config load failed:${err}`, true, 4000));
 }
 
 const rawLang = import.meta.env.SSR ? "zh" : navigator.language.slice(0, 2);

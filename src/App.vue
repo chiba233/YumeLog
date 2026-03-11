@@ -1,19 +1,73 @@
 <script lang="ts" setup>
-import { RouterView, useRouter } from "vue-router";
-import { onMounted } from "vue";
+import { RouterView, useRoute, useRouter } from "vue-router";
+import { computed, onMounted, watch } from "vue";
 import { NButton, NIcon, NMessageProvider } from "naive-ui";
 import { AnimalRabbit28Regular, Home12Regular } from "@vicons/fluent";
 import MessageProvider from "@/components/MessageProvider.vue";
 import TopBar from "@/components/topBar.vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import { themeColor } from "@/components/ts/useTheme.ts";
-import { globalWebTitleMap } from "./components/ts/useTitleState";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { SocialConfig, socialRawData } from "@/components/ts/setupJson.ts";
 import ClientOnly from "@/components/ClientOnly.vue";
+import { useCardGlow } from "@/components/ts/animationCalculate.ts";
+import { changeSpareUrl, listPrimaryError } from "./components/ts/getYaml";
+import { $message } from "./components/ts/msgUtils";
+import {
+  blogDisplay,
+  currentPostTitle,
+  globalWebTitleMap,
+  showCatModel,
+  showLineModel,
+  showMaiModal,
+  showWechatModel,
+} from "@/components/ts/useGlobalState.ts";
+import { useHead } from "@unhead/vue";
+import webTitle from "@/data/I18N/webTitle.json";
+
+interface TitleEntry {
+  [key: string]: string;
+}
+
+const route = useRoute();
+const webTitleData = webTitle as Record<string, TitleEntry>;
+onMounted(async () => {
+  if (route.query.invalid) {
+    const i18nSource = commonI18n.invalidAccess as Record<string, string>;
+    const warningMsg = i18nSource[lang.value] || i18nSource["en"];
+    $message.error(warningMsg, true, 3000);
+    await router.replace({
+      path: route.path,
+      query: {},
+    });
+  }
+});
+useHead({
+  title: computed(() => {
+    const currentLang = lang.value;
+    const routeName = (route.name as string) || "home";
+    const baseTitle = globalWebTitleMap.value[routeName]?.[currentLang] || routeName;
+    if (routeName === "blog" && currentPostTitle.value) {
+      return `${currentPostTitle.value} - ${baseTitle}`;
+    }
+    if (routeName === "home" && showWechatModel.value) {
+      return `${webTitleData.weChat[currentLang] || webTitleData.weChat.en} - ${baseTitle}`;
+    }
+    if (routeName === "home" && showCatModel.value) {
+      return `${webTitleData.neko[currentLang] || webTitleData.neko.en} - ${baseTitle}`;
+    }
+    if (routeName === "home" && showLineModel.value) {
+      return `${webTitleData.line[currentLang] || webTitleData.line.en} - ${baseTitle}`;
+    }
+    if (routeName === "home" && showMaiModal.value) {
+      return `${webTitleData.maimai[currentLang] || webTitleData.maimai.en} - ${baseTitle}`;
+    }
+    return baseTitle;
+  }),
+});
 
 type ColorData = Record<string, string>;
-
+const { onMove, onLeave, onEnter } = useCardGlow();
 const router = useRouter();
 const base = import.meta.env.SSR ? import.meta.env.VITE_SITE_URL : "";
 
@@ -56,14 +110,18 @@ const initData = async () => {
       }
     }
   } catch (e) {
-    console.error("Initialization failed:", e);
+    $message.error(
+      `Initialization failed: ${e instanceof Error ? e.message : String(e)}`,
+      true,
+      3000,
+    );
   }
 };
 
 const applyThemeToDOM = (index: number, color: string) => {
   if (import.meta.env.SSR) return;
   const bg = document.getElementById("bg");
-  if (bg) bg.style.backgroundImage = `url(/background${index}.webp)`;
+  if (bg) bg.style.backgroundImage = `url(/background/background${index}.webp)`;
   document.body.style.backgroundColor = color;
 };
 
@@ -79,6 +137,14 @@ const goTo = (name: string) => router.push({ name });
 
 const homeLabel = commonI18n.bottomToolBarHome as Record<string, string>;
 const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
+
+watch(
+  () => changeSpareUrl.value,
+  (v) =>
+    v &&
+    !listPrimaryError.value &&
+    $message.warning(blogDisplay.value.changeToSpareUrl, true, 3000),
+);
 </script>
 <template>
   <n-message-provider>
@@ -96,7 +162,7 @@ const blogLabel = commonI18n.bottomToolbarHome as Record<string, string>;
         </div>
       </div>
       <ClientOnly>
-        <div class="copyright">
+        <div class="copyright" @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
           <div class="cardButton">
             <n-button :color="themeColor" class="bottomButton" round @click="goTo('home')">
               <template #icon>
@@ -131,6 +197,15 @@ figure {
   background-color: rgba(var(--global-theme-rgb-deep), 0.2) !important;
   backdrop-filter: blur(3px);
   max-height: 100dvh;
+}
+
+.n-image-preview-overlay {
+  background-color: rgba(var(--global-theme-rgb-deep), 0.4);
+}
+
+.n-image-preview-toolbar {
+  background-color: rgba(var(--global-theme-rgb-deep), 0.4) !important;
+  backdrop-filter: blur(25px);
 }
 
 .n-scrollbar-content {
@@ -235,8 +310,8 @@ figure {
 .copyright {
   left: 0.6em;
   right: 0.6em;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(251, 238, 241, 0.1);
+  border: 1px solid rgba(251, 238, 241, 0.2);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   border-radius: 1.4em;
   backdrop-filter: blur(5px);
@@ -252,6 +327,53 @@ figure {
   pointer-events: auto;
   bottom: calc(0.45em + env(safe-area-inset-bottom));
 
+  --mx: -100px;
+  --my: -100px;
+  --opacity: 0;
+  overflow: hidden;
+  transition:
+    transform 0.2s,
+    background-color 0.3s;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(
+      800px circle at var(--mx) var(--my),
+      rgba(251, 238, 241, 0.15),
+      transparent 40%
+    );
+    opacity: var(--opacity);
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    -webkit-mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+    mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+    -webkit-mask-clip: content-box, border-box;
+    mask-clip: content-box, border-box;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    background: radial-gradient(
+      160px circle at var(--mx) var(--my),
+      rgba(251, 238, 241, 0.12),
+      transparent 60%
+    );
+
+    z-index: 2;
+    opacity: var(--opacity);
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
   .cardButton {
     display: grid;
     grid-auto-flow: column;
@@ -262,9 +384,10 @@ figure {
   .bottomButton {
     width: 100%;
     height: 2.2em;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(251, 238, 241, 0.2);
     margin-right: 0;
     display: flex;
+    z-index: 3;
     justify-content: center;
     pointer-events: auto;
     @media (max-width: 300px) {
@@ -321,19 +444,50 @@ figure {
 .n-message-container {
   margin-top: 4em;
 
-  .n-message.n-message--warning-type {
+  .n-message {
     --n-border: none !important;
-    --n-color: rgba(251, 238, 241, 0.6) !important;
-    background-color: var(--n-color) !important;
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
     border-radius: 12px !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
-    --n-content-text-color: #333 !important;
-    --n-icon-color: #d03050 !important;
     transition:
       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
       opacity 0.3s !important;
+  }
+
+  .n-message.n-message--info-type {
+    --n-color: rgba(235, 245, 255, 0.6) !important;
+    --n-content-text-color: #2080f0 !important;
+    --n-icon-color: #2080f0 !important;
+    background-color: var(--n-color) !important;
+  }
+
+  .n-message.n-message--success-type {
+    --n-color: rgba(237, 247, 242, 0.6) !important;
+    --n-content-text-color: #18a058 !important;
+    --n-icon-color: #18a058 !important;
+    background-color: var(--n-color) !important;
+  }
+
+  .n-message.n-message--error-type {
+    --n-color: rgba(254, 240, 240, 0.6) !important;
+    --n-content-text-color: #d03050 !important;
+    --n-icon-color: #d03050 !important;
+    background-color: var(--n-color) !important;
+  }
+
+  .n-message.n-message--loading-type {
+    --n-color: rgba(255, 255, 255, 0.7) !important;
+    --n-content-text-color: #333 !important;
+    --n-icon-color: #18a058 !important;
+    background-color: var(--n-color) !important;
+  }
+
+  .n-message.n-message--warning-type {
+    --n-color: rgba(251, 238, 241, 0.6) !important;
+    --n-content-text-color: #333 !important;
+    --n-icon-color: #f0a020 !important;
+    background-color: var(--n-color) !important;
   }
 }
 </style>

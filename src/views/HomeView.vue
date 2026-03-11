@@ -10,9 +10,7 @@
     <div class="contactsDIV">
       <ContactInformation />
     </div>
-    <Suspense>
-      <MyFriends />
-    </Suspense>
+    <MyFriends />
   </div>
 </template>
 
@@ -21,30 +19,8 @@ import HomeTitle from "@/components/homeTitle.vue";
 import PersonalIntroductions from "@/components/personalIntroduction.vue";
 import ContactInformation from "@/components/contactInformation.vue";
 import MyFriends from "@/components/myFriends.vue";
-import { computed, onMounted } from "vue";
-import { globalWebTitleMap } from "@/components/ts/useTitleState.ts";
-import { useHead } from "@unhead/vue";
-import { useRoute } from "vue-router";
-import commonI18n from "@/data/I18N/commonI18n.json";
-import { lang } from "@/components/ts/setupLang";
-import { $message } from "@/components/ts/msgUtils";
-
-const route = useRoute();
-onMounted(() => {
-  if (route.query.invalid) {
-    const i18nSource = commonI18n.invalidAccess as Record<string, string>;
-    const warningMsg = i18nSource[lang.value] || i18nSource["en"];
-
-    $message.warning(warningMsg, true, 4000);
-  }
-});
-
-useHead({
-  title: computed(() => {
-    const currentLang = lang.value;
-    return globalWebTitleMap.value["home"]?.[currentLang] || "Home";
-  }),
-});
+import { globalWebTitleMap } from "@/components/ts/useGlobalState.ts";
+import { lang } from "@/components/ts/setupLang.ts";
 </script>
 
 <style lang="scss">

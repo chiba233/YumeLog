@@ -155,7 +155,7 @@ watchEffect(() => {
 .buttonI18 {
   margin-right: 1em;
   height: 2.2em;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(251, 238, 241, 0.2);
   pointer-events: auto;
   min-width: var(--dynamic-width, auto);
   width: auto;

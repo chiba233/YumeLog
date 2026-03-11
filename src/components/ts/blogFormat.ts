@@ -1,3 +1,7 @@
+import { $message } from "@/components/ts/msgUtils.ts";
+import commonI18n from "@/data/I18N/commonI18n.json";
+import { lang } from "@/components/ts/setupLang.ts";
+
 export const RICH_TYPES = [
   "bold",
   "thin",
@@ -10,6 +14,7 @@ export const RICH_TYPES = [
   "warning",
 ] as const;
 
+type I18nMap = Record<string, string>;
 export const BLOCK_TYPES = ["info", "warning", "center"] as const;
 
 export type BlockType = (typeof BLOCK_TYPES)[number];
@@ -162,9 +167,11 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
           ignoredDepth++;
           buffer += text.slice(i, j + TAG_OPEN.length);
           if (stack.length === depthLimit && ignoredDepth === 1) {
-            console.error(
-              `[RichText] Max depth limit (${depthLimit}) reached at index ${i}. Nesting will be flattened.`,
-            );
+            const depthEntry = commonI18n.richTextDepthLimit as I18nMap;
+            const depthMsg = (depthEntry[lang.value] || depthEntry.en)
+              .replace("{depthLimit}", String(depthLimit))
+              .replace("{i}", String(i));
+            $message.error(depthMsg, true, 3000);
           }
           i = j + TAG_OPEN.length;
           continue;
@@ -187,9 +194,10 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
       }
 
       if (stack.length === 0) {
-        console.error(
-          `[RichText] Unexpected closing tag ")$$" at index ${i}. No matching opening tag found.`,
-        );
+        const closeEntry = commonI18n.richTextUnexpectedClose as I18nMap;
+        const closeMsg = (closeEntry[lang.value] || closeEntry.en).replace("{i}", String(i));
+        $message.error(closeMsg, true, 3000);
+
         buffer += END_TAG;
         i += END_TAG.length;
         continue;
@@ -201,8 +209,10 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
       const node = stack.pop()!;
 
       if (!isRichType(node.tag)) {
-        console.warn(
+        $message.warning(
           `[RichText] Unknown tag "${node.tag}" at index ${i}. Flattening content for compatibility.`,
+          true,
+          3000,
         );
         current().push(...node.tokens);
         i += END_TAG.length;

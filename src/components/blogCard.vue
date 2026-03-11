@@ -1,6 +1,16 @@
 <script lang="ts" setup>
-import { Component, computed, defineAsyncComponent, onMounted, ref, watch } from "vue";
+import {
+  Component,
+  computed,
+  defineAsyncComponent,
+  onMounted,
+  onServerPrefetch,
+  ref,
+  watch,
+} from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useHead } from "@unhead/vue";
+
 import {
   changeSpareUrl,
   faultTimes,
@@ -18,14 +28,17 @@ import Cancel from "@/icons/cancel.svg";
 import { NAlert, NButton, NCard, NIcon, NImage, NModal } from "naive-ui";
 import { parseRichText, stripRichText } from "@/components/ts/blogFormat.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import blogI18nData from "@/data/I18N/blogI18n.json";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
 import { useContentStore } from "./ts/contentStore";
-import { useHead } from "@unhead/vue";
-import { globalWebTitleMap } from "@/components/ts/useTitleState";
-import ClientOnly from "@/components/ClientOnly.vue";
+import {
+  blogDisplay,
+  currentPostTitle,
+  globalWebTitleMap,
+} from "@/components/ts/useGlobalState.ts";
+import { useRouteModal } from "@/components/ts/useRouteModal.ts";
 
+const router = useRouter();
 const { getPosts, getSingle } = useContentStore();
 
 interface ImageContent {
@@ -39,150 +52,55 @@ interface PostBlock {
   content?: string | ImageContent[];
 }
 
-const route = useRoute();
-const router = useRouter();
-const posts = ref<Post[]>([]);
-const selectedPost = ref<Post | null>(null);
-const showModal = ref<boolean>(false);
-
-const RichTextRenderer: Component = defineAsyncComponent(
-  () => import("@/components/RichTextRenderer.vue"),
-);
-
 type WebTitleMap = Record<string, Record<string, string>>;
 
 interface ProcessedPost extends Post {
   displayDescription: string;
 }
 
-const processedPosts = computed<ProcessedPost[]>(() => {
-  return posts.value.map((post) => ({
-    ...post,
-    displayDescription: getDescriptionText(post.blocks as PostBlock[]),
-  }));
-});
+const posts = ref<Post[]>([]);
+const selectedPost = ref<Post | null>(null);
+const showModal = ref(false);
 
-useHead({
-  title: computed(() => {
-    const currentLang = lang.value;
-    if (showModal.value && selectedPost.value) {
-      return `${selectedPost.value.title} - ${globalWebTitleMap.value["blog"]?.[currentLang] || "Blog"}`;
-    }
-    return globalWebTitleMap.value["blog"]?.[currentLang] || "Blog";
-  }),
-  meta: computed(() => {
-    if (!showModal.value || !selectedPost.value) {
-      return [
-        {
-          name: "description",
-          content: globalWebTitleMap.value["blog"]?.[lang.value] || "Blog",
-        },
-        {
-          property: "og:title",
-          content: globalWebTitleMap.value["blog"]?.[lang.value] || "Blog",
-        },
-        { property: "og:type", content: "Blog" },
-      ];
-    }
-    const desc = getDescriptionText(selectedPost.value.blocks).slice(0, 160);
-    const firstImg =
-      (getImageBlocks(selectedPost.value.blocks)?.[0]?.content as ImageContent[])?.[0]?.src ||
-      "Blog";
-    return [
-      { name: "description", content: desc },
-      { property: "og:description", content: desc },
-      { name: "article:published_time", content: selectedPost.value.time },
-      { name: "og:image", content: firstImg },
-    ];
-  }),
-});
-
-const syncModalWithRoute = async () => {
-  const routeId = route.params.id as string | undefined;
-  if (routeId) {
-    const targetPost = posts.value.find((p: Post) => p.id === routeId);
-    if (targetPost) {
-      selectedPost.value = targetPost;
-      showModal.value = true;
-    } else {
-      $message.warning(blogDisplay.value.unknownPostId, true, 4000);
-      await router.replace({ name: "blog" });
-    }
-  } else {
-    showModal.value = false;
-  }
-};
-
-onMounted(async () => {
-  try {
-    const [postsData, titleData] = await Promise.all([
-      getPosts<Post>("blog"),
-      getSingle<WebTitleMap>("main", "webTitle.json"),
-    ]);
-    if (postsData) posts.value = postsData;
-    if (titleData) globalWebTitleMap.value = titleData;
-    await syncModalWithRoute();
-  } catch (err) {
-    console.error("Initialization failed:", err);
-  }
-});
-
-watch(
-  () => route.params.id,
-  async () => {
-    if (posts.value.length > 0) {
-      await syncModalWithRoute();
-    }
-  },
+const RichTextRenderer: Component = defineAsyncComponent(
+  () => import("@/components/RichTextRenderer.vue"),
 );
+const route = useRoute();
+const isSSR = import.meta.env.SSR;
+if (import.meta.env.SSR) {
+  onServerPrefetch(async () => {
+    const currentId = route.params.id as string;
+    try {
+      const [postsData, titleData] = await Promise.all([
+        getPosts<Post>("blog"),
+        getSingle<WebTitleMap>("main", "webTitle.json"),
+      ]);
+      if (titleData) globalWebTitleMap.value = titleData;
 
-watch(
-  () => showModal.value,
-  async (isOpen: boolean) => {
-    if (!isOpen && route.params.id) {
-      await router.push({ name: "blog" });
+      if (postsData?.length) {
+        const targetPost = currentId ? postsData.find((p) => p.id === currentId) : null;
+        posts.value = postsData;
+        if (targetPost) {
+          selectedPost.value = targetPost;
+          showModal.value = true;
+          currentPostTitle.value = targetPost.title ?? null;
+        }
+      }
+    } catch (err) {
+      console.error("SSR Prefetch Error:", err);
     }
-  },
-);
-
-const blogDisplay = computed(() => {
-  const currentLang = lang.value;
-  const source = blogI18nData as Record<string, Record<string, string>>;
-  const displayObj: Record<string, string> = {};
-
-  Object.keys(source).forEach((key) => {
-    const translations = source[key];
-    displayObj[key] =
-      translations[currentLang] ||
-      translations["en"] ||
-      translations["other"] ||
-      Object.values(translations)[0];
   });
-
-  return displayObj;
-});
-
-const cardClick = async (post: Post) => {
-  if (!post.id) {
-    $message.warning(blogDisplay.value.errorPostId, true, 4000);
-    return;
-  }
-  await router.push({ name: "blog", params: { id: post.id } });
-};
-
-const closePortal = () => {
-  showModal.value = false;
-};
-
-const { onMove, onLeave, onEnter } = useCardGlow();
+}
 
 const getImageBlocks = (blocks?: PostBlock[]) => {
   if (!blocks) return [];
+
   return blocks.filter((b) => b.type === "image");
 };
 
 const getDescriptionText = (blocks?: PostBlock[]) => {
   if (!blocks) return "";
+
   return blocks
     .filter((b) => b.type === "text" || b.type === "center")
     .map((b) => (typeof b.content === "string" ? stripRichText(b.content) : ""))
@@ -191,28 +109,171 @@ const getDescriptionText = (blocks?: PostBlock[]) => {
 
 const handleImgError = (e: Event, spareUrl?: string) => {
   const target = e.target as HTMLImageElement;
+
   if (spareUrl) target.src = spareUrl;
 };
 
+const blogModals = computed(() => {
+  const map: Record<string, typeof showModal> = {};
+
+  posts.value.forEach((post) => {
+    if (post.id) map[post.id] = showModal;
+  });
+
+  return map;
+});
+
+const blogHandlers = computed(() => {
+  const handlers: Record<string, () => void> = {};
+
+  posts.value.forEach((post) => {
+    if (!post.id) return;
+
+    handlers[post.id] = () => {
+      selectedPost.value = post;
+      currentPostTitle.value = post.title ?? null;
+    };
+  });
+
+  return handlers;
+});
+
+const { openModal } = useRouteModal({
+  paramKey: "id",
+  paramSource: "path",
+  modals: blogModals,
+  isReady: computed(() => posts.value.length > 0),
+  loadHandlers: blogHandlers,
+  onAllClosed: () => {
+    currentPostTitle.value = null;
+  },
+  onInvalidId: async () => {
+    $message.warning(blogDisplay.value.unknownPostId, true, 3000);
+    await router.replace({
+      name: "blog",
+    });
+  },
+});
+
+const processedPosts = computed<ProcessedPost[]>(() =>
+  posts.value.map((post) => ({
+    ...post,
+
+    displayDescription: getDescriptionText(post.blocks as PostBlock[]),
+  })),
+);
+
+const cardClick = (post: Post) => {
+  if (!post.id) {
+    $message.warning(blogDisplay.value.errorPostId, true, 3000);
+    return;
+  }
+
+  void openModal(post.id);
+};
+
+const closePortal = () => {
+  showModal.value = false;
+  currentPostTitle.value = "";
+};
+
+const baseTitle = computed(() => globalWebTitleMap.value?.blog?.[lang.value] ?? "Blog");
+
+useHead({
+  title: computed(() => {
+    if (showModal.value && selectedPost.value?.title) {
+      return `${selectedPost.value.title} - ${baseTitle.value}`;
+    }
+
+    return baseTitle.value;
+  }),
+
+  meta: computed(() => {
+    if (!showModal.value || !selectedPost.value) {
+      return [
+        {
+          name: "description",
+          content: baseTitle.value,
+        },
+        {
+          property: "og:type",
+          content: "website",
+        },
+      ];
+    }
+
+    const blocks = selectedPost.value.blocks as PostBlock[];
+
+    const desc = getDescriptionText(blocks).slice(0, 160);
+
+    const firstImg = (getImageBlocks(blocks)?.[0]?.content as ImageContent[])?.[0]?.src ?? "";
+
+    return [
+      {
+        name: "description",
+        content: desc,
+      },
+
+      {
+        property: "og:description",
+        content: desc,
+      },
+
+      {
+        property: "og:image",
+        content: firstImg,
+      },
+
+      {
+        property: "og:title",
+        content: selectedPost.value.title ?? "",
+      },
+
+      {
+        name: "article:published_time",
+        content: selectedPost.value.time ?? "",
+      },
+
+      {
+        property: "og:type",
+        content: "article",
+      },
+    ];
+  }),
+});
+
+onMounted(async () => {
+  const [postsData, titleData] = await Promise.all([
+    getPosts<Post>("blog"),
+    getSingle<WebTitleMap>("main", "webTitle.json"),
+  ]);
+
+  posts.value = postsData;
+  if (titleData) {
+    globalWebTitleMap.value = titleData;
+  }
+});
+
+const { onMove, onLeave, onEnter } = useCardGlow();
+
 watch(
   () => yamlLoadingFault.value,
-  (v) => v && $message.warning(blogDisplay.value.partialLoadError, true, 4000),
+  (v) => v && $message.warning(blogDisplay.value.partialLoadError, true, 3000),
 );
+
 watch(
   () => listPrimaryError.value,
-  (v) => v && $message.warning(blogDisplay.value.listPrimaryError, true, 4000),
+  (v) => v && $message.warning(blogDisplay.value.listPrimaryError, true, 3000),
 );
+
 watch(
-  () => changeSpareUrl.value,
-  (v) =>
-    v &&
-    !listPrimaryError.value &&
-    $message.warning(blogDisplay.value.changeToSpareUrl, true, 4000),
+  () => listSpareError.value,
+  (v) => v && $message.warning(blogDisplay.value.listSpareError, true, 3000),
 );
 </script>
 
 <template>
-  <div v-if="!yamlLoading" class="post-container">
+  <div v-if="!(isSSR && selectedPost)" class="post-container">
     <article
       v-for="post in processedPosts"
       :key="post.time"
@@ -266,7 +327,7 @@ watch(
     </article>
   </div>
 
-  <div v-else class="loading-state">
+  <div v-if="yamlLoading && processedPosts.length === 0" class="loading-state">
     <div class="loader">
       <n-alert v-if="serverError" :title="blogDisplay.listFetchError" class="alert" type="error">
         {{ blogDisplay.serverFault }}
@@ -283,76 +344,93 @@ watch(
       <p v-else :lang="lang">{{ blogDisplay.loading }}</p>
     </div>
   </div>
-  <ClientOnly>
-    <n-modal v-model:show="showModal">
-      <n-card
-        v-if="selectedPost"
-        :lang="selectedPost?.lang as string"
-        :title="selectedPost.title"
-        class="postModel"
-        size="huge"
-      >
-        <template #header-extra>
-          <n-button circle tertiary @click="closePortal">
-            <template #icon>
-              <n-icon size="20">
-                <Cancel />
-              </n-icon>
-            </template>
-          </n-button>
-        </template>
-        <div class="postCardMain">
-          <div class="postCardMeta themeText">
-            <time :datetime="selectedPost.time" :lang="lang"
-              >{{ formatDate(selectedPost.time) }}
-            </time>
-            <span class="time-divider">|</span>
-            <span :lang="lang">{{ formatTime(selectedPost.time) }}</span>
-          </div>
-          <div
-            v-for="(block, a) in selectedPost.blocks as PostBlock[]"
-            :key="a"
-            class="postCardBody"
-          >
-            <div v-if="block.type === 'image'" class="postCardImage">
-              <div
-                v-for="img in block.content as ImageContent[]"
-                :key="img.src"
-                class="postCardNImage"
-              >
-                <n-image
-                  v-if="img.src && changeSpareUrl === false"
-                  :alt="img.desc"
-                  :src="img.src"
-                  class="postCardImg"
-                  width="120"
-                />
-                <n-image
-                  v-if="img.src && changeSpareUrl === true"
-                  :alt="img.desc"
-                  :src="img.spareUrl"
-                  class="postCardImg"
-                  width="120"
-                />
-                <div v-if="img.desc" class="postCardImageDesc">
-                  <span :lang="selectedPost?.lang as string" class="themeText">{{ img.desc }}</span>
-                </div>
+  <div v-if="isSSR && selectedPost" aria-hidden="true" style="display: none">
+    <article>
+      <h2>{{ selectedPost.title }}</h2>
+      <time>{{ selectedPost.time }}</time>
+      <span>{{ formatTime(selectedPost.time) }}</span>
+      <div v-for="(block, index) in selectedPost.blocks as PostBlock[]" :key="index">
+        <div v-if="block.type === 'text'">
+          <RichTextRenderer
+            :lang="selectedPost?.lang as string"
+            :tokens="parseRichText(block.content as string)"
+          />
+        </div>
+        <div v-if="block.type === 'image'">
+          <img
+            v-for="img in block.content as ImageContent[]"
+            :key="img.src"
+            :alt="img.desc"
+            :src="img.src"
+          />
+        </div>
+      </div>
+    </article>
+  </div>
+  <n-modal v-model:show="showModal" @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
+    <n-card
+      v-if="selectedPost"
+      :lang="selectedPost?.lang as string"
+      :title="selectedPost.title"
+      class="postModel"
+      size="huge"
+    >
+      <template #header-extra>
+        <n-button circle tertiary @click="closePortal">
+          <template #icon>
+            <n-icon size="20">
+              <Cancel />
+            </n-icon>
+          </template>
+        </n-button>
+      </template>
+      <div class="postCardMain">
+        <div class="postCardMeta themeText">
+          <time :datetime="selectedPost.time" :lang="lang"
+            >{{ formatDate(selectedPost.time) }}
+          </time>
+          <span class="time-divider">|</span>
+          <span :lang="lang">{{ formatTime(selectedPost.time) }}</span>
+        </div>
+        <div v-for="(block, a) in selectedPost.blocks as PostBlock[]" :key="a" class="postCardBody">
+          <div v-if="block.type === 'image'" class="postCardImage">
+            <div
+              v-for="img in block.content as ImageContent[]"
+              :key="img.src"
+              class="postCardNImage"
+            >
+              <n-image
+                v-if="img.src && changeSpareUrl === false"
+                :alt="img.desc"
+                :src="img.src"
+                class="postCardImg"
+                width="120"
+              />
+              <n-image
+                v-if="img.src && changeSpareUrl === true"
+                :alt="img.desc"
+                :src="img.spareUrl"
+                class="postCardImg"
+                width="120"
+              />
+              <div v-if="img.desc" class="postCardImageDesc">
+                <span :lang="selectedPost?.lang as string" class="themeText">{{ img.desc }}</span>
               </div>
             </div>
-            <div v-if="block.type === 'divider'" class="divider">
-              <div class="separator-icon"><span>✦</span></div>
-            </div>
-            <div v-if="block.type === 'text'" class="postCardText">
-              <RichTextRenderer
-                :lang="selectedPost?.lang as string"
-                :tokens="parseRichText(block.content as string)"
-              />
-            </div>
+          </div>
+          <div v-if="block.type === 'divider'" class="divider">
+            <div class="separator-icon"><span>✦</span></div>
+          </div>
+          <div v-if="block.type === 'text'" class="postCardText">
+            <RichTextRenderer
+              :lang="selectedPost?.lang as string"
+              :tokens="parseRichText(block.content as string)"
+            />
           </div>
         </div>
-      </n-card>
-    </n-modal>
-  </ClientOnly>
+      </div>
+    </n-card>
+  </n-modal>
 </template>
 
 <style lang="scss">
@@ -421,6 +499,7 @@ $border-radius: 16px;
     height: auto;
 
     .postCardImg img {
+      z-index: 3;
       margin: 0 !important;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -445,6 +524,55 @@ $border-radius: 16px;
   margin-bottom: 4em;
   margin-top: 4em;
   max-width: 92%;
+  --mx: -100px;
+  --my: -100px;
+  --opacity: 0;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.2s,
+    background-color 0.3s;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(
+      400px circle at var(--mx) var(--my),
+      rgba(251, 238, 241, 0.12),
+      transparent 65%
+    );
+    opacity: var(--opacity);
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    -webkit-mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+    mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+    -webkit-mask-clip: content-box, border-box;
+    mask-clip: content-box, border-box;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    background: radial-gradient(
+      180px circle at var(--mx) var(--my),
+      rgba(251, 238, 241, 0.75),
+      rgba(251, 238, 241, 0.25) 30%,
+      transparent 70%
+    );
+
+    z-index: 2;
+    opacity: var(--opacity);
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
   @media (max-width: 900px) {
     max-width: 98%;
   }
@@ -515,9 +643,9 @@ $border-radius: 16px;
     inset: 0;
     z-index: 1;
     background: radial-gradient(
-      800px circle at var(--mx) var(--my),
-      rgba(255, 255, 255, 0.15),
-      transparent 40%
+      160px circle at var(--mx) var(--my),
+      rgba(251, 238, 241, 0.1),
+      transparent 65%
     );
     opacity: var(--opacity);
     transition: opacity 0.4s ease;
@@ -550,9 +678,9 @@ $border-radius: 16px;
 
     // 4. 背景光斑逻辑（保持不变）
     background: radial-gradient(
-      150px circle at var(--mx) var(--my),
-      rgba(255, 255, 255, 1),
-      rgba(255, 255, 255, 0.3) 30%,
+      120px circle at var(--mx) var(--my),
+      rgba(251, 238, 241, 0.7),
+      rgba(251, 238, 241, 0.2) 30%,
       transparent 70%
     );
 
@@ -637,6 +765,7 @@ $border-radius: 16px;
       justify-content: center;
 
       img {
+        z-index: 3;
         width: 120px;
         flex-shrink: 0;
         height: 120px;
@@ -647,6 +776,7 @@ $border-radius: 16px;
       }
 
       .secondImg {
+        z-index: 3;
         @media (min-width: 900px) {
           display: none;
         }

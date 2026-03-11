@@ -14,7 +14,14 @@
     >
       <div class="content">
         <ClientOnly>
-          <n-avatar :size="100" :src="friend.icon" bordered round></n-avatar>
+          <n-avatar
+            :alt="lang === 'zh' ? friend.name : friend.alias"
+            :fallback-src="friend.spare"
+            :size="100"
+            :src="friend.icon || friend.spare"
+            bordered
+            round
+          />
         </ClientOnly>
         <span :lang="lang" class="friendName commonText">
           {{ lang === "zh" ? friend.name : friend.alias }}
@@ -25,7 +32,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from "vue";
+import { computed, onMounted, onServerPrefetch, ref } from "vue";
 import { NAvatar } from "naive-ui";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
 import { lang } from "@/components/ts/setupLang.ts";
@@ -33,12 +40,16 @@ import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 import { useHead } from "@unhead/vue";
 import ClientOnly from "@/components/ClientOnly.vue";
+import { $message } from "@/components/ts/msgUtils.ts";
+import commonI18n from "@/data/I18N/commonI18n.json";
 
+type I18nMap = Record<string, string>;
 interface Friend {
   name: string;
   alias: string;
   url: string;
   icon: string;
+  spare?: string;
 }
 
 interface YamlResponse {
@@ -50,24 +61,42 @@ type I18nSource = Record<string, Record<string, string>>;
 const { onMove, onLeave, onEnter } = useCardGlow();
 const { getSingle } = useContentStore();
 const friends = ref<Friend[]>([]);
+const loadFriendsData = async () => {
+  try {
+    const rawData = await getSingle<YamlResponse>("main", "friends.yaml");
+    if (rawData && rawData.friends) {
+      friends.value = rawData.friends;
+    }
+  } catch {
+    const yamlEntry = commonI18n.yamlLoadFailed as I18nMap;
+    const yamlMsg = (yamlEntry[lang.value] || yamlEntry.en).replace("{err}", "friends.yaml");
+    $message.error(yamlMsg, true, 3000);
+  }
+};
+onServerPrefetch(async () => {
+  await loadFriendsData();
+});
 
+onMounted(() => {
+  if (friends.value.length === 0) {
+    void loadFriendsData();
+  }
+});
 const friendsTitle = computed(() => {
   const source = friendsMessage as I18nSource;
   return {
     title: source.title[lang.value] ?? source.title.en,
   };
 });
-
 function openURL(url: string) {
   window.open(url, "_blank");
 }
-
 const getAutoHostname = () => {
   if (import.meta.env.SSR) {
     if (import.meta.env.VITE_SITE_URL) {
       return import.meta.env.VITE_SITE_URL.replace(/\/+$/, "");
     }
-    return "https://your-production-domain.com";
+    return "114.5.1.4";
   }
   return window.location.origin;
 };
@@ -80,11 +109,6 @@ const toAbsolute = (path: string) => {
   return `${baseOrigin}${cleanPath}`;
 };
 
-const rawData = await getSingle<YamlResponse>("main", "friends.yaml");
-
-if (rawData && rawData.friends) {
-  friends.value = rawData.friends;
-}
 useHead({
   script: [
     {
@@ -129,7 +153,7 @@ $transition-speed: 0.3s;
     0 -0.5px 0 rgba(0, 0, 0, 0.7);
   font-weight: normal;
   margin-bottom: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0;
   @media (min-width: 840px) {
     font-size: 2em;
   }
@@ -151,7 +175,7 @@ $transition-speed: 0.3s;
   align-items: center;
   flex-direction: column;
   position: relative;
-  z-index: 10;
+  z-index: 3;
   width: 100%;
   justify-content: center;
 }
@@ -165,7 +189,6 @@ $transition-speed: 0.3s;
 
   position: relative;
 
-  border-radius: 16px;
   overflow: hidden;
   transition:
     transform 0.2s,
@@ -185,9 +208,9 @@ $transition-speed: 0.3s;
     inset: 0;
     z-index: 1;
     background: radial-gradient(
-      800px circle at var(--mx) var(--my),
-      rgba(255, 255, 255, 0.15),
-      transparent 40%
+      120px circle at var(--mx) var(--my),
+      rgba(251, 238, 241, 0.12),
+      transparent 65%
     );
     opacity: var(--opacity);
     transition: opacity 0.4s ease;
@@ -220,9 +243,9 @@ $transition-speed: 0.3s;
 
     // 4. 背景光斑逻辑（保持不变）
     background: radial-gradient(
-      50px circle at var(--mx) var(--my),
-      rgba(255, 255, 255, 1),
-      rgba(255, 255, 255, 0.3) 30%,
+      30px circle at var(--mx) var(--my),
+      rgba(251, 238, 241, 0.8),
+      rgba(251, 238, 241, 0.2) 30%,
       transparent 70%
     );
 
@@ -232,26 +255,16 @@ $transition-speed: 0.3s;
     pointer-events: none;
   }
 
-  width: 7.5em;
+  width: 7.6em;
   height: 10em;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  @media (min-width: 450px) {
-    padding: 0.5em;
-    margin-left: 0.6em;
-    margin-right: 0.6em;
-    margin-bottom: 1.2em;
-    border-radius: 15px;
-  }
-
-  @media (max-width: 450px) {
-    padding: 0.5em;
-    margin-left: 0.3em;
-    margin-right: 0.3em;
-    margin-bottom: 0.6em;
-    border-radius: 8px;
-  }
+  padding: 0.5em;
+  margin-left: 0.35em;
+  margin-right: 0.35em;
+  margin-bottom: 0.7em;
+  border-radius: 16px;
 
   .n-avatar {
     width: 6em;
@@ -262,12 +275,13 @@ $transition-speed: 0.3s;
   }
 
   .friendName {
+    display: block;
+    max-width: 100%;
     font-weight: normal;
+    text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 100%;
-    text-align: center;
   }
 }
 </style>

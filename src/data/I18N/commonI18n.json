@@ -1,15 +1,36 @@
 {
   "cat": {
-    "zh": "孩子们",
+    "zh": "猫咪们",
     "en": "Neko",
-    "ja": "猫達",
+    "ja": "愛猫たち",
     "th": "แมวๆ",
     "other": "Neko"
+  },
+  "twitter": {
+    "zh": "推特",
+    "en": "X.com",
+    "ja": "X.com",
+    "th": "X.com",
+    "other": "X.com"
+  },
+  "weChat": {
+    "zh": "微信",
+    "en": "WeChat",
+    "ja": "WeChat",
+    "th": "WeChat",
+    "other": "WeChat"
+  },
+  "email": {
+    "zh": "电子邮箱",
+    "en": "Email",
+    "ja": "メール",
+    "th": "อีเมล",
+    "other": "Email"
   },
   "catMemoryTitle": {
     "zh": "孩子照片: 需要能GitHub",
     "en": "Neko: Requires GitHub access",
-    "ja": "猫写真：GitHub接続は必要です",
+    "ja": "愛猫たちの写真：GitHub接続は必要です",
     "th": "รูปแมว: ต้องสามารถเข้าถึง GitHub ได้",
     "other": "Neko: Requires GitHub access"
   },
@@ -40,5 +61,89 @@
     "en": "Invalid access. Redirecting to the homepage.",
     "th": "ตรวจพบการเข้าถึงที่ไม่ถูกต้อง กำลังกลับไปหน้าแรก",
     "other": "Invalid access. Redirecting to the homepage."
+  },
+  "modalLoadError": {
+    "zh": "弹窗数据加载失败，请重试",
+    "en": "Failed to load modal data, please try again",
+    "ja": "データの読み込みに失敗しました。再試行してください",
+    "th": "โหลดข้อมูลป๊อปอัปไม่สำเร็จ โปรดลองอีกครั้ง",
+    "other": "Failed to load modal data, please try again"
+  },
+  "unregisteredModalId": {
+    "zh": "试图打开未注册的页面 ID",
+    "en": "Attempted to open an unregistered page ID",
+    "ja": "未登録のページIDを開こうとしました",
+    "th": "พยายามเปิด ID หน้าที่ไม่ได้ลงทะเบียน",
+    "other": "Attempted to open an unregistered page ID"
+  },
+  "modalNavigationError": {
+    "zh": "页面路由跳转失败，请稍后重试",
+    "en": "Page routing failed, please try again later",
+    "ja": "ページのルーティングに失敗しました。後で再試行してください",
+    "th": "การนำทางหน้าเว็บล้มเหลว โปรดลองอีกครั้งในภายหลัง",
+    "other": "Page routing failed, please try again later"
+  },
+  "richTextDepthLimit": {
+    "zh": "[RichText] 在索引 {i} 处达到最大深度限制 ({depthLimit})。嵌套将被展平。",
+    "en": "[RichText] Max depth limit ({depthLimit}) reached at index {i}. Nesting will be flattened.",
+    "ja": "[RichText] インデックス {i} で最大深度制限 ({depthLimit}) に達しました。ネストは平坦化されます。",
+    "th": "[RichText] ถึงขีดจำกัดความลึกสูงสุด ({depthLimit}) ที่ดัชนี {i} การซ้อนทับจะถูกทำให้แบนราบ",
+    "other": "[RichText] Max depth limit ({depthLimit}) reached at index {i}. Nesting will be flattened."
+  },
+  "richTextUnexpectedClose": {
+    "zh": "[RichText] 在索引 {i} 处发现意外的闭合标签 ')$$'。未找到匹配的起始标签。",
+    "en": "[RichText] Unexpected closing tag ')$$' at index {i}. No matching opening tag found.",
+    "ja": "[RichText] インデックス {i} で予期しない閉じタグ ')$$' が見つかりました。対応する開始タグがありません。",
+    "th": "[RichText] พบแท็กปิดที่ไม่คาดคิด ')$$' ที่ดัชนี {i} ไม่พบแท็กเปิดที่ตรงกัน",
+    "other": "[RichText] Unexpected closing tag ')$$' at index {i}. No matching opening tag found."
+  },
+  "richTextUnknownTag": {
+    "zh": "[RichText] 在索引 {i} 处发现未知标签 '{tag}'。为了兼容性，内容将被展平。",
+    "en": "[RichText] Unknown tag '{tag}' at index {i}. Flattening content for compatibility.",
+    "ja": "[RichText] インデックス {i} で不明なタグ '{tag}' が見つかりました。互換性のためコンテンツを平坦化します。",
+    "th": "[RichText] พบแท็กที่ไม่รู้จัก '{tag}' ที่ดัชนี {i} เนื้อหาจะถูกทำให้แบนราบเพื่อความเข้ากันได้",
+    "other": "[RichText] Unknown tag '{tag}' at index {i}. Flattening content for compatibility."
+  },
+  "yamlLoadFailed": {
+    "zh": "YAML加载失败: {err}",
+    "en": "YAML load failed: {err}",
+    "ja": "YAMLの読み込みに失敗しました: {err}",
+    "th": "การโหลด YAML ล้มเหลว: {err}",
+    "other": "YAML load failed: {err}"
+  },
+  "socialLinkNotFound": {
+    "zh": "找不到 ID 为 {id} 的社交链接！",
+    "en": "Cannot find social link with ID {id}!",
+    "ja": "ID が {id} のソーシャルリンクが見つかりません！",
+    "th": "ไม่พบลิงก์โซเชียลที่มี ID {id}!",
+    "other": "Cannot find social link with ID {id}!"
+  },
+  "initFailed": {
+    "zh": "初始化失败: {err}",
+    "en": "Initialization failed: {err}",
+    "ja": "初期化に失敗しました: {err}",
+    "th": "การเริ่มต้นระบบล้มเหลว: {err}",
+    "other": "Initialization failed: {err}"
+  },
+  "configLoadFailed": {
+    "zh": "无法加载配置！",
+    "en": "Failed to load configuration!",
+    "ja": "設定を読み込めません！",
+    "th": "ไม่สามารถโหลดการตั้งค่าได้!",
+    "other": "Failed to load configuration!"
+  },
+  "configPathFetchFailed": {
+    "zh": "[Config Load Failed]: 无法获取路径配置文件。{err}",
+    "en": "[Config Load Failed]: Unable to fetch path configuration file. {err}",
+    "ja": "[Config Load Failed]: パス設定ファイルを取得できません。{err}",
+    "th": "[Config Load Failed]: ไม่สามารถดึงไฟล์การตั้งค่าเส้นทางได้ {err}",
+    "other": "[Config Load Failed]: Unable to fetch path configuration file. {err}"
+  },
+  "configTypeError": {
+    "zh": "[Config Error]: 在 YamlUrlConfig 中未找到类型 '{type}'。",
+    "en": "[Config Error]: Type '{type}' not found in YamlUrlConfig.",
+    "ja": "[Config Error]: YamlUrlConfig にタイプ '{type}' が見つかりません。",
+    "th": "[Config Error]: ไม่พบประเภท '{type}' ใน YamlUrlConfig",
+    "other": "[Config Error]: Type '{type}' not found in YamlUrlConfig."
   }
 }

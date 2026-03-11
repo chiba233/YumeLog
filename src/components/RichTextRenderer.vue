@@ -185,6 +185,7 @@ a.fw-link {
   paint-order: stroke fill;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
+  z-index: 3;
 
   &,
   & * {
@@ -200,6 +201,7 @@ a.fw-link {
   display: block;
   margin: 0.5rem auto;
   clear: both;
+  z-index: 3;
 
   --n-border: none !important;
   border-radius: 12px;

@@ -12,5 +12,33 @@
     "ja": "星野夢華のブログ",
     "other": "Yumeka's Blog",
     "th": "บล็อกของยูเมะกะ"
+  },
+  "maimai": {
+    "zh": "maimai DX 成绩",
+    "en": "maimai DX Score",
+    "ja": "maimai でらっくす 成績",
+    "other": "maimai DX Score",
+    "th": "คะแนน maimai DX"
+  },
+  "neko": {
+    "zh": "我的猫咪们",
+    "en": "My Cats",
+    "ja": "愛猫たち",
+    "other": "My Cats",
+    "th": "แมวของฉัน"
+  },
+  "weChat": {
+    "zh": "我的微信",
+    "en": "My WeChat",
+    "ja": "WeChat",
+    "other": "My WeChat",
+    "th": "WeChat ของฉัน"
+  },
+  "line": {
+    "zh": "我的 LINE",
+    "en": "My LINE",
+    "ja": "LINE",
+    "other": "My LINE",
+    "th": "LINE ของฉัน"
   }
 }

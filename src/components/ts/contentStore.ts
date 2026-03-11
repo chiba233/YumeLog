@@ -32,7 +32,11 @@ export const useContentStore = () => {
     return (postsCache[type]?.data as T[]) || [];
   };
 
-  const getSingle = async <T>(type: string, fileName: string, force = false): Promise<T | null> => {
+  const getSingle = async <T extends object>(
+    type: string,
+    fileName: string,
+    force = false,
+  ): Promise<T | null> => {
     const cacheKey = `${type}_${fileName}`;
     const now = Date.now();
     const cached = singleCache[cacheKey];

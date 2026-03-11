@@ -6,6 +6,7 @@ export const routes: RouteRecordRaw[] = [
     path: "/",
     name: "home",
     component: () => import("../views/HomeView.vue"),
+    props: true,
   },
   {
     path: "/blog/:id?",
@@ -15,10 +16,10 @@ export const routes: RouteRecordRaw[] = [
   },
   {
     path: "/:pathMatch(.*)*",
-    redirect: () => ({
-      name: "home",
+    redirect: {
+      path: "/",
       query: { invalid: "1" },
-    }),
+    },
   },
 ];
 

@@ -232,6 +232,10 @@ useHead({
           content: baseTitle.value,
         },
         {
+          property: "og:url",
+          content: `${siteOrigin}/blog/`,
+        },
+        {
           property: "og:type",
           content: "website",
         },

@@ -315,6 +315,10 @@ const headLinks = computed(() => {
       href: `${siteOrigin}/blog`,
       title: "Blog",
     },
+    {
+      property: "og:url",
+      content: siteOrigin,
+    },
   ];
 });
 useHead({

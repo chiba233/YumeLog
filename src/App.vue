@@ -81,10 +81,6 @@ useHead({
       property: "og:site_name",
       content: computed(() => globalWebTitleMap.value["home"]?.[lang.value] || "Your Brand"),
     },
-    {
-      property: "og:url",
-      content: siteOrigin,
-    },
   ],
 });
 

@@ -81,7 +81,7 @@
     <n-button
       v-for="item in platforms ?? []"
       :key="item.id"
-      :aria-labelledby="getLabel(item)"
+      :aria-label="getLabel(item)"
       :color="themeColor"
       class="cButton glass"
       round

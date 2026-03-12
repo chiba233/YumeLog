@@ -16,6 +16,7 @@
     </n-button>
     <n-modal
       v-model:show="showFromNowModal"
+      to="#modal-target"
       @mouseenter="onEnter"
       @mouseleave="onLeave"
       @mousemove="onMove"

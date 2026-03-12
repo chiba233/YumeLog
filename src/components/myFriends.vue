@@ -13,16 +13,17 @@
       @mousemove="onMove"
     >
       <div class="content">
-        <ClientOnly>
-          <n-avatar
-            :alt="lang === 'zh' ? friend.name : friend.alias"
-            :fallback-src="friend.spare"
-            :size="100"
-            :src="friend.icon || friend.spare"
-            bordered
-            round
-          />
-        </ClientOnly>
+        <n-avatar
+          :alt="lang === 'zh' ? friend.name : friend.alias"
+          :fallback-src="friend.spare"
+          :img-props="{
+            alt: lang === 'zh' ? friend.name : friend.alias,
+          }"
+          :size="100"
+          :src="friend.icon || friend.spare"
+          bordered
+          round
+        />
         <span :lang="lang" class="friendName commonText">
           {{ lang === "zh" ? friend.name : friend.alias }}
         </span>
@@ -39,7 +40,6 @@ import { lang } from "@/components/ts/setupLang.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 import { useHead } from "@unhead/vue";
-import ClientOnly from "@/components/ClientOnly.vue";
 import { $message } from "@/components/ts/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 

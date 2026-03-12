@@ -1,8 +1,15 @@
 <template>
   <div class="dashboardTitle">
-    <ClientOnly>
-      <n-avatar :src="icon" bordered class="titleIcon" round></n-avatar>
-    </ClientOnly>
+    <n-avatar
+      :alt="personRawData?.author[lang] ?? personRawData?.author?.en"
+      :img-props="{
+        alt: personRawData?.author[lang] ?? personRawData?.author?.en,
+      }"
+      :src="icon"
+      bordered
+      class="titleIcon"
+      round
+    ></n-avatar>
     <h2 :lang="lang" class="titleText">
       {{ displayTitle }}
     </h2>
@@ -15,7 +22,7 @@ import icon from "../icons/icon.webp";
 import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 import { useHead } from "@unhead/vue";
 import { lang } from "@/components/ts/setupLang.ts";
-import ClientOnly from "@/components/ClientOnly.vue";
+import { personRawData } from "@/components/ts/setupJson.ts";
 
 const displayTitle = useYamlText("main", "title.yaml", "title");
 const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;

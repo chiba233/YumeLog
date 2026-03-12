@@ -1,13 +1,5 @@
 <script lang="ts" setup>
-import {
-  Component,
-  computed,
-  defineAsyncComponent,
-  onMounted,
-  onServerPrefetch,
-  ref,
-  watch,
-} from "vue";
+import { computed, onMounted, onServerPrefetch, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useHead } from "@unhead/vue";
 
@@ -26,7 +18,7 @@ import {
 import { formatDate, formatTime, lang } from "@/components/ts/setupLang.ts";
 import Cancel from "@/icons/cancel.svg";
 import { NAlert, NButton, NCard, NIcon, NImage, NModal } from "naive-ui";
-import { parseRichText, stripRichText } from "@/components/ts/blogFormat.ts";
+import { parseRichText, stripRichText, TextToken } from "@/components/ts/blogFormat.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
@@ -38,6 +30,7 @@ import {
 } from "@/components/ts/useGlobalState.ts";
 import { useRouteModal } from "@/components/ts/useRouteModal.ts";
 import { personRawData } from "@/components/ts/setupJson.ts";
+import RichTextRenderer from "@/components/RichTextRenderer.vue";
 
 const router = useRouter();
 const { getPosts, getSingle } = useContentStore();
@@ -51,21 +44,20 @@ interface ImageContent {
 interface PostBlock {
   type: string;
   content?: string | ImageContent[];
+  tokens?: TextToken[];
 }
 
 type WebTitleMap = Record<string, Record<string, string>>;
 
 interface ProcessedPost extends Post {
   displayDescription: string;
+  imageBlocks: PostBlock[];
 }
 
 const posts = ref<Post[]>([]);
 const selectedPost = ref<Post | null>(null);
 const showModal = ref(false);
 
-const RichTextRenderer: Component = defineAsyncComponent(
-  () => import("@/components/RichTextRenderer.vue"),
-);
 const route = useRoute();
 const isSSR = import.meta.env.SSR;
 if (import.meta.env.SSR) {
@@ -162,11 +154,16 @@ const { openModal } = useRouteModal({
 });
 
 const processedPosts = computed<ProcessedPost[]>(() =>
-  posts.value.map((post) => ({
-    ...post,
-
-    displayDescription: getDescriptionText(post.blocks as PostBlock[]),
-  })),
+  posts.value.map((post) => {
+    const blocks = post.blocks ?? [];
+    const imageBlocks = blocks.filter((b) => b.type === "image");
+    return {
+      ...post,
+      blocks,
+      imageBlocks,
+      displayDescription: getDescriptionText(blocks),
+    };
+  }),
 );
 
 const cardClick = (post: Post) => {
@@ -214,7 +211,7 @@ useHead({
   script: computed(() => {
     if (!isSSR) return [];
     if (showModal.value && selectedPost.value) {
-      const blocks = selectedPost.value.blocks as PostBlock[];
+      const blocks = selectedPost.value?.blocks ?? [];
       const firstImg = (getImageBlocks(blocks)?.[0]?.content as ImageContent[])?.[0]?.src ?? "";
       const post = selectedPost.value;
       return [
@@ -282,7 +279,7 @@ useHead({
       ];
     }
 
-    const blocks = selectedPost.value.blocks as PostBlock[];
+    const blocks = selectedPost.value?.blocks ?? [];
 
     const desc = getDescriptionText(blocks).slice(0, 160);
 
@@ -319,6 +316,25 @@ useHead({
       },
     ];
   }),
+});
+
+const richTextCache = new WeakMap<PostBlock, TextToken[]>();
+const parsedBlocks = computed<PostBlock[]>(() => {
+  if (!selectedPost.value?.blocks) return [];
+  return selectedPost.value.blocks.map((block) => {
+    if (block.type === "text" && typeof block.content === "string") {
+      let tokens = richTextCache.get(block);
+      if (!tokens) {
+        tokens = parseRichText(block.content);
+        richTextCache.set(block, tokens);
+      }
+      return {
+        ...block,
+        tokens,
+      };
+    }
+    return block;
+  });
 });
 
 onMounted(async () => {
@@ -361,7 +377,7 @@ watch(
       v-for="post in processedPosts"
       :key="post.time"
       class="post-card glass"
-      @click="() => cardClick(post)"
+      @click="cardClick(post)"
       @mouseenter="onEnter"
       @mouseleave="onLeave"
       @mousemove="onMove"
@@ -381,11 +397,8 @@ watch(
         </div>
 
         <div class="post-body">
-          <div v-if="getImageBlocks(post.blocks as PostBlock[]).length > 0" class="post-image">
-            <template
-              v-for="(block, idx) in getImageBlocks(post.blocks as PostBlock[]).slice(0, 2)"
-              :key="idx"
-            >
+          <div v-if="post.imageBlocks.length > 0" class="post-image">
+            <template v-for="(block, idx) in post.imageBlocks.slice(0, 2)" :key="idx">
               <img
                 v-if="Array.isArray(block.content) && block.content[0]?.src"
                 :alt="block.content[0].desc"
@@ -397,10 +410,7 @@ watch(
             </template>
           </div>
 
-          <div
-            :class="{ 'expanded-text': !getImageBlocks(post.blocks as PostBlock[]).length }"
-            class="post-description"
-          >
+          <div :class="{ 'expanded-text': !post.imageBlocks.length }" class="post-description">
             <p :lang="post?.lang as string" class="commonText">
               {{ post.displayDescription }}
             </p>
@@ -427,18 +437,19 @@ watch(
       <p v-else :lang="lang">{{ blogDisplay.loading }}</p>
     </div>
   </div>
-  <div v-if="isSSR && selectedPost" aria-hidden="true" style="display: none">
+  <div v-if="isSSR && selectedPost" aria-hidden="true" style="position: absolute; left: -9999px">
     <article>
       <h2>{{ selectedPost.title }}</h2>
       <time :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')">
         {{ selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") }}
       </time>
       <span>{{ formatTime(selectedPost.time) }}</span>
-      <div v-for="(block, index) in selectedPost.blocks as PostBlock[]" :key="index">
+      <div v-for="(block, index) in parsedBlocks" :key="index">
         <div v-if="block.type === 'text'">
           <RichTextRenderer
+            v-if="block.type === 'text' && block.tokens"
             :lang="selectedPost?.lang as string"
-            :tokens="parseRichText(block.content as string)"
+            :tokens="block.tokens!"
           />
         </div>
         <div v-if="block.type === 'image'">
@@ -452,7 +463,13 @@ watch(
       </div>
     </article>
   </div>
-  <n-modal v-model:show="showModal" @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
+  <n-modal
+    v-model:show="showModal"
+    to="#modal-target"
+    @mouseenter="onEnter"
+    @mouseleave="onLeave"
+    @mousemove="onMove"
+  >
     <n-card
       v-if="selectedPost"
       :lang="selectedPost?.lang as string"
@@ -477,7 +494,7 @@ watch(
           <span class="time-divider">|</span>
           <span :lang="lang">{{ formatTime(selectedPost.time) }}</span>
         </div>
-        <div v-for="(block, a) in selectedPost.blocks as PostBlock[]" :key="a" class="postCardBody">
+        <div v-for="(block, a) in parsedBlocks" :key="a" class="postCardBody">
           <div v-if="block.type === 'image'" class="postCardImage">
             <div
               v-for="img in block.content as ImageContent[]"
@@ -507,10 +524,7 @@ watch(
             <div class="separator-icon"><span>✦</span></div>
           </div>
           <div v-if="block.type === 'text'" class="postCardText">
-            <RichTextRenderer
-              :lang="selectedPost?.lang as string"
-              :tokens="parseRichText(block.content as string)"
-            />
+            <RichTextRenderer :lang="selectedPost?.lang as string" :tokens="block.tokens!" />
           </div>
         </div>
       </div>

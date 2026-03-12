@@ -175,18 +175,20 @@ a.fw-link {
 .code-text {
   font-family: "SFMono-Regular", Consolas, monospace;
   background-color: rgba(var(--global-theme-rgb-deep), 0.13) !important;
-  padding: 0 0.35rem;
-  border-radius: 4px;
+  padding: 3px;
+  border-radius: 6px;
   font-size: 0.85em;
   font-weight: bold;
-  display: inline-block !important;
+  line-height: inherit;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  display: inline !important;
   text-decoration: none !important;
   -webkit-text-stroke: 0.1px var(--global-theme-color-deep);
   paint-order: stroke fill;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   z-index: 3;
-
   &,
   & * {
     color: var(--global-theme-color-deep) !important;

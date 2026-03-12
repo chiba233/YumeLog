@@ -68,18 +68,15 @@ export default defineConfig(({ mode }) => {
       },
 
       async onFinished() {
-        console.log("SSG finished, generating sitemap...");
+        console.log("SSG finished, generating sitemap and robots.txt...");
 
         const formatDate = (t?: string) => {
           if (!t) return "";
-
           if (/^\d{8}$/.test(t)) {
             return `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}`;
           }
-
           const d = new Date(t);
           if (isNaN(d.getTime())) return "";
-
           return d.toISOString().slice(0, 10);
         };
 
@@ -107,11 +104,20 @@ ${routes
   .join("\n")}
 </urlset>`;
 
+        const robots = `User-agent: *
+Allow: /
+
+Sitemap: ${siteOrigin}/sitemap.xml
+`;
+
         if (!fs.existsSync("dist")) {
           fs.mkdirSync("dist", { recursive: true });
         }
 
         fs.writeFileSync("dist/sitemap.xml", xml);
+        fs.writeFileSync("dist/robots.txt", robots);
+
+        console.log("Sitemap and robots.txt generated successfully!");
       },
     },
 

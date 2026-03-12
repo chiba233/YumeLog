@@ -42,28 +42,50 @@ onMounted(async () => {
     });
   }
 });
+
+const dynamicTitle = computed(() => {
+  const currentLang = lang.value;
+  const routeName = (route.name as string) || "home";
+  const baseTitle = globalWebTitleMap.value[routeName]?.[currentLang] || routeName;
+
+  if (routeName === "blog" && currentPostTitle.value) {
+    return `${currentPostTitle.value} - ${baseTitle}`;
+  }
+
+  const modals = [
+    { active: showWechatModel.value, data: webTitleData.weChat },
+    { active: showCatModel.value, data: webTitleData.neko },
+    { active: showLineModel.value, data: webTitleData.line },
+    { active: showMaiModal.value, data: webTitleData.maimai },
+  ];
+
+  if (routeName === "home") {
+    const active = modals.find((m) => m.active);
+    if (active) {
+      const sub = active.data[currentLang] || active.data.en;
+      return `${sub} - ${baseTitle}`;
+    }
+  }
+
+  return baseTitle;
+});
+const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
 useHead({
-  title: computed(() => {
-    const currentLang = lang.value;
-    const routeName = (route.name as string) || "home";
-    const baseTitle = globalWebTitleMap.value[routeName]?.[currentLang] || routeName;
-    if (routeName === "blog" && currentPostTitle.value) {
-      return `${currentPostTitle.value} - ${baseTitle}`;
-    }
-    if (routeName === "home" && showWechatModel.value) {
-      return `${webTitleData.weChat[currentLang] || webTitleData.weChat.en} - ${baseTitle}`;
-    }
-    if (routeName === "home" && showCatModel.value) {
-      return `${webTitleData.neko[currentLang] || webTitleData.neko.en} - ${baseTitle}`;
-    }
-    if (routeName === "home" && showLineModel.value) {
-      return `${webTitleData.line[currentLang] || webTitleData.line.en} - ${baseTitle}`;
-    }
-    if (routeName === "home" && showMaiModal.value) {
-      return `${webTitleData.maimai[currentLang] || webTitleData.maimai.en} - ${baseTitle}`;
-    }
-    return baseTitle;
-  }),
+  title: dynamicTitle,
+  meta: [
+    {
+      property: "og:title",
+      content: dynamicTitle,
+    },
+    {
+      property: "og:site_name",
+      content: computed(() => globalWebTitleMap.value["home"]?.[lang.value] || "Your Brand"),
+    },
+    {
+      property: "og:url",
+      content: siteOrigin,
+    },
+  ],
 });
 
 type ColorData = Record<string, string>;

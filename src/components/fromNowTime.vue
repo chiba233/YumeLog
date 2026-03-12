@@ -54,7 +54,7 @@ import { useRouteModal } from "@/components/ts/useRouteModal.ts";
 
 const showFromNowModal = ref(false);
 const { openModal } = useRouteModal({
-  paramKey: "modalId",
+  paramKey: "model",
   modals: {
     fromNow: showFromNowModal,
   },

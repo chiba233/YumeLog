@@ -117,7 +117,9 @@ const blogModals = computed(() => {
   const map: Record<string, typeof showModal> = {};
 
   posts.value.forEach((post) => {
-    if (post.id) map[post.id] = showModal;
+    if (post.id) {
+      map[post.id] = showModal;
+    }
   });
 
   return map;
@@ -139,6 +141,7 @@ const blogHandlers = computed(() => {
 });
 
 const { openModal } = useRouteModal({
+  baseRouteName: "blog",
   paramKey: "id",
   paramSource: "path",
   modals: blogModals,
@@ -147,8 +150,10 @@ const { openModal } = useRouteModal({
   onAllClosed: () => {
     currentPostTitle.value = null;
   },
+
   onInvalidId: async () => {
     $message.warning(blogDisplay.value.unknownPostId, true, 3000);
+
     await router.replace({
       name: "blog",
     });
@@ -172,13 +177,12 @@ const cardClick = (post: Post) => {
   void openModal(post.id);
 };
 
-const closePortal = () => {
-  showModal.value = false;
-  currentPostTitle.value = "";
+const closePortal = async () => {
+  await router.replace({ name: "blog" });
 };
 
 const baseTitle = computed(() => globalWebTitleMap.value?.blog?.[lang.value] ?? "Blog");
-
+const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
 useHead({
   title: computed(() => {
     if (showModal.value && selectedPost.value?.title) {
@@ -188,6 +192,38 @@ useHead({
     return baseTitle.value;
   }),
 
+  link: computed(() => {
+    if (!showModal.value || !selectedPost.value?.id) {
+      return [
+        {
+          rel: "canonical",
+          href: `${siteOrigin}/blog`,
+        },
+      ];
+    }
+
+    return [
+      {
+        rel: "canonical",
+        href: `${siteOrigin}/blog/${selectedPost.value.id}`,
+      },
+    ];
+  }),
+  script: computed(() => [
+    {
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        blogPost: posts.value.map((post) => ({
+          "@type": "BlogPosting",
+          headline: post.title,
+          url: `${siteOrigin}/blog/${post.id}`,
+          datePublished: post.time,
+        })),
+      }),
+    },
+  ]),
   meta: computed(() => {
     if (!showModal.value || !selectedPost.value) {
       return [
@@ -251,6 +287,12 @@ onMounted(async () => {
   posts.value = postsData;
   if (titleData) {
     globalWebTitleMap.value = titleData;
+  }
+  if (Object.keys(route.query).length > 0) {
+    await router.replace({
+      path: route.path,
+      query: {},
+    });
   }
 });
 

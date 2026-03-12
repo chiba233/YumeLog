@@ -17,25 +17,17 @@ import { useHead } from "@unhead/vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import ClientOnly from "@/components/ClientOnly.vue";
 
-const iconUrl = new URL("../icons/icon.webp", import.meta.url).href;
-
 const displayTitle = useYamlText("main", "title.yaml", "title");
-
-if (!import.meta.env.SSR) {
-  useHead({
-    meta: [
-      {
-        property: "og:image",
-        content: iconUrl,
-      },
-    ],
-  });
-}
+const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
 useHead(() => ({
   meta: [
     {
       property: "og:title",
       content: displayTitle.value.slice(0, 160),
+    },
+    {
+      property: "og:image",
+      content: `${siteOrigin}/icon/icon.webp`,
     },
   ],
 }));

@@ -260,7 +260,7 @@ const getStatValue = (key: string): string | number => {
 };
 
 const { openModal } = useRouteModal({
-  paramKey: "modalId",
+  paramKey: "card",
   modals: {
     maimai: showMaiModal,
     cat: showCatModel,
@@ -269,7 +269,6 @@ const { openModal } = useRouteModal({
   },
   loadHandlers: {
     cat: async () => {
-      console.log("正在通过 Hook 加载数据...");
       await loadCat();
     },
   },
@@ -298,18 +297,26 @@ const getLabel = (item: PlatformConfig): string => {
   return item.label;
 };
 
+const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
 const headLinks = computed(() => {
   const links = socialLinks.value;
-  if (!platforms.value.length) return [];
-  return platforms.value
+
+  const social = platforms.value
     .filter((p) => p.type === "link" && links[p.id as keyof typeof links])
     .map((p) => ({
       rel: "me",
       href: links[p.id as keyof typeof links],
       title: p.label,
     }));
+  return [
+    ...social,
+    {
+      rel: "canonical",
+      href: `${siteOrigin}/blog`,
+      title: "Blog",
+    },
+  ];
 });
-
 useHead({
   link: headLinks,
   meta: [

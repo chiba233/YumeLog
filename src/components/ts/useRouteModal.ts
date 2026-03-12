@@ -4,22 +4,15 @@ import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
 import { $message } from "@/components/ts/msgUtils.ts";
 
-const globalModalRegistry = new Set<string>();
-let isReportingError = false;
-
 interface ModalOptions {
   modals: Ref<Record<string, Ref<boolean>>> | Record<string, Ref<boolean>>;
   paramKey: string;
-
-  // 新增
   paramSource?: "query" | "path";
-
+  baseRouteName?: string;
   isReady?: Ref<boolean> | ComputedRef<boolean>;
-
   loadHandlers?:
     | Ref<Record<string, () => Promise<void> | void>>
     | Record<string, () => Promise<void> | void>;
-
   onAllClosed?: () => void;
   onInvalidId?: (id: string) => Promise<void> | void;
 }
@@ -28,6 +21,7 @@ export function useRouteModal({
   modals,
   paramKey,
   paramSource = "query",
+  baseRouteName,
   isReady,
   loadHandlers,
   onAllClosed,
@@ -55,13 +49,26 @@ export function useRouteModal({
     return (Array.isArray(raw) ? raw[0] : raw) || "";
   };
 
-  watch(
-    () => unref(modals),
-    (newModals) => {
-      Object.keys(newModals).forEach((key) => globalModalRegistry.add(key));
-    },
-    { immediate: true, deep: true },
-  );
+  const closeAllModals = () => {
+    const current = unref(modals);
+    Object.values(current).forEach((m) => {
+      m.value = false;
+    });
+  };
+
+  const clearRouteParam = async () => {
+    const nav =
+      paramSource === "path"
+        ? {
+            name: baseRouteName || route.name || "home",
+          }
+        : {
+            name: route.name || "home",
+            query: { ...route.query, [paramKey]: undefined },
+          };
+
+    await router.replace(nav);
+  };
 
   const syncModalWithRoute = async () => {
     if (isLock) return;
@@ -70,59 +77,35 @@ export function useRouteModal({
     const currentModals = unref(modals);
 
     if (!modalId) {
-      Object.values(currentModals).forEach((m) => {
-        m.value = false;
-      });
+      closeAllModals();
       return;
     }
 
     if (!(modalId in currentModals)) {
-      Object.values(currentModals).forEach((m) => {
-        m.value = false;
-      });
+      closeAllModals();
 
       const ready = unref(isReady) ?? true;
+      if (!ready) return;
 
-      if (ready && !isReportingError) {
-        if (onInvalidId) {
-          isLock = true;
-          await onInvalidId(modalId);
-          isLock = false;
-        } else if (!globalModalRegistry.has(modalId)) {
-          isReportingError = true;
+      if (onInvalidId) {
+        isLock = true;
+        await onInvalidId(modalId);
+        isLock = false;
+      } else {
+        const i18nSource = commonI18n.invalidAccess as Record<string, string>;
+        $message.error(i18nSource[lang.value] || i18nSource["en"], true, 3000);
 
-          const i18nSource = commonI18n.invalidAccess as Record<string, string>;
-          $message.error(i18nSource[lang.value] || i18nSource["en"], true, 3000);
-
-          isLock = true;
-
-          const nav =
-            paramSource === "path"
-              ? {
-                  name: route.name || "home",
-                  params: { ...route.params, [paramKey]: undefined },
-                }
-              : {
-                  name: route.name || "home",
-                  query: { ...route.query, [paramKey]: undefined },
-                };
-
-          void router.replace(nav).finally(() => {
-            setTimeout(() => {
-              isLock = false;
-              isReportingError = false;
-            }, 200);
-          });
-        }
+        isLock = true;
+        await clearRouteParam();
+        isLock = false;
       }
+
       return;
     }
 
     if (currentModals[modalId].value) return;
 
-    Object.values(currentModals).forEach((m) => {
-      m.value = false;
-    });
+    closeAllModals();
 
     const handlers = unref(loadHandlers);
 
@@ -174,43 +157,25 @@ export function useRouteModal({
       const i18nSource = commonI18n.modalNavigationError as Record<string, string>;
       $message.error(i18nSource[lang.value] || i18nSource["en"], true, 3000);
     } finally {
-      setTimeout(() => {
-        isLock = false;
-        void syncModalWithRoute();
-      }, 50);
+      isLock = false;
+      void syncModalWithRoute();
     }
   };
 
   watch(
     () => Object.values(unref(modals)).map((m) => m.value),
-    (newStates, oldStates) => {
+    async (newStates, oldStates) => {
       if (isLock) return;
 
-      const anyOpen = newStates.some((s) => s);
-      const wasAnyOpen = oldStates ? oldStates.some((s) => s) : false;
+      const anyOpen = newStates.some(Boolean);
+      const wasOpen = oldStates ? oldStates.some(Boolean) : false;
 
-      const currentId = getParamId();
-
-      if (!anyOpen && wasAnyOpen && currentId in unref(modals)) {
+      if (!anyOpen && wasOpen) {
         isLock = true;
 
-        const nav =
-          paramSource === "path"
-            ? {
-                name: route.name || "home",
-                params: { ...route.params, [paramKey]: undefined },
-              }
-            : {
-                name: route.name || "home",
-                query: { ...route.query, [paramKey]: undefined },
-              };
+        await clearRouteParam();
 
-        router
-          .push(nav)
-          .catch(() => {})
-          .finally(() => {
-            isLock = false;
-          });
+        isLock = false;
 
         onAllClosed?.();
       }
@@ -225,9 +190,21 @@ export function useRouteModal({
     },
   );
 
-  void nextTick().then(() => {
-    void syncModalWithRoute();
-  });
+  if (isReady) {
+    watch(
+      () => unref(isReady),
+      (ready) => {
+        if (ready && !isLock) {
+          void syncModalWithRoute();
+        }
+      },
+    );
+  }
 
-  return { openModal, syncModalWithRoute };
+  void nextTick().then(syncModalWithRoute);
+
+  return {
+    openModal,
+    syncModalWithRoute,
+  };
 }

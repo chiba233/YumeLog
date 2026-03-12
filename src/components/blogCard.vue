@@ -214,6 +214,8 @@ useHead({
   script: computed(() => {
     if (!isSSR) return [];
     if (showModal.value && selectedPost.value) {
+      const blocks = selectedPost.value.blocks as PostBlock[];
+      const firstImg = (getImageBlocks(blocks)?.[0]?.content as ImageContent[])?.[0]?.src ?? "";
       const post = selectedPost.value;
       return [
         {
@@ -223,6 +225,7 @@ useHead({
             "@type": "BlogPosting",
             headline: post.title,
             datePublished: post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
+            image: firstImg,
             author: {
               "@type": "Person",
               name: personRawData.value?.author[lang.value] ?? personRawData.value?.author?.en,

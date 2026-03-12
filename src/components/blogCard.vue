@@ -37,10 +37,11 @@ import {
   globalWebTitleMap,
 } from "@/components/ts/useGlobalState.ts";
 import { useRouteModal } from "@/components/ts/useRouteModal.ts";
+import { personRawData } from "@/components/ts/setupJson.ts";
 
 const router = useRouter();
 const { getPosts, getSingle } = useContentStore();
-
+const { onMove, onLeave, onEnter } = useCardGlow();
 interface ImageContent {
   src: string;
   spareUrl?: string;
@@ -183,12 +184,12 @@ const closePortal = async () => {
 
 const baseTitle = computed(() => globalWebTitleMap.value?.blog?.[lang.value] ?? "Blog");
 const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
+
 useHead({
   title: computed(() => {
     if (showModal.value && selectedPost.value?.title) {
       return `${selectedPost.value.title} - ${baseTitle.value}`;
     }
-
     return baseTitle.value;
   }),
 
@@ -209,21 +210,57 @@ useHead({
       },
     ];
   }),
-  script: computed(() => [
-    {
-      type: "application/ld+json",
-      children: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "Blog",
-        blogPost: posts.value.map((post) => ({
-          "@type": "BlogPosting",
-          headline: post.title,
-          url: `${siteOrigin}/blog/${post.id}`,
-          datePublished: post.time,
-        })),
-      }),
-    },
-  ]),
+
+  script: computed(() => {
+    if (!isSSR) return [];
+    if (showModal.value && selectedPost.value) {
+      const post = selectedPost.value;
+      return [
+        {
+          type: "application/ld+json",
+          innerHTML: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            headline: post.title,
+            datePublished: post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
+            author: {
+              "@type": "Person",
+              name: personRawData.value?.author[lang.value] ?? personRawData.value?.author?.en,
+            },
+            publisher: {
+              "@type": "Organization",
+              name: personRawData.value?.author[lang.value] ?? personRawData.value?.author?.en,
+            },
+            mainEntityOfPage: {
+              "@type": "WebPage",
+              "@id": `${siteOrigin}/blog/${post.id}`,
+            },
+          }),
+        },
+      ];
+    }
+
+    return [
+      {
+        type: "application/ld+json",
+        innerHTML: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          blogPost: posts.value.map((post) => ({
+            "@type": "BlogPosting",
+            headline: post.title,
+            url: `${siteOrigin}/blog/${post.id}`,
+            datePublished: post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
+            author: {
+              "@type": "Person",
+              name: personRawData.value?.author[lang.value] ?? personRawData.value?.author?.en,
+            },
+          })),
+        }),
+      },
+    ];
+  }),
+
   meta: computed(() => {
     if (!showModal.value || !selectedPost.value) {
       return [
@@ -233,7 +270,7 @@ useHead({
         },
         {
           property: "og:url",
-          content: `${siteOrigin}/blog/`,
+          content: `${siteOrigin}/blog`,
         },
         {
           property: "og:type",
@@ -253,30 +290,29 @@ useHead({
         name: "description",
         content: desc,
       },
-
       {
         property: "og:description",
         content: desc,
       },
-
       {
         property: "og:image",
         content: firstImg,
       },
-
       {
         property: "og:title",
         content: selectedPost.value.title ?? "",
       },
-
       {
-        name: "article:published_time",
-        content: selectedPost.value.time ?? "",
+        property: "article:published_time",
+        content: selectedPost.value.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
       },
-
       {
         property: "og:type",
         content: "article",
+      },
+      {
+        property: "og:url",
+        content: `${siteOrigin}/blog/${selectedPost.value.id}`,
       },
     ];
   }),
@@ -299,8 +335,6 @@ onMounted(async () => {
     });
   }
 });
-
-const { onMove, onLeave, onEnter } = useCardGlow();
 
 watch(
   () => yamlLoadingFault.value,
@@ -393,7 +427,9 @@ watch(
   <div v-if="isSSR && selectedPost" aria-hidden="true" style="display: none">
     <article>
       <h2>{{ selectedPost.title }}</h2>
-      <time>{{ selectedPost.time }}</time>
+      <time :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')">
+        {{ selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") }}
+      </time>
       <span>{{ formatTime(selectedPost.time) }}</span>
       <div v-for="(block, index) in selectedPost.blocks as PostBlock[]" :key="index">
         <div v-if="block.type === 'text'">

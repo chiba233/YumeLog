@@ -1,14 +1,16 @@
 {
   "home": {
-    "zh": "YumeLOG的页面",
-    "en": "YumeLOG Pages",
-    "ja": "YumeLOG - ホーム",
-    "other": "YumeLOG Pages"
+    "zh": "星野夢華的主页",
+    "en": "Yumeka's Pages",
+    "ja": "星野夢華 - ホーム",
+    "other": "Yumeka's Pages",
+    "th": "หน้าแรกของ ยูเมะกะ"
   },
   "blog": {
-    "zh": "YumeLOG的博客",
-    "en": "YumeLOG's Blog",
-    "ja": "YumeLOGのブログ",
-    "other": "YumeLOG's Blog"
+    "zh": "星野夢華的主页 - 博客",
+    "en": "Yumeka's Pages - Blog",
+    "ja": "星野夢華的主页 - ブログ",
+    "other": "Yumeka's Pages - Blog",
+    "th": "บล็อกของ ยูเมะกะ"
   }
 }

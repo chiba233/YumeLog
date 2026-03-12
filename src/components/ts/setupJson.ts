@@ -69,4 +69,11 @@ export interface SocialConfig {
   socialLinks: Record<string, string>;
 }
 
+export interface PersonConfig {
+  author: {
+    [key: string]: string;
+  };
+}
+
 export const socialRawData = shallowRef<SocialConfig | null>(null);
+export const personRawData = shallowRef<PersonConfig | null>(null);

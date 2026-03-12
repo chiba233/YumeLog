@@ -8,7 +8,12 @@ import TopBar from "@/components/topBar.vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import { themeColor } from "@/components/ts/useTheme.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
-import { SocialConfig, socialRawData } from "@/components/ts/setupJson.ts";
+import {
+  PersonConfig,
+  personRawData,
+  SocialConfig,
+  socialRawData,
+} from "@/components/ts/setupJson.ts";
 import ClientOnly from "@/components/ClientOnly.vue";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { changeSpareUrl, listPrimaryError } from "./components/ts/getYaml";
@@ -69,7 +74,6 @@ const dynamicTitle = computed(() => {
 
   return baseTitle;
 });
-const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
 useHead({
   title: dynamicTitle,
   meta: [
@@ -94,6 +98,7 @@ const initData = async () => {
     const fetchTasks: Promise<Response>[] = [
       fetch(`${base}/data/main/webTitle.json`),
       fetch(`${base}/data/config/socialLinks.json`),
+      fetch(`${base}/data/main/person.json`),
     ];
 
     if (!import.meta.env.SSR) {
@@ -103,12 +108,15 @@ const initData = async () => {
     const results = await Promise.all(fetchTasks);
     const titleRes = results[0];
     const socialRes = results[1];
-    const colorRes = results[2];
+    const personRes = results[2];
+    const colorRes = results[3];
 
     if (socialRes?.ok) {
       socialRawData.value = (await socialRes.json()) as SocialConfig;
     }
-
+    if (personRes?.ok) {
+      personRawData.value = (await personRes.json()) as PersonConfig;
+    }
     if (titleRes?.ok) {
       globalWebTitleMap.value = (await titleRes.json()) as Record<string, Record<string, string>>;
     }

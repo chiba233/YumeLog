@@ -1,225 +1,213 @@
 # 🌙 yumeLog (ユメログ)
 
-一个基于 **Vue 3** + **TypeScript** + **Naive UI** + **Vite SSG** 构建的极简高颜值个人主页与自制 **RICH-TEXT-DSL**  博客系统。
-
-本项目为静态网页， 你可以在几乎任何托管平台直接托管，实现低成本部署。
-虽然是静态网页，网页是全SEO完备的，不光是`head/meta`信息 每次编译还都会使用`vite-SSG`
-将全部页面包括每篇编译时存在的文章的html与sitemap.xml及robots.txt进行预编译以便搜索引擎索引！目前几乎所有软件都可以启动分享标签。以及搜索引擎将更易抓取你的页面。
-
-本项目拒绝臃肿的富文本与传统 Markdown 引擎，**全手动实现了一套轻量级文本解析器**，并深度集成了 MaiMai
-玩家专属成绩展示模块。致力于打造兼具硬核技术与个人美学的专属数字空间。
-
-## 核心特性
-
-### 响应式设计
-
-打破传统博客的刻板布局，全站采用现代化的毛玻璃悬浮 UI。**深度适配移动端（手机/平板）**
-，无论是复杂的博客多层嵌套视图，还是首页的多维信息面板，都能在各种屏幕尺寸下保证丝滑的交互体验与像素级的视觉享受。
-
-### 独创的轻量级博客解析引擎
-
-不依赖庞大的第三方渲染库，仅使用 `js-yaml` 获取与结构化数据，核心样式解析完全自研！支持通过独创的 `$$Type()$$` 及 `$$raw-code(编程语言 | title
-)% 内容 %end$$` 语法进行快速渲染：
-
-* **支持的嵌套格式指令**: `"bold"`, `"thin"`, `"underline"`, `"strike"`, `"center"`, `"link"`, `"code"`, `"info"`,
-  `"warning"`。
-* **支持的raw格式指令**: `"info"`,`"warning"`,`"raw-code"`
-* **支持显示图片、简介。图片同样支持双轨数据获取。
-* **支持 `"divider"` 分割文本章节。
-* **双轨数据获取**: 完美支持从本地目录读取，或通过 HTTP/CDN 从远程服务器动态拉取 YAML 数据流。
-
-### 截图
-
-#### 电脑端
-
 <p align="center">
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/1.png" width="170" />
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/2.png" width="170" />
+  <img alt="Vue" src="https://img.shields.io/badge/Vue%203-35495E?style=for-the-badge&logo=vue.js&logoColor=4FC08D" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" />
 </p>
 
-#### 手机端
+一个基于 **Vue 3** + **TypeScript** + **Naive UI** + **Vite SSG** 构建的极简高颜值个人主页与自制 **RICH-TEXT-DSL** 博客系统。
 
+本项目为静态网页，可实现极低成本部署。通过 `vite-SSG` 预渲染技术，在每次编译时自动生成包含所有文章的 HTML、`sitemap.xml` 与 `robots.txt`，完美实现全站级 SEO 优化，搜索引擎与各大社交软件分享抓取毫无压力。
+
+致力于打造兼具硬核技术与个人美学的专属数字空间。
+
+---
+
+## 🌟 特性速览 (Features Overview)
+
+| Feature | Description |
+| :--- | :--- |
+| **Static Architecture** | 纯静态博客架构，极低成本无后端部署 |
+| **Vite SSG** | 自动预渲染 HTML / sitemap / robots，SEO 完备 |
+| **Custom DSL** | 拒绝传统臃肿 Markdown，自研轻量级 RICH-TEXT DSL |
+| **Nested Rendering** | 核心引擎支持无限嵌套语法解析 |
+| **Image Blocks** | 图像块完美支持主干与双轨容灾备用地址 |
+| **Responsive UI** | 全端响应式设计，深度适配移动端与毛玻璃交互 |
+| **Theme System** | 灵活的主题系统：背景壁纸 + 对应主题色 |
+| **Multi Language** | 抛弃繁重框架，自研基于 JSON/YAML 的轻量级 i18n |
+| **Anniversary Timeline** | 专属纪念日时间轴，精准计算非凡时刻 |
+| **Photo Wall** | 专为晒猫与个人摄影打造的流式照片墙展示 |
+| **Social Links** | 全域联系方式收纳，支持 Web3 钱包地址展示 |
+| **Remote Data** | 灵活的数据双轨：完美支持从本地、CDN 或 HTTP 动态拉取 YAML |
+| **Maimai Module** | MaiMai DX 原生 API 接入，优雅展示玩家成绩与段位 |
+
+---
+
+## 📸 视觉预览
+
+<details>
+<summary><b>💻 桌面端视图</b> (点击展开)</summary>
+<br>
 <p align="center">
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/3.png" width="170" />
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/4.png" width="170" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/1.png" width="48%" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/2.png" width="48%" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/8.png" width="48%" />
 </p>
+</details>
 
-#### maimai功能
-
+<details>
+<summary><b>📱 移动端视图</b> (点击展开)</summary>
+<br>
 <p align="center">
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/5.png" width="170" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/3.png" width="30%" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/4.png" width="30%" />
 </p>
+</details>
 
-#### 纪念日功能
-
+<details>
+<summary><b>🧩 特色功能模块 (Maimai / 纪念日 / 照片墙)</b> (点击展开)</summary>
+<br>
 <p align="center">
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/6.png" width="170" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/5.png" width="30%" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/6.png" width="30%" />
+  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/7.png" width="30%" />
 </p>
+</details>
 
-#### 照片墙功能
+---
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/7.png" width="170" />
-</p>
+## 🛠️ 技术栈与环境
 
-#### blog详情页
+- **框架 & 语言**: Vue 3 (Composition API) / TypeScript (Strict Mode)
+- **UI & 样式**: Naive UI (针对毛玻璃美学与移动端微调)
+- **构建 & SEO**: Vite 7 / Vite SSG
+- **数据处理**: `js-yaml` (仅用于解析结构，DOM 渲染由自研 Parser 全权接管)
+- **依赖管理**: `pnpm` (>= 8.0.0), Node.js (>= 18.0.0)
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/8.png" width="170" />
-</p>
+---
 
-### 全方位个人展示模块
+## 🚀 极速启动与部署
 
-不只是博客，更是你在这个世界的数字名片：
+本项目强依赖 **pnpm**，请确保环境配置正确。
 
-* **主题系统**: 支持多种主题，可以设置对应壁纸和主题色
-* **多语言适配**: 抛弃繁杂的第三方 i18n 框架，自研基于 JSON/YAML
-  的轻量级多语言切换中心。轻松驾驭中文、英语、日本語，甚至是泰语的无缝切换(
-  中文、英语、日本語、泰语为内置默认语言，你可以非常轻松的手动添加更多语言的i18n)，让主页真正走向国际化。
-* **个人简介**: 高度自定义的个人状态面板。
-* **联系网络**: 优雅收纳全域联系方式，涵盖 Telegram, WeChat 等传统社交平台，以及 Ethereum, Solana 等 Web3 钱包地址展示。
-* **朋友展示**: 专属友链网格面板，给重要的人留下最显眼的位置。
-* **纪念日**: 专属时间线模块，精准计算并展示那些对你意义非凡的时刻。
-* **照片展示板**: 专为晒猫或个人摄影打造的流式照片墙。
+### 1. 本地开发
+```bash
+pnpm install
+pnpm dev
+# 局域网移动端调试
+pnpm run host
+```
 
-### 玩家模块
+### 2. 生产环境构建
+```bash
+# 方案 A：完整构建 (严格类型检查 + SSG SEO 优化) —— 推荐
+vue-tsc --noEmit && vite build && pnpm run ssg
 
-* **Maimai Score**: 原生接入 Maimai DX Aqua 服务器 API，主页直接优雅展示你的铺面战绩与段位信息。
+# 方案 B：仅基础构建 (不执行 SSG)
+vite build
 
-## 技术栈
+# 方案 C：对已有的 dist 目录进行 SSG 补全
+vite-ssg build
+```
 
-* **前端框架**: Vue 3 (Composition API)
-* **开发语言**: TypeScript (Strict Mode)
-* **SEO工具**：Vite SSG
-* **组件库**: Naive UI (针对毛玻璃美学与移动端进行了深度样式重写与微调)
-* **构建工具**: Vite
-* **数据处理**: js-yaml (仅用于解析结构，DOM 渲染由自研 Parser 引擎全权接管)
+### 3. 代码质量检查
+```bash
+pnpm lint
+pnpm type-check
+```
 
-## 开发与部署
-
-由于项目采用了 **Vite 7** 与 **pnpm** 驱动，请确保你的开发环境已安装 pnpm。
-
-### 1. 环境准备
-
-* **Node.js**: >= 18.0.0
-* **Package Manager**: pnpm >= 8.0.0
-
-### 2. 安装依赖
-
-    pnpm install
-
-### 3. 本地开发
-
-启动开发服务器，支持热更新（HMR）：
-
-    pnpm dev
-
-如果你需要在移动端调试（局域网访问），请运行：
-
-    pnpm run host
-
-## 4. 生产环境构建
-
-### 执行以下命令将进行严格的类型检查并生成SEO优化后的静态资源（存放在 dist 目录）：
-
-    vue-tsc --noEmit && vite build && pnpm run ssg
-
-### 如果你并不希望执行Vite-SSG优化，请执行以下命令进行编译（存放在 dist 目录）：
-
-    vite build
-
-### 如果你已经拥有dist，只是希望进行Vite-SSG优化，请执行以下命令进行编译（存放在 dist 目录）：
-
-    vite-ssg build
-
-## 5. 代码质量检查
-
-### 运行 ESLint 自动修复
-
-    pnpm lint
-
-### 运行 TypeScript 类型检查
-
-    pnpm type-check
-
-## 部署说明
-
-### Nginx 配置
-
-本项目使用 vue-router 的 History 模式，部署到 Nginx 时需添加以下配置，否则刷新页面会触发 404：
-
-    server {
+### 4. 部署 Nginx 配置参考
+项目采用 Vue-router History 模式，部署到 Nginx 时需添加以下配置避免 404：
+```nginx
+server {
     listen 80;
     server_name your-domain.com;
-
     location / {
         root /path/to/yumeLog/dist;
         index index.html;
         try_files $uri $uri/ /index.html;
     }
-
 }
+```
 
-## 块级驱动与自研语法
+---
 
-yumeLog 采用极其灵活的 **块级** 架构组织内容。同时，自研的解析引擎完美支持了**无限嵌套**的文本格式渲染。
+## ✍️ 自研 DSL 语法指南 (DSL Grammar)
 
-**请注意，你必须添加id否则将无法访问文章，你可以直接使用id跳转至文章。**
+yumeLog 采用块级架构与自研 DSL 引擎渲染博客文本。文章必须包含唯一 `id` 以便路由访问。
 
-**例子：你可以直接通过此链接进行快速跳转及分享：**`http://localhost:5173/blog/test`
+### 基础语法
+```text
+$$type(content)$$
+```
+**示例：** `$$bold(Hello World)$$`
 
-**请记住link的语法是** `$$link(URL | $$type(点我)$$)$$` ，**其中** `$$type(点我)$$`**其中**
-`type`**支持嵌套，但是`URL`**不能嵌套！必须在链接同一层级！**
+### 嵌套语法
+所有常规 type 均支持无限嵌套。
+**示例：** `$$bold($$underline(Hello)$$)$$`
 
-### 标准 YAML 示例
+### 超链接语法 (Link)
+```text
+$$link(URL | content)$$
+```
+**示例：** `$$link(https://example.com | 点我访问)$$`
 
+⚠️ **严格注意：**
+- **URL**：绝对 **不能嵌套**！必须在第一层级声明。
+- **content**：**可以嵌套** 其他指令。
+**正确复合示例：** `$$link(https://google.com | $$bold(Google)$$)$$`
+
+### 原始代码块 (Raw Code Block)
+Raw block 内部 **不会解析任何 DSL 指令**。
+```text
+$$raw-code(lang | title)
+content
+%end$$
+```
+**示例：**
+```text
+$$raw-code(ts | example)
+const a = 1
+%end$$
+```
+
+### 支持的 Type 清单
+
+| Type | Description |
+| :--- | :--- |
+| **bold** | 粗体 |
+| **thin** | 细体 |
+| **underline** | 下划线 |
+| **strike** | 删除线 |
+| **center** | 居中对齐 |
+| **code** | 行内代码 |
+| **link** | 超链接 |
+| **info** | 基础信息提示框 |
+| **warning** | 警告提示框 |
+
+### 完整 YAML 块级驱动示例
 ```yaml
 id: "test"
 time: "20260106"
 pin: true
-# pin值以将重要文章置顶
-title: "鲲鹏920解决升级至debian12后panic"
+title: "DSL 渲染测试"
 blocks:
-  # 1. 普通文本块
-  - type: "text"
-    content: "这是测试文本"
-    
-  # 2. 极致嵌套文本块
   - type: "text"
     content: |
-      $$center($$bold($$underline(这是测试)$$)$$)$$
-      $$code(const a = ref(true))$$
+      $$center($$bold($$underline(多层嵌套测试)$$)$$)$$
       $$info(typescript | const a = ref(true))$$
-      $$warning(error | 我去，原地爆炸了！
-      爆炸了)$$
-      $$warning(error | $$center(我去，原地爆炸了！这个有居中效果喵！
-      爆炸了)$$)$$
-      $$bold(粗体$$underline(嵌套下划线$$link(http://baidu.com)$$)$$)$$
-      $$link(https://baidu.com | $$bold($$underline(点我进入百度)$$)$$)$$
-      $$raw-code(yaml | 示例 yaml)
-      此内容内所有tag都不会被解析
-      # end行必须无空格，单起一行
+      $$warning(error | 发生未知错误！)$$
+      $$link([https://baidu.com](https://baidu.com) | $$bold(点我进入百度)$$)$$
+      $$raw-code(yaml | 示例)
+      纯净文本，忽略所有 $$tag()$$
       %end$$
-  - type: "divider"  #分割线
-  # 3. 图像渲染块 (支持容灾备用链接)
+  - type: "divider"
   - type: "image"
     content:
       - src: /background0.webp
         spareUrl: /background0.webp
-        desc: "这是图片描述"
-
+        desc: "绝美风景"
 ```
-
-由于 **yumeLog 是纯前端静态架构（无后端）**，所有博客与个人信息均通过仓库中的数据文件进行管理。  
-如果需要修改内容，请按照以下说明操作。
 
 ---
 
-## 添加博客文章
+## ⚙️ 核心配置与自定义指南
 
-**注意 要使用博客前你必须先在`\public\data\config\yamlUrl.json`** 指向正确的远程目录及热备目录
-示例：
+由于 **yumeLog 是纯前端静态架构（无后端）**，所有数据均通过仓库中的本地文件或远程 JSON/YAML 驱动。如果需要修改内容，请严格按照以下说明操作。
 
+### 1. 添加博客文章
+**注意：** 要使用博客前你必须先在 `\public\data\config\yamlUrl.json` 指向正确的远程目录及热备目录。
 ```json
 {
   "blog": {
@@ -234,13 +222,10 @@ blocks:
   }
 }
 ```
-
+**操作步骤：**
 1. 在博客目录创建新的 YAML 文件（例如 `20260106.yaml`）。
 2. 按照项目定义的 `blocks` 结构编写文章内容。
-3. **手动修改 `list.json`**，将新的文章文件名添加进去。
-
-### 示例：
-
+3. **手动修改 `list.json`**，将新的文章文件名添加进去。如果没有添加，文章将不会被系统加载。
 ```json
 [
   "20251201.yaml",
@@ -248,27 +233,9 @@ blocks:
 ]
 ```
 
-如果没有添加到 `list.json`，文章将不会被系统加载。
-
----
-
-## I18N 多语言管理
-
-### 语言配置文件：
-
-```
-/public/data/config/i18nLang.json
-```
-
-默认支持语言：
-
-- 中文
-- English
-- 日本語
-
-如果不需要某个语言，**直接从 JSON 中删除即可**，对应语言选项会自动从前端消失。
-示例：
-
+### 2. I18N 多语言管理
+**文件位置：** `/public/data/config/i18nLang.json`
+默认支持中文、English、日本語。如果不需要某个语言，**直接从 JSON 中删除即可**，对应选项会自动从前端消失。
 ```json
 [
   {
@@ -280,46 +247,23 @@ blocks:
     "value": "en"
   }
 ]
-
 ```
 
----
-
-## 修改主题
-
-### 文件位置：
-
-```
-/public/data/config/colorData.json
-```
-
-**请注意，请必须严格将图片名按照**`background0.xxx`**顺序命名并放入**`/public/`**目录，且每个图片必须有对应主题色，否则将会不工作
-**
-
-那么问题来了，主题色怎么获取呢，随便找个取色器咯）））
-
-``` json
+### 3. 修改主题
+**文件位置：** `/public/data/config/colorData.json`
+**强制要求：** 图片必须严格按照 `background0.xxx` 顺序命名并放入 `/public/` 目录，且每个图片必须有对应主题色，否则将无法工作。
+```json
 {
   "background0": "#C7B0C0",
   "background1": "#9E8A95",
-  "background2": "#BF948E",
+  "background2": "#BF948E"
 }
-
 ```
 
----
-
-## 修改网页标题
-
-### 文件位置：
-
-```
-/public/data/main/webTitle.json
-```
-
-### 标准 JSON 示例
-
-``` json
+### 4. 修改网页标题
+**文件位置：** `/public/data/main/webTitle.json`
+用于控制浏览器标签页标题以及部分全局显示名称。
+```json
 {
   "home": {
     "zh": "YumeLOG的页面",
@@ -336,20 +280,9 @@ blocks:
 }
 ```
 
-用于控制浏览器标签页标题以及部分全局显示名称。
-
----
-
-## 修改首页招呼语
-
-### 文件位置：
-
-```
-/public/data/main/title.yaml
-```
-
-标准 YAML 示例
-
+### 5. 修改首页招呼语
+**文件位置：** `/public/data/main/title.yaml`
+用于控制主页顶部的欢迎语与简短介绍。
 ```yaml
 title:
   - type: "zh"
@@ -362,49 +295,27 @@ title:
     content: "Sorry Unknown Language!"
 ```
 
-用于控制主页顶部的欢迎语与简短介绍。
-
----
-
-## 修改照片墙
-
-### 文件位置：
-
-```
-/public/data/config/neko.yaml
-```
-
-### 标准 YAML 示例
-
+### 6. 修改照片墙
+**文件位置：** `/public/data/config/neko.yaml`
+用于管理照片墙展示的图片及描述内容（例如猫猫照片或摄影作品）。
 ```yaml
 img:
   - imgError: /cat/猫咪图片1.webp
-    img: https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E6%A9%98%E7%8C%AB.webp
+    img: [https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E6%A9%98%E7%8C%AB.webp](https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E6%A9%98%E7%8C%AB.webp)
     imgName: 猫咪图片1
   - imgError: /cat/猫咪图片2.webp
-    img: https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E5%A5%B6%E5%AD%90.webp
+    img: [https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E5%A5%B6%E5%AD%90.webp](https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E5%A5%B6%E5%AD%90.webp)
     imgName: 猫咪图片2
 ```
-用于管理照片墙展示的图片及描述内容（例如猫猫照片或摄影作品）。
 
----
-
-## 修改个人详细简介
-
-### 文件位置：
-
-```
-/public/data/config/introduction.yaml
-```
-
-### 标准 YAML 示例
-
+### 7. 修改个人详细简介
+**文件位置：** `/public/data/config/introduction.yaml`
+用于展示完整的个人介绍信息。
 ```yaml
 introduction:
   - type: "zh"
     content: |
       这是基础信息，你可以访问/main/introduction.yaml进行修改
-
   - type: "en"
     content: |
       This is the basic information. 
@@ -419,22 +330,10 @@ introduction:
       You can access /main/introduction.yaml to modify it.
 ```
 
-用于展示完整的个人介绍信息。
-
----
-
-## 修改纪念日时间线
-
-### 文件位置：
-
-```
-/public/data/config/fromNow.yaml
-```
-
-### 标准 YAML 示例
-
+### 8. 修改纪念日时间线
+**文件位置：** `/public/data/config/fromNow.yaml`
+用于配置纪念日与时间线展示内容，系统会自动计算时间差。
 ```yaml
-introduction:
 fromNow:
   - time: "19700101"
     photo: ""
@@ -452,25 +351,22 @@ fromNow:
     photo: ""
     names:
       - type: "zh"
-        content: "如果你需要添加纪念日请进入/src/data/components/fromNow.json"
+        content: ""
       - type: "en"
-        content: "To add anniversaries, please access /src/data/components/fromNow.json"
+        content: ""
       - type: "ja"
-        content: "記念日の追加が必要な際は、/src/data/components/fromNow.json を開いて設定してください。"
+        content: ""
       - type: "other"
-        content: "To add anniversaries, please access /src/data/components/fromNow.json"
+        content: ""
 ```
-
-用于配置纪念日与时间线展示内容。
 
 ---
 
-## License
+## 📜 License
 
 本项目采用 **MIT License** 开源。
 
 你可以自由地：
-
 - 使用
 - 修改
 - 分发

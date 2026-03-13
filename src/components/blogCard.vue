@@ -2,14 +2,12 @@
 import { computed, onMounted, onServerPrefetch, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useHead } from "@unhead/vue";
-
 import {
   changeSpareUrl,
   faultTimes,
   listPrimaryError,
   listSpareError,
   loadError,
-  Post,
   serverError,
   yamlLoading,
   yamlLoadingFault,
@@ -18,7 +16,7 @@ import {
 import { formatDate, formatTime, lang } from "@/components/ts/setupLang.ts";
 import Cancel from "@/icons/cancel.svg";
 import { NAlert, NButton, NCard, NIcon, NImage, NModal } from "naive-ui";
-import { parseRichText, stripRichText, TextToken } from "@/components/ts/blogFormat.ts";
+import { parseRichText, stripRichText } from "@/components/ts/blogFormat.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
@@ -27,32 +25,16 @@ import {
   blogDisplay,
   currentPostTitle,
   globalWebTitleMap,
+  WebTitleMap,
 } from "@/components/ts/useGlobalState.ts";
 import { useRouteModal } from "@/components/ts/useRouteModal.ts";
 import { personRawData } from "@/components/ts/setupJson.ts";
 import RichTextRenderer from "@/components/RichTextRenderer.vue";
+import { ImageContent, Post, PostBlock, ProcessedPost, TextToken } from "./ts/d";
 
 const router = useRouter();
 const { getPosts, getSingle } = useContentStore();
 const { onMove, onLeave, onEnter } = useCardGlow();
-interface ImageContent {
-  src: string;
-  spareUrl?: string;
-  desc?: string;
-}
-
-interface PostBlock {
-  type: string;
-  content?: string | ImageContent[];
-  tokens?: TextToken[];
-}
-
-type WebTitleMap = Record<string, Record<string, string>>;
-
-interface ProcessedPost extends Post {
-  displayDescription: string;
-  imageBlocks: PostBlock[];
-}
 
 const posts = ref<Post[]>([]);
 const selectedPost = ref<Post | null>(null);

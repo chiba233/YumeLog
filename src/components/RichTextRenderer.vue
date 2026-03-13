@@ -1,18 +1,11 @@
 <script lang="ts" setup>
 import type { Component } from "vue";
-import { RichType } from "@/components/ts/blogFormat.ts";
 import { NAlert } from "naive-ui";
+import { RichType, TextToken } from "./ts/d";
 
 defineOptions({
   name: "RichTextRenderer",
 });
-
-interface TextToken {
-  type: RichType | "text";
-  value: string | TextToken[];
-  url?: string;
-  title?: string;
-}
 
 defineProps<{
   tokens: TextToken[];

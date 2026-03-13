@@ -1,21 +1,9 @@
-import { ComputedRef, nextTick, Ref, unref, watch } from "vue";
+import { nextTick, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
 import { $message } from "@/components/ts/msgUtils.ts";
-
-interface ModalOptions {
-  modals: Ref<Record<string, Ref<boolean>>> | Record<string, Ref<boolean>>;
-  paramKey: string;
-  paramSource?: "query" | "path";
-  baseRouteName?: string;
-  isReady?: Ref<boolean> | ComputedRef<boolean>;
-  loadHandlers?:
-    | Ref<Record<string, () => Promise<void> | void>>
-    | Record<string, () => Promise<void> | void>;
-  onAllClosed?: () => void;
-  onInvalidId?: (id: string) => Promise<void> | void;
-}
+import { ModalOptions } from "@/components/ts/d.ts";
 
 export function useRouteModal({
   modals,

@@ -52,6 +52,7 @@ import fromNowI18 from "@/data/I18N/fromNowI18n.json";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useRouteModal } from "@/components/ts/useRouteModal.ts";
+import { FromNowLanguageConfig, FromNowYamlResponse, YamlTimeBlock } from "@/components/ts/d.ts";
 
 const showFromNowModal = ref(false);
 const { openModal } = useRouteModal({
@@ -62,39 +63,18 @@ const { openModal } = useRouteModal({
 });
 
 const { onMove, onLeave, onEnter } = useCardGlow();
-
 interface Props {
   btnWidth?: string;
 }
-
 const props = withDefaults(defineProps<Props>(), {
   btnWidth: "auto",
 });
-
-interface I18nBlock {
-  type: string;
-  content: string;
-}
-
-interface YamlTimeBlock {
-  time: string | number;
-  photo?: string;
-  names?: I18nBlock[];
-  name_zh?: string;
-  name_en?: string;
-  name_ja?: string;
-  name_other?: string;
-}
-
-interface YamlResponse {
-  fromNow: YamlTimeBlock[];
-}
 
 const fromNow = ref<YamlTimeBlock[]>([]);
 const { getSingle } = useContentStore();
 
 onMounted(async () => {
-  const res = await getSingle<YamlResponse>("main", "fromNow.yaml");
+  const res = await getSingle<FromNowYamlResponse>("main", "fromNow.yaml");
   if (res && res.fromNow) {
     fromNow.value = res.fromNow;
   }
@@ -114,12 +94,7 @@ const getName = (item: YamlTimeBlock): string => {
   );
 };
 
-interface LanguageConfig {
-  title: string;
-  button: string;
-}
-
-const data = fromNowI18 as Record<string, LanguageConfig>;
+const data = fromNowI18 as Record<string, FromNowLanguageConfig>;
 
 const boxTitle = computed(() => {
   return data[lang.value]?.title || data["en"].title;

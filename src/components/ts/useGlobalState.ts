@@ -2,9 +2,9 @@ import { computed, ref, shallowRef } from "vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
+import { NekoYamlResponse, YamlNekoBlock } from "./d";
 
-type WebTitleMap = Record<string, Record<string, string>>;
-
+export type WebTitleMap = Record<string, Record<string, string>>;
 export const globalWebTitleMap = shallowRef<WebTitleMap>({});
 export const showCatModel = ref<boolean>(false);
 export const showMaiModal = ref<boolean>(false);
@@ -28,29 +28,13 @@ export const blogDisplay = computed(() => {
   return displayObj;
 });
 
-interface YamlNekoBlock {
-  imgError: string;
-  img: string;
-  imgName: string;
-}
-
-interface YamlResponse {
-  img: YamlNekoBlock[];
-}
-
-interface OriginalNekoBlock {
-  imgError: string;
-  img: string;
-  imgName: string;
-}
-
-export const nekoImg = ref<OriginalNekoBlock[]>([]);
+export const nekoImg = ref<YamlNekoBlock[]>([]);
 export const loadCat = async () => {
   if (nekoImg.value.length) return;
-  const res = await loadSingleYaml<YamlResponse>("main", "neko.yaml");
+  const res = await loadSingleYaml<NekoYamlResponse>("main", "neko.yaml");
   if (res && res.img) {
     nekoImg.value = res.img.map(
-      (img: YamlNekoBlock): OriginalNekoBlock => ({
+      (img: YamlNekoBlock): YamlNekoBlock => ({
         imgError: img.imgError,
         img: img.img,
         imgName: img.imgName,

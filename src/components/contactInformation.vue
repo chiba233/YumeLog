@@ -134,13 +134,8 @@ import axios from "axios";
 import { useAsyncState, useStorage } from "@vueuse/core";
 import { lang } from "@/components/ts/setupLang.ts";
 import { themeColor } from "@/components/ts/useTheme.ts";
-import { getMaiUrl, type UserDataType } from "./ts/maimaiScore";
-import {
-  maiSections,
-  PlatformConfig,
-  PlatformId,
-  socialRawData,
-} from "@/components/ts/setupJson.ts";
+import { getMaiUrl } from "./ts/maimaiScore";
+import { maiSections, socialRawData } from "@/components/ts/setupJson.ts";
 import { useHead } from "@unhead/vue";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import {
@@ -153,8 +148,7 @@ import {
 } from "./ts/useGlobalState.ts";
 import { $message } from "./ts/msgUtils.ts";
 import { useRouteModal } from "./ts/useRouteModal.ts";
-
-type I18nMap = Record<string, string>;
+import { PlatformConfig, PlatformId, UserDataType } from "./ts/d.ts";
 
 const { onMove, onLeave, onEnter } = useCardGlow();
 const platforms = computed(() => {
@@ -271,6 +265,7 @@ const { openModal } = useRouteModal({
     },
   },
 });
+type I18nMap = Record<string, string>;
 const handleContactClick = async (item: PlatformConfig): Promise<void> => {
   if (item.type === "link") {
     const url = socialLinks.value[item.id as keyof typeof socialLinks.value];

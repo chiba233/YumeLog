@@ -1,38 +1,5 @@
 import { shallowRef } from "vue";
-
-export type PlatformId =
-  | "telegram"
-  | "wechat"
-  | "line"
-  | "email"
-  | "twitter"
-  | "github"
-  | "tron"
-  | "eth"
-  | "areth"
-  | "bsc"
-  | "polygon"
-  | "solana"
-  | "maimai"
-  | "cat";
-export type InteractionType = "link" | "modal" | "func";
-
-export interface PlatformConfig {
-  id: PlatformId;
-  label: string;
-  type: InteractionType;
-}
-
-export interface MaiSectionItem {
-  label: string;
-  value: string;
-}
-
-export interface MaiSection {
-  titleKey: string;
-  name: string;
-  items: MaiSectionItem[];
-}
+import { MaiSection, PersonConfig, SocialConfig } from "./d";
 
 export const maiSections: MaiSection[] = [
   {
@@ -64,16 +31,6 @@ export const maiSections: MaiSection[] = [
     items: [{ label: "highestRating", value: "highestRating" }],
   },
 ];
-export interface SocialConfig {
-  platforms: PlatformConfig[];
-  socialLinks: Record<string, string>;
-}
-
-export interface PersonConfig {
-  author: {
-    [key: string]: string;
-  };
-}
 
 export const socialRawData = shallowRef<SocialConfig | null>(null);
 export const personRawData = shallowRef<PersonConfig | null>(null);

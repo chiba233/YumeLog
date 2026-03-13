@@ -1,18 +1,14 @@
 import { reactive } from "vue";
-import { BaseContent, loadAllPosts, loadSingleYaml } from "./getYaml.ts";
+import { loadAllPosts, loadSingleYaml } from "./getYaml.ts";
+import { BaseMetadata, CacheEntry } from "@/components/ts/d.ts";
 
-interface CacheEntry<T> {
-  data: T;
-  lastFetch: number;
-}
-
-const postsCache = reactive<Record<string, CacheEntry<BaseContent[]>>>({});
+const postsCache = reactive<Record<string, CacheEntry<BaseMetadata[]>>>({});
 const singleCache = reactive<Record<string, CacheEntry<unknown>>>({});
 
 const CACHE_TIMEOUT = 10 * 60 * 1000;
 
 export const useContentStore = () => {
-  const getPosts = async <T extends BaseContent>(type: string, force = false): Promise<T[]> => {
+  const getPosts = async <T extends BaseMetadata>(type: string, force = false): Promise<T[]> => {
     const now = Date.now();
     const cached = postsCache[type];
 
@@ -24,7 +20,7 @@ export const useContentStore = () => {
 
     if (data && data.length > 0) {
       postsCache[type] = {
-        data: data as BaseContent[],
+        data: data as BaseMetadata[],
         lastFetch: now,
       };
     }

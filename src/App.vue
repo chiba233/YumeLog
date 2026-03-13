@@ -8,12 +8,7 @@ import TopBar from "@/components/topBar.vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import { themeColor } from "@/components/ts/useTheme.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
-import {
-  PersonConfig,
-  personRawData,
-  SocialConfig,
-  socialRawData,
-} from "@/components/ts/setupJson.ts";
+import { personRawData, socialRawData } from "@/components/ts/setupJson.ts";
 import ClientOnly from "@/components/ClientOnly.vue";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { changeSpareUrl, listPrimaryError } from "./components/ts/getYaml";
@@ -29,6 +24,7 @@ import {
 } from "@/components/ts/useGlobalState.ts";
 import { useHead } from "@unhead/vue";
 import webTitle from "@/data/I18N/webTitle.json";
+import { PersonConfig, SocialConfig } from "@/components/ts/d.ts";
 
 interface TitleEntry {
   [key: string]: string;

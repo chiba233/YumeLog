@@ -4,18 +4,9 @@ import pLimit from "p-limit";
 import { $message } from "@/components/ts/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
+import { BaseMetadata, YamlUrlConfig } from "@/components/ts/d.ts";
 
 const limit = pLimit(6);
-
-interface YamlConfigItem {
-  listUrl: string;
-  url: string;
-  spareUrl?: string;
-  spareListUrl?: string;
-  lang?: string;
-}
-
-type YamlUrlConfig = Record<string, YamlConfigItem>;
 
 let memoizedConfig: Promise<YamlUrlConfig> | undefined;
 let cacheTime = 0;
@@ -40,6 +31,8 @@ const getFetchUrl = (path: string) => {
 type I18nMap = Record<string, string>;
 const configLoadFailed = commonI18n.configLoadFailed as I18nMap;
 const pathEntry = commonI18n.configPathFetchFailed as I18nMap;
+const configTypeError = commonI18n.configTypeError as I18nMap;
+const yamlLoadFailed = commonI18n.yamlLoadFailed as I18nMap;
 
 export function getYamlConfig(): Promise<YamlUrlConfig> {
   const now = Date.now();
@@ -61,33 +54,6 @@ export function getYamlConfig(): Promise<YamlUrlConfig> {
   }
 
   return memoizedConfig;
-}
-
-export interface BaseContent {
-  time?: string;
-  pin?: boolean;
-
-  [key: string]: unknown;
-}
-
-export interface ImageContent {
-  src: string;
-  spareUrl?: string;
-  desc?: string;
-}
-
-export interface PostBlock {
-  type: string;
-  content: string | ImageContent[];
-}
-
-export interface Post extends BaseContent {
-  id: string;
-  time?: string;
-  pin?: boolean;
-  title?: string;
-  layout?: string;
-  blocks?: PostBlock[];
 }
 
 export const yamlLoading = ref<boolean>(false);
@@ -129,17 +95,18 @@ const fetchWithRetry = async (
   }
 };
 
-export const loadAllPosts = async <T extends BaseContent>(type: string): Promise<T[]> => {
+export const loadAllPosts = async <T extends BaseMetadata>(type: string): Promise<T[]> => {
   const config = await getYamlConfig();
-
   const configItem = config[type];
   if (!configItem) {
-    $message.warning(`[Config Error]: Type "${type}" not found in YamlUrlConfig.`, true, 3000);
+    const pathMsg = (configTypeError[lang.value] || configTypeError.en).replace(
+      "{type}",
+      String(type),
+    );
+    $message.error(pathMsg, true, 3000);
     return [] as T[];
   }
-
   const { listUrl, url: baseUrl, spareListUrl, spareUrl } = configItem;
-
   yamlLoading.value = true;
   serverError.value = false;
   loadError.value = false;
@@ -148,14 +115,11 @@ export const loadAllPosts = async <T extends BaseContent>(type: string): Promise
   yamlLoadingFault.value = false;
   changeSpareUrl.value = false;
   faultTimes.value = 0;
-
   let listRes: Response | null = await fetchWithRetry(getFetchUrl(listUrl), undefined, 2, 500);
-
   if ((!listRes || !listRes.ok) && spareListUrl) {
     listPrimaryError.value = true;
     changeSpareUrl.value = true;
     listRes = await fetchWithRetry(spareListUrl, undefined, 3, 800);
-
     if (!listRes || !listRes.ok) {
       listSpareError.value = true;
     }
@@ -169,7 +133,6 @@ export const loadAllPosts = async <T extends BaseContent>(type: string): Promise
     }
     return [] as T[];
   }
-
   try {
     const data: unknown = await listRes.json();
     const postData = data as string[];
@@ -194,38 +157,35 @@ export const loadAllPosts = async <T extends BaseContent>(type: string): Promise
         }
       }),
     );
-
     const results = await Promise.all(promises);
     const validData = results.filter((p): p is NonNullable<typeof p> => p !== null);
     const parseTime = (t?: string) => {
       if (!t) return 0;
-
       if (/^\d{8}$/.test(t)) {
         const iso = `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}`;
         return Date.parse(iso);
       }
-
       return Date.parse(t) || 0;
     };
     validData.forEach((p) => {
       (p as unknown as T & { _ts: number })._ts = parseTime(p.time);
     });
-
     validData.sort((a, b) => {
       if (a.pin && !b.pin) return -1;
       if (!a.pin && b.pin) return 1;
-
       const timeA = (a as unknown as T & { _ts: number })._ts;
       const timeB = (b as unknown as T & { _ts: number })._ts;
       return timeB - timeA;
     });
-
     yamlLoading.value = false;
     return validData;
   } catch (e: unknown) {
     const errMsg = e instanceof Error ? e.message : String(e);
-    $message.error(`[Post Processing Error]: ${errMsg}`, true, 3000);
-
+    const pathMsg = (yamlLoadFailed[lang.value] || yamlLoadFailed.en).replace(
+      "{err}",
+      String(errMsg),
+    );
+    $message.error(pathMsg, true, 3000);
     serverError.value = true;
     return [] as T[];
   }
@@ -238,41 +198,33 @@ export const loadSingleYaml = async <T extends object>(
   changeSpareUrl.value = false;
   const config = await getYamlConfig();
   const configItem = config[type];
-
   if (!configItem) {
-    console.warn(`[Config Error]: Type "${type}" not found.`);
+    const pathMsg = (configTypeError[lang.value] || configTypeError.en).replace(
+      "{type}",
+      String(type),
+    );
+    $message.error(pathMsg, true, 3000);
     return null;
   }
-
   const { url: baseUrl, spareUrl } = configItem;
-
-  // 拼接路径时注意斜杠，防止出现 // 的情况
   const fullUrl = `${baseUrl.endsWith("/") ? baseUrl : baseUrl + "/"}${fileName}`;
   let res = await fetchWithRetry(getFetchUrl(fullUrl), undefined, 2, 500);
-
   if ((!res || !res.ok) && spareUrl) {
     changeSpareUrl.value = true;
     const spareFullUrl = `${spareUrl.endsWith("/") ? spareUrl : spareUrl + "/"}${fileName}`;
     res = await fetchWithRetry(getFetchUrl(spareFullUrl), undefined, 2, 500);
   }
-
   if (res && res.ok) {
     try {
       const text = await res.text();
-      // 使用 FAILSAFE_SCHEMA 更加稳健
       const parsed = yaml.load(text, { schema: yaml.FAILSAFE_SCHEMA });
-
-      // 这里的逻辑判断决定了 T 必须是对象
       if (parsed === null || typeof parsed !== "object") {
         return null;
       }
       return parsed as T;
     } catch (e: unknown) {
-      $message.error(
-        `[Single YAML Parse Error] ${e instanceof Error ? e.message : String(e)}`,
-        true,
-        3000,
-      );
+      const pathMsg = (yamlLoadFailed[lang.value] || yamlLoadFailed.en).replace("{err}", String(e));
+      $message.error(pathMsg, true, 3000);
       return null;
     }
   }

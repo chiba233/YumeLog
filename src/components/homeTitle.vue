@@ -1,11 +1,11 @@
 <template>
   <div class="dashboardTitle">
     <n-avatar
+      :src="icon"
       :alt="personRawData?.author[lang] ?? personRawData?.author?.en"
       :img-props="{
         alt: personRawData?.author[lang] ?? personRawData?.author?.en,
       }"
-      :src="icon"
       bordered
       class="titleIcon"
       round

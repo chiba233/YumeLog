@@ -1,32 +1,9 @@
 import { $message } from "@/components/ts/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
-
-export const RICH_TYPES = [
-  "bold",
-  "thin",
-  "underline",
-  "strike",
-  "center",
-  "link",
-  "code",
-  "info",
-  "warning",
-] as const;
+import { BLOCK_TYPES, BlockType, RICH_TYPES, RichType, TextToken } from "./d";
 
 type I18nMap = Record<string, string>;
-export const BLOCK_TYPES = ["info", "warning", "center"] as const;
-
-export type BlockType = (typeof BLOCK_TYPES)[number];
-export type RichType = (typeof RICH_TYPES)[number];
-
-export interface TextToken {
-  type: RichType | "text";
-  value: string | TextToken[];
-  title?: string;
-  url?: string;
-}
-
 const TAG_PREFIX = "$$";
 const END_TAG = ")$$";
 const TAG_OPEN = "(";
@@ -205,15 +182,13 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
 
       pushText(buffer);
       buffer = "";
-
       const node = stack.pop()!;
-
       if (!isRichType(node.tag)) {
-        $message.warning(
-          `[RichText] Unknown tag "${node.tag}" at index ${i}. Flattening content for compatibility.`,
-          true,
-          3000,
-        );
+        const richTextUnknownTag = commonI18n.richTextUnknownTag as I18nMap;
+        const richTextUnknownTagMsg = (richTextUnknownTag[lang.value] || richTextUnknownTag.en)
+          .replace("{tag}", String(node.tag))
+          .replace("{i}", String(i));
+        $message.error(richTextUnknownTagMsg, true, 3000);
         current().push(...node.tokens);
         i += END_TAG.length;
         continue;

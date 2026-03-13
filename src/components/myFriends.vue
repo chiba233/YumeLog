@@ -42,19 +42,9 @@ import { useContentStore } from "@/components/ts/contentStore.ts";
 import { useHead } from "@unhead/vue";
 import { $message } from "@/components/ts/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
+import { Friend, FriendsYamlResponse } from "./ts/d";
 
 type I18nMap = Record<string, string>;
-interface Friend {
-  name: string;
-  alias: string;
-  url: string;
-  icon: string;
-  spare?: string;
-}
-
-interface YamlResponse {
-  friends: Friend[];
-}
 
 type I18nSource = Record<string, Record<string, string>>;
 
@@ -63,7 +53,7 @@ const { getSingle } = useContentStore();
 const friends = ref<Friend[]>([]);
 const loadFriendsData = async () => {
   try {
-    const rawData = await getSingle<YamlResponse>("main", "friends.yaml");
+    const rawData = await getSingle<FriendsYamlResponse>("main", "friends.yaml");
     if (rawData && rawData.friends) {
       friends.value = rawData.friends;
     }

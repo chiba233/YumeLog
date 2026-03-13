@@ -21,8 +21,11 @@
 不依赖庞大的第三方渲染库，仅使用 `js-yaml` 获取与结构化数据，核心样式解析完全自研！支持通过独创的 `$$Type()$$` 及 `$$raw-code(编程语言 | title
 )% 内容 %end$$` 语法进行快速渲染：
 
-* **支持的格式指令**: `"bold"`, `"thin"`, `"underline"`, `"strike"`, `"center"`, `"link"`, `"code"`, `"info"`,
+* **支持的嵌套格式指令**: `"bold"`, `"thin"`, `"underline"`, `"strike"`, `"center"`, `"link"`, `"code"`, `"info"`,
   `"warning"`。
+* **支持的raw格式指令**: `"info"`,`"warning"`,`"raw-code"`
+* **支持显示图片、简介url。图片同样支持双轨数据获取。
+* **支持 `"divider"` 分割文本章节。
 * **双轨数据获取**: 完美支持从本地目录读取，或通过 HTTP/CDN 从远程服务器动态拉取 YAML 数据流。
 
 ### 截图

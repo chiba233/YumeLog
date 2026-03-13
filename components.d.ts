@@ -23,6 +23,7 @@ declare module "vue" {
     RichTextRenderer: typeof import("./src/components/RichTextRenderer.vue")["default"];
     RouterLink: typeof import("vue-router")["RouterLink"];
     RouterView: typeof import("vue-router")["RouterView"];
+    ShikiCodeBlock: typeof import("./src/components/ShikiCodeBlock.vue")["default"];
     TopBar: typeof import("./src/components/topBar.vue")["default"];
   }
 }

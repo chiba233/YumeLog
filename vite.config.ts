@@ -1,10 +1,13 @@
+import type { PluginOption } from "vite";
 import { CSSOptions, defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
 import svgLoader from "vite-svg-loader";
 import { fileURLToPath, URL } from "node:url";
 import { loadAllPostsForSSG } from "./ssgGetPost";
-import sass from "sass";
+import * as sass from "sass";
 import fs from "node:fs";
+import Components from "unplugin-vue-components/vite";
+import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
 
 interface BaseContent {
   time?: string;
@@ -45,7 +48,13 @@ export default defineConfig(({ mode }) => {
   const siteOrigin = env.VITE_SSR_SITE_URL?.replace(/\/$/, "") || "https://example.com";
 
   return {
-    plugins: [vue(), svgLoader()],
+    plugins: [
+      vue(),
+      svgLoader(),
+      (Components as unknown as (options: { resolvers: unknown[] }) => PluginOption)({
+        resolvers: [(NaiveUiResolver as unknown as () => unknown)()],
+      }),
+    ],
 
     resolve: {
       alias: {
@@ -137,7 +146,14 @@ Sitemap: ${siteOrigin}/sitemap.xml
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes("node_modules")) return "vendor";
+            if (!id.includes("node_modules")) return;
+            if (id.includes("naive-ui")) {
+              return "naive-ui";
+            }
+            if (id.includes("dayjs")) {
+              return "date";
+            }
+            return "vendor";
           },
         },
       },

@@ -151,13 +151,13 @@ $$link(URL | content)$$
 ### 原始代码块 (Raw Code Block)
 Raw block 内部 **不会解析任何 DSL 指令**。
 ```text
-$$raw-code(lang | title)
+$$raw-code(lang | title)%
 content
 %end$$
 ```
 **示例：**
 ```text
-$$raw-code(ts | example)
+$$raw-code(ts | example)%
 const a = 1
 %end$$
 ```
@@ -189,7 +189,7 @@ blocks:
       $$info(typescript | const a = ref(true))$$
       $$warning(error | 发生未知错误！)$$
       $$link([https://baidu.com](https://baidu.com) | $$bold(点我进入百度)$$)$$
-      $$raw-code(yaml | 示例)
+      $$raw-code(yaml | 示例)%
       纯净文本，忽略所有 $$tag()$$
       %end$$
   - type: "divider"

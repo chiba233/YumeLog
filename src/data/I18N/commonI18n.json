@@ -145,5 +145,26 @@
     "ja": "[Config Error]: YamlUrlConfig にタイプ '{type}' が見つかりません。",
     "th": "[Config Error]: ไม่พบประเภท '{type}' ใน YamlUrlConfig",
     "other": "[Config Error]: Type '{type}' not found in YamlUrlConfig."
+  },
+  "richTextRawNotClosed": {
+    "zh": "原始块未正确关闭。",
+    "en": "Raw block not closed!",
+    "ja": "rawブロックが閉じられていません!",
+    "th": "บล็อก raw ยังไม่ได้ปิด!",
+    "other": "Raw block not closed!"
+  },
+  "unsupportedCodeLanguage": {
+    "zh": "不支持的代码语言：'{language}'。",
+    "en": "Unsupported code language: '{language}'.",
+    "ja": "サポートされていないコード言語（げんご）です: '{language}'。",
+    "th": "ไม่รองรับภาษาของโค้ด: '{language}'",
+    "other": "Unsupported code language: '{language}'."
+  },
+  "ShikiErrorLanguage": {
+    "zh": "Shiki 炸了呢，快检查一下！",
+    "en": "Shiki crashed! Better check it out!",
+    "ja": "Shiki（シキ）が壊（こわ）れちゃったみたい！確認（かくにん）してみて！",
+    "th": "Shiki พังแล้ว! รีบตรวจสอบหน่อยนะ!",
+    "other": "Shiki error occurred. Please check the configuration."
   }
 }

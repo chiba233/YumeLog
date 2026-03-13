@@ -1,11 +1,18 @@
 <script lang="ts" setup>
-import type { Component } from "vue";
+import { type Component, onMounted, ref } from "vue";
 import { NAlert } from "naive-ui";
-import { RichType, TextToken } from "./ts/d";
+import type { RichType, TextToken } from "./ts/d";
+import ShikiCodeBlock from "./ShikiCodeBlock.vue";
+import { getShiki } from "@/components/ts/shiki.ts";
+import { HighlighterCore } from "shiki/core";
 
-defineOptions({
-  name: "RichTextRenderer",
+const highlighter = ref<HighlighterCore | null>(null);
+
+onMounted(async () => {
+  highlighter.value = await getShiki();
 });
+
+defineOptions({ name: "RichTextRenderer" });
 
 defineProps<{
   tokens: TextToken[];
@@ -24,7 +31,9 @@ const tagMap: Record<RichType, RenderTarget> = {
   link: "a",
   info: NAlert,
   warning: NAlert,
+  "raw-code": ShikiCodeBlock,
 };
+
 const getUrl = (token: TextToken) => (token.url ? normalizeUrl(token.url) : undefined);
 const normalizeUrl = (raw: string): string | undefined => {
   if (!raw) return undefined;
@@ -32,9 +41,7 @@ const normalizeUrl = (raw: string): string | undefined => {
     const url = raw.match(/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//)
       ? new URL(raw)
       : new URL("https://" + raw);
-
-    if (!["http:", "https:"].includes(url.protocol)) return undefined;
-    return url.href;
+    return ["http:", "https:"].includes(url.protocol) ? url.href : undefined;
   } catch {
     return undefined;
   }
@@ -43,9 +50,12 @@ const normalizeUrl = (raw: string): string | undefined => {
 
 <template>
   <template v-for="(token, index) in tokens" :key="index">
-    <span v-if="token.type === 'text'" :lang="lang" class="rich-text-content">
-      {{ token.value }}
-    </span>
+    <span
+      v-if="token.type === 'text'"
+      :lang="lang"
+      class="rich-text-content"
+      v-text="token.value"
+    ></span>
 
     <component
       :is="tagMap[token.type] || 'span'"
@@ -56,7 +66,7 @@ const normalizeUrl = (raw: string): string | undefined => {
       :rel="token.type === 'link' ? 'noopener noreferrer' : undefined"
       :target="token.type === 'link' ? '_blank' : undefined"
       :class="[
-        `fw-${token.type}`,
+        token.type !== 'raw-code' ? `fw-${token.type}` : '',
         {
           'fw-link': token.type === 'link',
           'rich-underline': token.type === 'underline',
@@ -67,6 +77,17 @@ const normalizeUrl = (raw: string): string | undefined => {
           'rich-warning-block': token.type === 'warning',
         },
       ]"
+      v-bind="
+        token.type === 'raw-code'
+          ? {
+              code: token.value as string,
+              codeLang: token.codeLang,
+              title: token.title,
+              label: token.label,
+              highlighter: highlighter || null,
+            }
+          : {}
+      "
       :show-icon="token.type === 'info' || token.type === 'warning'"
       :title="token.title"
       :type="token.type === 'info' || token.type === 'warning' ? token.type : undefined"
@@ -76,8 +97,8 @@ const normalizeUrl = (raw: string): string | undefined => {
         :tokens="token.value"
         :lang="lang"
       />
-      <template v-else-if="typeof token.value === 'string'">
-        {{ token.value }}
+      <template v-else-if="typeof token.value === 'string' && token.type !== 'raw-code'"
+        >{{ token.value }}
       </template>
     </component>
   </template>
@@ -86,7 +107,7 @@ const normalizeUrl = (raw: string): string | undefined => {
 <style lang="scss">
 %common-style {
   word-break: break-word;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   white-space: pre-wrap;
   color: #2b2628;
   text-shadow:
@@ -168,17 +189,15 @@ a.fw-link {
 .code-text {
   font-family: "SFMono-Regular", Consolas, monospace;
   background-color: rgba(var(--global-theme-rgb-deep), 0.13) !important;
-  padding: 3px;
+  padding: 0.2em 0.35em;
   border-radius: 6px;
   font-size: 0.85em;
   font-weight: bold;
-  line-height: inherit;
+  line-height: 1.4;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
   display: inline !important;
   text-decoration: none !important;
-  -webkit-text-stroke: 0.1px var(--global-theme-color-deep);
-  paint-order: stroke fill;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   z-index: 3;
@@ -204,13 +223,6 @@ a.fw-link {
   --n-content-text-color: #333 !important;
   --n-padding: 13px !important;
 
-  .code-text {
-    &,
-    & * {
-      color: var(--global-theme-color-deep) !important;
-    }
-  }
-
   .fw-link {
     &,
     & * {
@@ -234,8 +246,8 @@ a.fw-link {
   .rich-alert-block,
   [class^="fw-"]:not(.fw-link):not(.code-text),
   [class^="rich-"]:not(.fw-link):not(.code-text) {
-    font-size: 1.05rem !important;
-    line-height: 1.35rem !important;
+    font-size: 1.15rem;
+    line-height: 1.5rem;
   }
 
   .n-alert-body__title {

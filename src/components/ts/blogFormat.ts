@@ -1,13 +1,16 @@
 import { $message } from "@/components/ts/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
-import { BLOCK_TYPES, BlockType, RICH_TYPES, RichType, TextToken } from "./d";
+import { BLOCK_TYPES, BlockType, RICH_TYPES, RichType, TagHandler, TextToken } from "./d";
 
 type I18nMap = Record<string, string>;
 const TAG_PREFIX = "$$";
 const END_TAG = ")$$";
 const TAG_OPEN = "(";
 const TAG_DIVIDER = "|";
+const RAW_OPEN = ")%";
+const RAW_CLOSE = "%end$$";
+const TAG_CLOSE = ")";
 
 const RICH_TYPE_SET: ReadonlySet<RichType> = new Set(RICH_TYPES);
 const BLOCK_TYPES_SET: ReadonlySet<BlockType> = new Set(BLOCK_TYPES);
@@ -25,9 +28,29 @@ const extractText = (tokens?: TextToken[]): string => {
   if (!tokens?.length) return "";
   return tokens.map((t) => (typeof t.value === "string" ? t.value : extractText(t.value))).join("");
 };
+const ALLOWED_LANGS = ["typescript", "javascript", "bash", "json", "yaml", "text"] as const;
+type SupportedLang = (typeof ALLOWED_LANGS)[number];
+const normalizeLang = (codeLang?: string): SupportedLang => {
+  if (!codeLang) return "javascript";
+  const normalized = codeLang.trim().toLowerCase();
+  if (!(ALLOWED_LANGS as unknown as string[]).includes(normalized)) {
+    const unsupportedCodeLanguage = commonI18n.unsupportedCodeLanguage as I18nMap;
+    const unsupportedCodeLanguageMsg = (
+      unsupportedCodeLanguage[lang.value] || unsupportedCodeLanguage.en
+    ).replace("{language}", String(codeLang));
+    $message.error(unsupportedCodeLanguageMsg, true, 3000);
+    return "typescript";
+  }
+  return normalized as SupportedLang;
+};
 
 const splitTokensByPipe = (tokens: TextToken[]): TextToken[][] => {
   const parts: TextToken[][] = [[]];
+
+  const pushText = (text: string) => {
+    if (!text) return;
+    parts[parts.length - 1].push({ type: "text", value: text });
+  };
 
   for (const token of tokens) {
     if (token.type !== "text" || typeof token.value !== "string") {
@@ -35,72 +58,100 @@ const splitTokensByPipe = (tokens: TextToken[]): TextToken[][] => {
       continue;
     }
 
-    const segments = token.value.split(TAG_DIVIDER);
+    let sPos = 0;
+    let pipeIdx: number;
+    while ((pipeIdx = token.value.indexOf(TAG_DIVIDER, sPos)) !== -1) {
+      let segment = token.value.slice(sPos, pipeIdx);
+      segment = segment.replace(/\s+$/, "");
+      pushText(segment);
+      parts.push([]);
+      sPos = pipeIdx + 1;
+      while (token.value[sPos] === " ") sPos++;
+    }
 
-    segments.forEach((seg, i) => {
-      if (i > 0) {
-        parts.push([]);
-      }
-
-      const cleaned = seg.trim();
-
-      if (cleaned !== "") {
-        parts[parts.length - 1].push({
-          type: "text",
-          value: cleaned,
-        });
-      }
-    });
+    const remaining = token.value.slice(sPos);
+    pushText(remaining);
   }
 
   return parts;
 };
 
-const TAG_HANDLERS: Partial<Record<RichType, (tokens: TextToken[]) => TextToken>> = {
-  link: (tokens) => {
-    const parts = splitTokensByPipe(tokens);
-    const titlePart = parts.shift() ?? [];
+const TAG_HANDLERS: Record<string, TagHandler> = {
+  link: {
+    inline: (tokens) => {
+      const parts = splitTokensByPipe(tokens);
+      const titlePart = parts.shift() ?? [];
 
-    return {
-      type: "link",
-      url: extractText(titlePart).trim(),
-      value: parts.length ? parts.flat() : titlePart,
-    };
+      return {
+        type: "link",
+        url: extractText(titlePart).trim(),
+        value: parts.length ? parts.flat() : titlePart,
+      };
+    },
   },
 
-  info: (tokens) => {
-    const parts = splitTokensByPipe(tokens);
-    if (parts.length === 1) {
+  info: {
+    inline: (tokens) => {
+      const parts = splitTokensByPipe(tokens);
+      if (parts.length === 1) {
+        return {
+          type: "info",
+          title: "Info:",
+          value: parts[0],
+        };
+      }
+      const titlePart = parts.shift() ?? [];
       return {
         type: "info",
-        title: "Info:",
-        value: parts[0],
+        title: extractText(titlePart).trim(),
+        value: parts.flat(),
       };
-    }
-    const titlePart = parts.shift() ?? [];
-    return {
+    },
+    raw: (title, content) => ({
       type: "info",
-      title: extractText(titlePart).trim(),
-      value: parts.flat(),
-    };
+      title: title || "Info:",
+      value: [{ type: "text", value: content }],
+    }),
   },
 
-  warning: (tokens) => {
-    const parts = splitTokensByPipe(tokens);
-    if (parts.length === 1) {
+  warning: {
+    inline: (tokens) => {
+      const parts = splitTokensByPipe(tokens);
+      if (parts.length === 1) {
+        return {
+          type: "warning",
+          title: "Warning:",
+          value: parts[0],
+        };
+      }
+      const titlePart = parts.shift() ?? [];
+
       return {
         type: "warning",
-        title: "Warning:",
-        value: parts[0],
+        title: extractText(titlePart).trim(),
+        value: parts.flat(),
       };
-    }
-    const titlePart = parts.shift() ?? [];
-
-    return {
+    },
+    raw: (title, content) => ({
       type: "warning",
-      title: extractText(titlePart).trim(),
-      value: parts.flat(),
-    };
+      title: title || "Warning:",
+      value: [{ type: "text", value: content }],
+    }),
+  },
+  "raw-code": {
+    raw: (arg, content) => {
+      const parts = splitTokensByPipe([{ type: "text", value: arg ?? "" }]);
+      const codeLang = normalizeLang(extractText(parts[0] ?? []).trim());
+      const title = extractText(parts[1] ?? []).trim();
+      const label = extractText(parts[2] ?? []).trim();
+      return {
+        type: "raw-code",
+        codeLang,
+        title: title || "Code:",
+        label,
+        value: content.trim(),
+      };
+    },
   },
 };
 
@@ -132,7 +183,7 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
   while (i < text.length) {
     const c = text[i];
 
-    if (c === TAG_PREFIX[0] && text.startsWith(TAG_PREFIX, i)) {
+    if (text.startsWith(TAG_PREFIX, i)) {
       let j = i + TAG_PREFIX.length;
 
       while (j < text.length && isTagChar(text[j])) j++;
@@ -141,17 +192,70 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
         const tag = text.slice(i + TAG_PREFIX.length, j);
 
         if (stack.length >= depthLimit || ignoredDepth > 0) {
-          ignoredDepth++;
-          buffer += text.slice(i, j + TAG_OPEN.length);
-          if (stack.length === depthLimit && ignoredDepth === 1) {
+          if (stack.length === depthLimit && ignoredDepth === 0) {
             const depthEntry = commonI18n.richTextDepthLimit as I18nMap;
             const depthMsg = (depthEntry[lang.value] || depthEntry.en)
               .replace("{depthLimit}", String(depthLimit))
               .replace("{i}", String(i));
             $message.error(depthMsg, true, 3000);
           }
+          ignoredDepth++;
+          buffer += text.slice(i, j + TAG_OPEN.length);
           i = j + TAG_OPEN.length;
           continue;
+        }
+        const handler = TAG_HANDLERS[tag];
+        if (handler?.raw) {
+          let k = j + 1;
+          let depth = 1;
+          while (k < text.length && depth > 0) {
+            const ch = text[k];
+            if (ch === TAG_OPEN) depth++;
+            else if (ch === TAG_CLOSE) depth--;
+            k++;
+          }
+          if (depth !== 0) {
+            buffer += text.slice(i, j + TAG_OPEN.length);
+            i = j + TAG_OPEN.length;
+            continue;
+          }
+          k--;
+          if (k < text.length && text.startsWith(RAW_OPEN, k)) {
+            pushText(buffer);
+            buffer = "";
+            const arg = text.slice(j + 1, k).trim();
+            const contentStart = k + RAW_OPEN.length;
+            let end = -1;
+            let pos = contentStart;
+            while (true) {
+              pos = text.indexOf(RAW_CLOSE, pos);
+              if (pos === -1) break;
+              const before = pos === 0 || text[pos - 1] === "\n";
+              const after =
+                pos + RAW_CLOSE.length === text.length ||
+                text[pos + RAW_CLOSE.length] === "\n" ||
+                text.startsWith("\r\n", pos + RAW_CLOSE.length);
+              if (before && after) {
+                end = pos;
+                break;
+              }
+              pos += RAW_CLOSE.length;
+            }
+            if (end === -1) {
+              const rawEntry = commonI18n.richTextRawNotClosed as I18nMap;
+              const rawMsg = (rawEntry[lang.value] || rawEntry.en).replace("{i}", String(i));
+              $message.error(rawMsg, true, 3000);
+              buffer += text.slice(i, k + RAW_OPEN.length);
+              i = k + RAW_OPEN.length;
+              continue;
+            }
+            const content = text.slice(contentStart, end);
+            current().push(handler.raw(arg, content));
+            i = end + RAW_CLOSE.length;
+            if (text.startsWith("\r\n", i)) i += 2;
+            else if (text[i] === "\n") i++;
+            continue;
+          }
         }
 
         pushText(buffer);
@@ -195,12 +299,15 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
       }
 
       const handler = TAG_HANDLERS[node.tag];
-      const token: TextToken = handler
-        ? handler(node.tokens)
-        : {
-            type: node.tag,
-            value: node.tokens,
-          };
+      let token: TextToken;
+      if (handler?.inline) {
+        token = handler.inline(node.tokens);
+      } else {
+        token = {
+          type: node.tag,
+          value: node.tokens,
+        };
+      }
 
       current().push(token);
 
@@ -235,12 +342,57 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
     }
     parent.push(...node.tokens);
   }
-
   return root;
 };
 
 export const stripRichText = (text?: string): string => {
   if (!text) return "";
-  if (text.indexOf(TAG_PREFIX) === -1) return text.trim();
-  return extractText(parseRichText(text)).trim();
+  let result = "";
+  let i = 0;
+
+  while (i < text.length) {
+    if (text.startsWith(TAG_PREFIX, i)) {
+      let j = i + TAG_PREFIX.length;
+      while (j < text.length && isTagChar(text[j])) j++;
+
+      if (text[j] === TAG_OPEN) {
+        let k = j + 1;
+        let depth = 1;
+
+        while (k < text.length && depth > 0) {
+          if (text[k] === TAG_OPEN) depth++;
+          else if (text[k] === TAG_CLOSE) depth--;
+          k++;
+        }
+
+        if (depth === 0) {
+          const closePos = k - 1;
+
+          // RAW
+          if (text.startsWith(RAW_OPEN, closePos)) {
+            const contentStart = closePos + RAW_OPEN.length;
+            const end = text.indexOf(RAW_CLOSE, contentStart);
+
+            if (end !== -1) {
+              result += text.slice(contentStart, end);
+              i = end + RAW_CLOSE.length;
+              continue;
+            }
+          }
+
+          if (text.startsWith(END_TAG, closePos)) {
+            const inner = text.slice(j + 1, closePos);
+            result += stripRichText(inner);
+            i = closePos + END_TAG.length;
+            continue;
+          }
+        }
+      }
+    }
+
+    result += text[i];
+    i++;
+  }
+
+  return result.trim().slice(0, 150);
 };

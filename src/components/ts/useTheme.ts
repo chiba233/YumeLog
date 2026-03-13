@@ -17,6 +17,7 @@ export const useTheme = (deepOffset = 90) => {
   const color = useCssVar("--global-theme-color", root);
   const rgbDeep = useCssVar("--global-theme-rgb-deep", root);
   const colorDeep = useCssVar("--global-theme-color-deep", root);
+  const rgbColor = useCssVar("--global-theme-color-rgb", root);
 
   watchEffect(() => {
     const rgb = toRGB(themeColor.value, deepOffset);
@@ -24,5 +25,6 @@ export const useTheme = (deepOffset = 90) => {
     color.value = themeColor.value;
     rgbDeep.value = rgb;
     colorDeep.value = `rgb(${rgb})`;
+    rgbColor.value = rgb;
   });
 };

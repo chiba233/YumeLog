@@ -245,11 +245,9 @@ figure {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
   backdrop-filter: blur(25px);
   max-height: 98dvh;
-
   .n-card-header {
     padding: 1.3em 1.3em 0.5em !important;
   }
-
   .n-card-header__main {
     color: var(--global-theme-color-deep) !important;
     -webkit-text-stroke: 0.2px var(--global-theme-color-deep);
@@ -257,19 +255,15 @@ figure {
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
   }
-
   .n-card-header__main {
     text-align: center;
   }
-
   .n-card__content {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
-
   .n-button {
     --n-color: rgba(var(--global-theme-rgb-deep), 0.1);
-
     &:focus,
     &:active,
     &:hover {
@@ -280,7 +274,6 @@ figure {
       color: var(--global-theme-color-deep) !important;
     }
   }
-
   @media (max-width: 500px) {
     max-width: 98% !important;
   }
@@ -293,6 +286,18 @@ figure {
     min-height: 0;
     scrollbar-gutter: stable both-edges;
 
+    .n-collapse-item__header-main {
+      color: var(--global-theme-color-deep) !important;
+      -webkit-text-stroke: 0.15px var(--global-theme-color-deep);
+
+      .n-base-icon {
+        svg {
+          color: var(--global-theme-color-deep) !important;
+          stroke-width: 0.2px;
+          stroke: currentColor;
+        }
+      }
+    }
     &::-webkit-scrollbar {
       width: 6px !important;
       display: block !important;

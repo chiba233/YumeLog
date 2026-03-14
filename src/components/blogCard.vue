@@ -521,7 +521,7 @@ watch(
   display: flex;
   align-items: center;
   text-align: center;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(var(--global-theme-rgb-deep), 0.85);
   margin: 0.5rem 0;
   font-weight: bold;
 }
@@ -530,13 +530,21 @@ watch(
 .separator-icon::after {
   content: "";
   flex: 1;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.6);
+  height: 2px;
+}
+
+.separator-icon::before {
+  background: linear-gradient(to right, transparent, rgba(var(--global-theme-rgb-deep), 0.6));
+}
+
+.separator-icon::after {
+  background: linear-gradient(to right, rgba(var(--global-theme-rgb-deep), 0.6), transparent);
 }
 
 .separator-icon span {
   padding: 0 20px;
   font-size: 14px;
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
 .postCardImageDesc {

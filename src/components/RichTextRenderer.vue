@@ -65,6 +65,17 @@ const normalizeUrl = (raw: string): string | undefined => {
       :href="token.type === 'link' ? getUrl(token) : undefined"
       :rel="token.type === 'link' ? 'noopener noreferrer' : undefined"
       :target="token.type === 'link' ? '_blank' : undefined"
+      v-bind="
+        token.type === 'raw-code'
+          ? {
+              code: token.value as string,
+              codeLang: token.codeLang,
+              title: token.title,
+              label: token.label,
+              highlighter: highlighter || null,
+            }
+          : {}
+      "
       :class="[
         token.type !== 'raw-code' ? `fw-${token.type}` : '',
         {
@@ -77,17 +88,6 @@ const normalizeUrl = (raw: string): string | undefined => {
           'rich-warning-block': token.type === 'warning',
         },
       ]"
-      v-bind="
-        token.type === 'raw-code'
-          ? {
-              code: token.value as string,
-              codeLang: token.codeLang,
-              title: token.title,
-              label: token.label,
-              highlighter: highlighter || null,
-            }
-          : {}
-      "
       :show-icon="token.type === 'info' || token.type === 'warning'"
       :title="token.title"
       :type="token.type === 'info' || token.type === 'warning' ? token.type : undefined"

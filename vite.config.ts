@@ -78,7 +78,11 @@ export default defineConfig(({ mode }) => {
 
       async onFinished() {
         console.log("SSG finished, generating sitemap and robots.txt...");
-
+        const viteDir = "dist/.vite";
+        if (fs.existsSync(viteDir)) {
+          fs.rmSync(viteDir, { recursive: true, force: true });
+          console.log("Removed dist/.vite");
+        }
         const formatDate = (t?: string) => {
           if (!t) return "";
           if (/^\d{8}$/.test(t)) {
@@ -152,6 +156,9 @@ Sitemap: ${siteOrigin}/sitemap.xml
             }
             if (id.includes("dayjs")) {
               return "date";
+            }
+            if (id.includes("shiki")) {
+              return "shiki";
             }
             return "vendor";
           },

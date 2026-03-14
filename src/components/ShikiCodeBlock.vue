@@ -8,7 +8,7 @@ import { lang } from "@/components/ts/setupLang.ts";
 
 type I18nMap = Record<string, string>;
 
-type CodeLang = "typescript" | "javascript" | "bash" | "json" | "yaml" | "text";
+type CodeLang = "typescript" | "html" | "bash" | "json" | "yaml" | "text" | "vue";
 
 interface Props {
   code: string;
@@ -19,7 +19,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  codeLang: "typescript",
+  codeLang: "text",
   label: "",
   title: "",
 });
@@ -78,7 +78,7 @@ watch(
 
 <template>
   <div class="shiki-code-block-container light-theme">
-    <div v-if="label || lang" class="code-block-header">
+    <div v-if="label || codeLang" class="code-block-header">
       <span class="code-title">{{ title }}</span>
       <span class="code-lang-label">{{ codeLang }}</span>
     </div>

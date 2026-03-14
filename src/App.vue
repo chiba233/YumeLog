@@ -285,11 +285,9 @@ figure {
     display: block;
     min-height: 0;
     scrollbar-gutter: stable both-edges;
-
     .n-collapse-item__header-main {
       color: var(--global-theme-color-deep) !important;
       -webkit-text-stroke: 0.15px var(--global-theme-color-deep);
-
       .n-base-icon {
         svg {
           color: var(--global-theme-color-deep) !important;

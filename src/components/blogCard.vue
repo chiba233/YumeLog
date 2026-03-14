@@ -39,8 +39,13 @@ const { onMove, onLeave, onEnter } = useCardGlow();
 const posts = ref<Post[]>([]);
 const selectedPost = ref<Post | null>(null);
 const showModal = ref(false);
-
 const route = useRoute();
+const getSlug = (post?: Post | null) =>
+  post?.id ??
+  post?.title
+    ?.trim()
+    .replace(/[\/\\?#]/g, "")
+    .replace(/\s+/g, "-");
 const isSSR = import.meta.env.SSR;
 if (import.meta.env.SSR) {
   onServerPrefetch(async () => {
@@ -53,7 +58,16 @@ if (import.meta.env.SSR) {
       if (titleData) globalWebTitleMap.value = titleData;
 
       if (postsData?.length) {
-        const targetPost = currentId ? postsData.find((p) => p.id === currentId) : null;
+        const targetPost = currentId
+          ? postsData.find(
+              (p) =>
+                p.id === currentId ||
+                p.title
+                  ?.trim()
+                  .replace(/[\/\\?#]/g, "")
+                  .replace(/\s+/g, "-") === currentId,
+            )
+          : null;
         posts.value = postsData;
         if (targetPost) {
           selectedPost.value = targetPost;
@@ -75,11 +89,11 @@ const getImageBlocks = (blocks?: PostBlock[]) => {
 
 const getDescriptionText = (blocks?: PostBlock[]) => {
   if (!blocks) return "";
-
-  return blocks
+  const text = blocks
     .filter((b) => b.type === "text" || b.type === "center")
     .map((b) => (typeof b.content === "string" ? stripRichText(b.content) : ""))
     .join(" ");
+  return text.slice(0, 250);
 };
 
 const handleImgError = (e: Event, spareUrl?: string) => {
@@ -92,8 +106,9 @@ const blogModals = computed(() => {
   const map: Record<string, typeof showModal> = {};
 
   posts.value.forEach((post) => {
-    if (post.id) {
-      map[post.id] = showModal;
+    const slug = getSlug(post);
+    if (slug) {
+      map[slug] = showModal;
     }
   });
 
@@ -104,9 +119,10 @@ const blogHandlers = computed(() => {
   const handlers: Record<string, () => void> = {};
 
   posts.value.forEach((post) => {
-    if (!post.id) return;
+    const key = getSlug(post);
+    if (!key) return;
 
-    handlers[post.id] = () => {
+    handlers[key] = () => {
       selectedPost.value = post;
       currentPostTitle.value = post.title ?? null;
     };
@@ -149,12 +165,13 @@ const processedPosts = computed<ProcessedPost[]>(() =>
 );
 
 const cardClick = (post: Post) => {
-  if (!post.id) {
+  const slug = getSlug(post);
+  if (!slug) {
     $message.warning(blogDisplay.value.errorPostId, true, 3000);
     return;
   }
 
-  void openModal(post.id);
+  void openModal(slug);
 };
 
 const closePortal = async () => {
@@ -173,7 +190,7 @@ useHead({
   }),
 
   link: computed(() => {
-    if (!showModal.value || !selectedPost.value?.id) {
+    if (!showModal.value || (!selectedPost.value?.id && !selectedPost.value?.title)) {
       return [
         {
           rel: "canonical",
@@ -185,7 +202,7 @@ useHead({
     return [
       {
         rel: "canonical",
-        href: `${siteOrigin}/blog/${selectedPost.value.id}`,
+        href: `${siteOrigin}/blog/${getSlug(selectedPost.value)}`,
       },
     ];
   }),
@@ -215,7 +232,7 @@ useHead({
             },
             mainEntityOfPage: {
               "@type": "WebPage",
-              "@id": `${siteOrigin}/blog/${post.id}`,
+              "@id": `${siteOrigin}/blog/${getSlug(selectedPost.value)}`,
             },
           }),
         },
@@ -231,7 +248,7 @@ useHead({
           blogPost: posts.value.map((post) => ({
             "@type": "BlogPosting",
             headline: post.title,
-            url: `${siteOrigin}/blog/${post.id}`,
+            url: `${siteOrigin}/blog/${getSlug(post)}`,
             datePublished: post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
             author: {
               "@type": "Person",
@@ -294,7 +311,7 @@ useHead({
       },
       {
         property: "og:url",
-        content: `${siteOrigin}/blog/${selectedPost.value.id}`,
+        content: `${siteOrigin}/blog/${getSlug(selectedPost.value)}`,
       },
     ];
   }),
@@ -304,10 +321,10 @@ const richTextCache = new WeakMap<PostBlock, TextToken[]>();
 const parsedBlocks = computed<PostBlock[]>(() => {
   if (!selectedPost.value?.blocks) return [];
   return selectedPost.value.blocks.map((block) => {
-    if (block.type === "text" && typeof block.content === "string") {
+    if (block.type === "text") {
       let tokens = richTextCache.get(block);
       if (!tokens) {
-        tokens = parseRichText(block.content);
+        tokens = parseRichText(block.content as string);
         richTextCache.set(block, tokens);
       }
       return {
@@ -429,7 +446,7 @@ watch(
       <div v-for="(block, index) in parsedBlocks" :key="index">
         <div v-if="block.type === 'text'">
           <RichTextRenderer
-            v-if="block.type === 'text' && block.tokens"
+            v-if="block.tokens"
             :lang="selectedPost?.lang as string"
             :tokens="block.tokens!"
           />

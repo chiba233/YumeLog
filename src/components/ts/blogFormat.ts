@@ -5,12 +5,12 @@ import { BLOCK_TYPES, BlockType, RICH_TYPES, RichType, TagHandler, TextToken } f
 
 type I18nMap = Record<string, string>;
 const TAG_PREFIX = "$$";
-const END_TAG = ")$$";
 const TAG_OPEN = "(";
+const TAG_CLOSE = ")";
 const TAG_DIVIDER = "|";
+const END_TAG = ")$$";
 const RAW_OPEN = ")%";
 const RAW_CLOSE = "%end$$";
-const TAG_CLOSE = ")";
 
 const RICH_TYPE_SET: ReadonlySet<RichType> = new Set(RICH_TYPES);
 const BLOCK_TYPES_SET: ReadonlySet<BlockType> = new Set(BLOCK_TYPES);
@@ -28,18 +28,22 @@ const extractText = (tokens?: TextToken[]): string => {
   if (!tokens?.length) return "";
   return tokens.map((t) => (typeof t.value === "string" ? t.value : extractText(t.value))).join("");
 };
-const ALLOWED_LANGS = ["typescript", "javascript", "bash", "json", "yaml", "text"] as const;
+const ALLOWED_LANGS = ["typescript", "bash", "json", "yaml", "vue", "html", "text"] as const;
 type SupportedLang = (typeof ALLOWED_LANGS)[number];
 const normalizeLang = (codeLang?: string): SupportedLang => {
-  if (!codeLang) return "javascript";
+  const tsAliases = ["js", "javascript", "ts", "typescript"];
+  if (!codeLang) return "typescript";
   const normalized = codeLang.trim().toLowerCase();
+  if (tsAliases.includes(normalized)) {
+    return "typescript";
+  }
   if (!(ALLOWED_LANGS as unknown as string[]).includes(normalized)) {
     const unsupportedCodeLanguage = commonI18n.unsupportedCodeLanguage as I18nMap;
     const unsupportedCodeLanguageMsg = (
       unsupportedCodeLanguage[lang.value] || unsupportedCodeLanguage.en
     ).replace("{language}", String(codeLang));
     $message.error(unsupportedCodeLanguageMsg, true, 3000);
-    return "typescript";
+    return "text";
   }
   return normalized as SupportedLang;
 };
@@ -349,50 +353,68 @@ export const stripRichText = (text?: string): string => {
   if (!text) return "";
   let result = "";
   let i = 0;
-
   while (i < text.length) {
+    let matched = false;
     if (text.startsWith(TAG_PREFIX, i)) {
       let j = i + TAG_PREFIX.length;
       while (j < text.length && isTagChar(text[j])) j++;
-
       if (text[j] === TAG_OPEN) {
+        const tagName = text.slice(i + TAG_PREFIX.length, j);
         let k = j + 1;
         let depth = 1;
-
         while (k < text.length && depth > 0) {
           if (text[k] === TAG_OPEN) depth++;
           else if (text[k] === TAG_CLOSE) depth--;
           k++;
         }
-
         if (depth === 0) {
           const closePos = k - 1;
-
-          // RAW
           if (text.startsWith(RAW_OPEN, closePos)) {
             const contentStart = closePos + RAW_OPEN.length;
-            const end = text.indexOf(RAW_CLOSE, contentStart);
+            let end = -1;
+            let pos = contentStart;
+            while (true) {
+              pos = text.indexOf(RAW_CLOSE, pos);
+              if (pos === -1) break;
+
+              const before = pos === 0 || text[pos - 1] === "\n";
+              const after =
+                pos + RAW_CLOSE.length === text.length ||
+                text[pos + RAW_CLOSE.length] === "\n" ||
+                text.startsWith("\r\n", pos + RAW_CLOSE.length);
+              if (before && after) {
+                end = pos;
+                break;
+              }
+              pos += RAW_CLOSE.length;
+            }
 
             if (end !== -1) {
               result += text.slice(contentStart, end);
               i = end + RAW_CLOSE.length;
-              continue;
-            }
-          }
+              if (text.startsWith("\r\n", i)) i += 2;
+              else if (text[i] === "\n") i++;
 
-          if (text.startsWith(END_TAG, closePos)) {
+              matched = true;
+            }
+          } else if (text.startsWith(END_TAG, closePos)) {
             const inner = text.slice(j + 1, closePos);
             result += stripRichText(inner);
             i = closePos + END_TAG.length;
-            continue;
+            if (BLOCK_TYPES_SET.has(tagName as BlockType)) {
+              if (text.startsWith("\r\n", i)) i += 2;
+              else if (text[i] === "\n") i++;
+            }
+            matched = true;
           }
         }
       }
     }
 
-    result += text[i];
-    i++;
+    if (!matched) {
+      result += text[i];
+      i++;
+    }
   }
-
-  return result.trim().slice(0, 150);
+  return result.replace(/[\r\n\t]+/g, " ").trim();
 };

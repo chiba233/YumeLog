@@ -78,10 +78,10 @@ export interface PostBlock extends BaseBlock<string | ImageContent[]> {
 }
 // 原始文章结构
 export interface Post extends BaseMetadata {
-  id: string;
-  title?: string;
+  id?: string;
+  title: string;
   layout?: string;
-  blocks?: PostBlock[];
+  blocks: PostBlock[];
 }
 // 处理后的文章（用于 UI 展示）
 export interface ProcessedPost extends Post {

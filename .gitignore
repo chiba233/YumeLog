@@ -15,7 +15,7 @@ dist-ssr
 coverage
 *.local
 .vite-ssg-temp
-YumeLog-*
+pnpm-workspace.yaml
 
 /cypress/videos/
 /cypress/screenshots/

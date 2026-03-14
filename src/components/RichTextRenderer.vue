@@ -191,7 +191,7 @@ a.fw-link {
   background-color: rgba(var(--global-theme-rgb-deep), 0.13) !important;
   padding: 0.2em 0.35em;
   border-radius: 6px;
-  font-size: 0.85em;
+  font-size: 0.8em;
   font-weight: bold;
   line-height: 1.4;
   box-decoration-break: clone;
@@ -201,6 +201,15 @@ a.fw-link {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   z-index: 3;
+
+  .rich-text-content,
+  .center-text,
+  .fw-link,
+  .rich-underline,
+  .fw-bold {
+    font-size: 1em !important;
+  }
+
   &,
   & * {
     color: var(--global-theme-color-deep) !important;
@@ -209,6 +218,9 @@ a.fw-link {
 
 .rich-warning-block,
 .rich-alert-block {
+  .code-text {
+    font-size: 0.75em;
+  }
   max-width: 98%;
   min-width: 45%;
   width: fit-content;

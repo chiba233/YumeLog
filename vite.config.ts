@@ -28,13 +28,23 @@ interface PostBlock {
 }
 
 interface Post extends BaseContent {
-  id: string;
-  title?: string;
+  id?: string;
+  title: string;
   layout?: string;
-  blocks?: PostBlock[];
+  blocks: PostBlock[];
 }
 
 let cachedPosts: Post[] | null = null;
+
+function getSlug(post: Post): string | null {
+  if (post.id) return post.id;
+  if (post.title)
+    return post.title
+      .trim()
+      .replace(/[\/\\?#]/g, "")
+      .replace(/\s+/g, "-");
+  return null;
+}
 
 async function getPosts(): Promise<Post[]> {
   if (!cachedPosts) {
@@ -68,7 +78,10 @@ export default defineConfig(({ mode }) => {
       async includedRoutes(paths) {
         const staticPaths = paths.filter((p) => !p.includes(":"));
         const posts = await getPosts();
-        const postRoutes = posts.filter((p) => p.id).map((p) => `/blog/${p.id}/`);
+        const postRoutes = posts
+          .map((p) => getSlug(p))
+          .filter(Boolean)
+          .map((slug) => `/blog/${slug}/`);
         return [...new Set([...staticPaths, "/blog/", ...postRoutes])];
       },
 
@@ -99,11 +112,15 @@ export default defineConfig(({ mode }) => {
           { url: "/", lastmod: "" },
           { url: "/blog/", lastmod: "" },
           ...posts
-            .filter((p) => p.id)
-            .map((p) => ({
-              url: `/blog/${p.id}/`,
-              lastmod: formatDate(p.time),
-            })),
+            .map((p) => {
+              const slug = getSlug(p);
+              if (!slug) return null;
+              return {
+                url: `/blog/${slug}/`,
+                lastmod: formatDate(p.time),
+              };
+            })
+            .filter((r): r is { url: string; lastmod: string } => r !== null),
         ];
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>

@@ -6,12 +6,10 @@
   <img alt="Vite" src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" />
 </p>
 
-一个基于 **Vue 3** + **TypeScript** + **Naive UI** + **Vite SSG** 构建的极简高颜值个人主页与自制 **RICH-TEXT-DSL** 博客系统。
+一个基于 **Vue 3** + **TypeScript** + **Naive UI** + **Vite SSG** 构建的好看的个人主页与自制 **RICH-TEXT-DSL** 博客系统。
 
 本项目为静态网页，可实现极低成本部署。通过 `vite-SSG` 预渲染技术，在每次编译时自动生成包含所有文章的 HTML、`sitemap.xml` 与
 `robots.txt`，完美实现全站级 SEO 优化，搜索引擎与各大社交软件分享抓取毫无压力。
-
-致力于打造兼具硬核技术与个人美学的专属数字空间。
 
 ---
 
@@ -71,7 +69,7 @@
 ## 🛠️ 技术栈与环境
 
 - **框架 & 语言**: Vue 3 (Composition API) / TypeScript (Strict Mode)
-- **UI & 样式**: Naive UI (针对毛玻璃美学与移动端微调)
+- **UI & 样式**: Naive UI (针对毛玻璃美学与移动端魔改)
 - **构建 & SEO**: Vite 7 / Vite SSG
 - **数据处理**: `js-yaml` (仅用于解析结构，DOM 渲染由自研 Parser 全权接管)
 - **依赖管理**: `pnpm` (>= 10.0.0), Node.js (>= 24.0.0)

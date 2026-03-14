@@ -21,17 +21,17 @@
 |:-------------------------|:-------------------------------------|
 | **Static Architecture**  | 纯静态博客架构，极低成本无后端部署                    |
 | **Vite SSG**             | 自动预渲染 HTML / sitemap / robots，SEO 完备 |
-| **Custom DSL**           | 拒绝传统臃肿 Markdown，自研轻量级 RICH-TEXT DSL  |
+| **Custom DSL**           | 拒绝传统臃肿 Markdown，自造轻量级 RICH-TEXT DSL  |
 | **Nested Rendering**     | 核心引擎支持无限嵌套语法解析                       |
 | **Image Blocks**         | 图像块完美支持主干与双轨容灾备用地址                   |
 | **Responsive UI**        | 全端响应式设计，深度适配移动端与毛玻璃交互                |
-| **Theme System**         | 灵活的主题系统：背景壁纸 + 对应主题色。全场景覆盖主题色。       |
-| **Multi Language**       | 抛弃繁重框架，自研基于 JSON/YAML 的轻量级 i18n      |
-| **Anniversary Timeline** | 专属纪念日时间轴，精准计算非凡时刻                    |
-| **Photo Wall**           | 专为晒猫与个人摄影打造的流式照片墙展示                  |
+| **Theme System**         | 灵活的主题系统：背景壁纸 + 对应全场景覆盖主题色。       |
+| **Multi Language**       | 抛弃繁重框架，自制轻量级 i18n      |
+| **Anniversary Timeline** | 专属纪念日时间轴                    |
+| **Photo Wall**           | 专为晒猫与个人的照片墙展示                 |
 | **Social Links**         | 全域联系方式收纳，支持 Web3 钱包地址展示              |
 | **Remote Data**          | 灵活的数据双轨：完美支持从本地、CDN 或 HTTP 动态拉取 YAML |
-| **Maimai Module**        | MaiMai DX 原生 API 接入，优雅展示玩家成绩与段位      |
+| **Maimai Module**        | MaiMai DX AQUA API 接入     |
 
 ---
 

@@ -244,7 +244,46 @@ figure {
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
   backdrop-filter: blur(25px);
+  max-height: 98dvh;
 
+  .n-card-header {
+    padding: 1.3em 1.3em 0.5em !important;
+  }
+
+  .n-card-header__main {
+    color: var(--global-theme-color-deep) !important;
+    -webkit-text-stroke: 0.2px var(--global-theme-color-deep);
+    paint-order: stroke fill;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .n-card-header__main {
+    text-align: center;
+  }
+
+  .n-card__content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .n-button {
+    --n-color: rgba(var(--global-theme-rgb-deep), 0.1);
+
+    &:focus,
+    &:active,
+    &:hover {
+      --n-color: rgba(var(--global-theme-rgb-deep), 0.25) !important;
+    }
+
+    svg {
+      color: var(--global-theme-color-deep) !important;
+    }
+  }
+
+  @media (max-width: 500px) {
+    max-width: 98% !important;
+  }
   .n-card-content {
     flex: 1;
     overflow-y: auto !important;
@@ -268,7 +307,7 @@ figure {
       background-color: rgba(var(--global-theme-rgb-deep), 0.1);
     }
 
-    padding: 1.3rem !important;
+    padding: 0.5em 1.3rem 1em !important;
     -webkit-overflow-scrolling: touch;
   }
 }

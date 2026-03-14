@@ -158,6 +158,9 @@ $transition-speed: 0.3s;
   justify-content: center;
   flex-wrap: wrap;
   margin-bottom: 4rem;
+  @media (min-width: 975px) {
+    max-width: 95%;
+  }
 }
 
 .content {

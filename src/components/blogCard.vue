@@ -552,7 +552,10 @@ watch(
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    max-height: 92dvh;
+    max-height: 96dvh;
+    @media (max-width: 500px) {
+      max-height: 98dvh;
+    }
 
     :deep(.n-card-header) {
       flex-shrink: 0;
@@ -602,9 +605,7 @@ $border-radius: 16px;
 }
 
 .postModel {
-  margin-bottom: 4em;
-  margin-top: 4em;
-  max-width: 92%;
+  max-width: 96%;
   --mx: -100px;
   --my: -100px;
   --opacity: 0;
@@ -652,10 +653,6 @@ $border-radius: 16px;
     opacity: var(--opacity);
     transition: opacity 0.4s ease;
     pointer-events: none;
-  }
-
-  @media (max-width: 900px) {
-    max-width: 98%;
   }
 
   .postCardMain {
@@ -712,8 +709,6 @@ $border-radius: 16px;
     transform 0.2s,
     background-color 0.3s;
 
-  @media (max-width: 900px) {
-  }
   @media (min-width: 900px) {
     width: 25rem;
   }

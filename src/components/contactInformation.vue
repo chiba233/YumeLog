@@ -336,7 +336,6 @@ watch([showWechatModel, showLineModel], async ([wechat, line]) => {
 <style lang="scss">
 .n-modal-container .maiCard,
 .n-modal-container .catCard {
-  max-height: 92dvh;
   --mx: -100px;
   --my: -100px;
   --opacity: 0;
@@ -385,40 +384,6 @@ watch([showWechatModel, showLineModel], async ([wechat, line]) => {
     transition: opacity 0.4s ease;
     pointer-events: none;
   }
-
-  .n-button {
-    svg {
-      color: var(--global-theme-color-deep) !important;
-    }
-  }
-
-  .n-card-header__main {
-    color: var(--global-theme-color-deep) !important;
-    paint-order: stroke fill;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .n-collapse-item__header-main {
-    color: var(--global-theme-color-deep) !important;
-    -webkit-text-stroke: 0.15px var(--global-theme-color-deep);
-    paint-order: stroke fill;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
-
-    svg {
-      color: var(--global-theme-color-deep) !important;
-    }
-  }
-
-  .n-card__content {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .n-card-header__main {
-    text-align: center;
-  }
 }
 
 .catMainCard {
@@ -455,17 +420,11 @@ watch([showWechatModel, showLineModel], async ([wechat, line]) => {
 
 .catCard {
   max-width: 48em;
-  @media (max-width: 600px) {
-    max-width: 98%;
-  }
 }
 
 .maiCard {
   display: flex;
   width: 42em;
-  @media (max-width: 600px) {
-    max-width: 98%;
-  }
 
   .connecter {
     padding-right: 0.6em;
@@ -502,7 +461,7 @@ watch([showWechatModel, showLineModel], async ([wechat, line]) => {
 
   .cButton {
     height: 2.2em;
-    margin: 0.5rem;
+    margin: 0.35rem;
     border: 1px solid rgba(251, 238, 241, 0.2);
 
     &:focus,
@@ -515,9 +474,6 @@ watch([showWechatModel, showLineModel], async ([wechat, line]) => {
     a {
       font-weight: normal;
       margin-left: 3px;
-    }
-
-    @media (min-width: 550px) {
     }
     @media (max-width: 550px) {
       .n-icon {

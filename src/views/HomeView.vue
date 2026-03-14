@@ -7,7 +7,7 @@
     <div class="detailsDIV">
       <PersonalIntroductions />
     </div>
-    <div class="contactsDIV">
+    <div>
       <ContactInformation />
     </div>
     <MyFriends />
@@ -40,12 +40,6 @@ import { lang } from "@/components/ts/setupLang.ts";
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
-
-  .contactsDIV {
-    @media (min-width: 730px) {
-      margin: 0.95em;
-    }
-  }
 
   .detailsDIV {
     width: 100%;

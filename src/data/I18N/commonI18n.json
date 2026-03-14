@@ -156,14 +156,14 @@
   "unsupportedCodeLanguage": {
     "zh": "不支持的代码语言：'{language}'。",
     "en": "Unsupported code language: '{language}'.",
-    "ja": "サポートされていないコード言語（げんご）です: '{language}'。",
+    "ja": "サポートされていないコード言語です: '{language}'。",
     "th": "ไม่รองรับภาษาของโค้ด: '{language}'",
     "other": "Unsupported code language: '{language}'."
   },
   "ShikiErrorLanguage": {
     "zh": "Shiki 炸了呢，快检查一下！",
     "en": "Shiki crashed! Better check it out!",
-    "ja": "Shiki（シキ）が壊（こわ）れちゃったみたい！確認（かくにん）してみて！",
+    "ja": "Shiki が壊れちゃったみたい！確認してみて！",
     "th": "Shiki พังแล้ว! รีบตรวจสอบหน่อยนะ!",
     "other": "Shiki error occurred. Please check the configuration."
   }

@@ -3,6 +3,7 @@ import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/ja";
 import "dayjs/locale/zh-cn";
 import "dayjs/locale/en-au";
+import buddhistEra from "dayjs/plugin/buddhistEra";
 import "dayjs/locale/th";
 import { ref, type Ref, watch } from "vue";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -11,6 +12,7 @@ import { $message } from "@/components/ts/msgUtils.ts";
 import { SelectOption } from "@/components/ts/d.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 
+dayjs.extend(buddhistEra);
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
 
@@ -68,5 +70,8 @@ export const formatDate = (date?: string | number | Date | Dayjs): string => {
   if (!date) return "error";
   const locale = localeMap[lang.value] || localeMap.en;
   dayjs.locale(locale);
+  if (locale === "th") {
+    return dayjs(date).format("D MMMM BBBB - dddd");
+  }
   return dayjs(date).format("LL - dddd");
 };

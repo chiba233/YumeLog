@@ -156,45 +156,6 @@ const buttonTitle = computed(() => {
     transition: opacity 0.4s ease;
     pointer-events: none;
   }
-
-  .n-button {
-    svg {
-      color: var(--global-theme-color-deep) !important;
-    }
-  }
-
-  .n-card-header__main {
-    color: var(--global-theme-color-deep) !important;
-    paint-order: stroke fill;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .n-collapse-item__header-main {
-    color: var(--global-theme-color-deep) !important;
-    -webkit-text-stroke: 0.15px var(--global-theme-color-deep);
-    paint-order: stroke fill;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
-
-    svg {
-      color: var(--global-theme-color-deep) !important;
-    }
-  }
-
-  .n-card__content {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .n-card-header__main {
-    text-align: center;
-  }
-}
-
-.n-card__content {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .buttonClock {

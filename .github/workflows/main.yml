@@ -4,6 +4,15 @@ on:
   push:
     branches: [master]
   workflow_dispatch:
+    inputs:
+      build_command:
+        description: '选择构建脚本 (Choose build script)'
+        required: true
+        default: 'build:client'
+        type: choice
+        options:
+          - 'build:client'
+          - 'build'
 
 jobs:
   build:
@@ -11,15 +20,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "24.14.0"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: "10.32.1"
 
@@ -32,7 +41,12 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build
-        run: pnpm run build
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            pnpm run ${{ github.event.inputs.build_command }}
+          else
+            pnpm run build:client
+          fi
 
       - name: Zip dist
         run: |
@@ -40,7 +54,7 @@ jobs:
           zip -r ../site.zip .
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: site
           path: site.zip

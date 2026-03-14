@@ -6,12 +6,10 @@
   <img alt="Vite" src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" />
 </p>
 
-一个基于 **Vue 3** + **TypeScript** + **Naive UI** + **Vite SSG** 构建的极简高颜值个人主页与自制 **RICH-TEXT-DSL** 博客系统。
+一个基于 **Vue 3** + **TypeScript** + **Naive UI** + **Vite SSG** 构建的好看的个人主页与自制 **RICH-TEXT-DSL** 博客系统。
 
 本项目为静态网页，可实现极低成本部署。通过 `vite-SSG` 预渲染技术，在每次编译时自动生成包含所有文章的 HTML、`sitemap.xml` 与
 `robots.txt`，完美实现全站级 SEO 优化，搜索引擎与各大社交软件分享抓取毫无压力。
-
-致力于打造兼具硬核技术与个人美学的专属数字空间。
 
 ---
 
@@ -21,17 +19,17 @@
 |:-------------------------|:-------------------------------------|
 | **Static Architecture**  | 纯静态博客架构，极低成本无后端部署                    |
 | **Vite SSG**             | 自动预渲染 HTML / sitemap / robots，SEO 完备 |
-| **Custom DSL**           | 拒绝传统臃肿 Markdown，自研轻量级 RICH-TEXT DSL  |
+| **Custom DSL**           | 拒绝传统臃肿 Markdown，自造轻量级 RICH-TEXT DSL  |
 | **Nested Rendering**     | 核心引擎支持无限嵌套语法解析                       |
 | **Image Blocks**         | 图像块完美支持主干与双轨容灾备用地址                   |
 | **Responsive UI**        | 全端响应式设计，深度适配移动端与毛玻璃交互                |
-| **Theme System**         | 灵活的主题系统：背景壁纸 + 对应主题色。全场景覆盖主题色。       |
-| **Multi Language**       | 抛弃繁重框架，自研基于 JSON/YAML 的轻量级 i18n      |
-| **Anniversary Timeline** | 专属纪念日时间轴，精准计算非凡时刻                    |
-| **Photo Wall**           | 专为晒猫与个人摄影打造的流式照片墙展示                  |
+| **Theme System**         | 灵活的主题系统：背景壁纸 + 对应全场景覆盖主题色。       |
+| **Multi Language**       | 抛弃繁重框架，自制轻量级 i18n      |
+| **Anniversary Timeline** | 专属纪念日时间轴                    |
+| **Photo Wall**           | 专为晒猫与个人的照片墙展示                 |
 | **Social Links**         | 全域联系方式收纳，支持 Web3 钱包地址展示              |
 | **Remote Data**          | 灵活的数据双轨：完美支持从本地、CDN 或 HTTP 动态拉取 YAML |
-| **Maimai Module**        | MaiMai DX 原生 API 接入，优雅展示玩家成绩与段位      |
+| **Maimai Module**        | MaiMai DX AQUA API 接入     |
 
 ---
 
@@ -71,7 +69,7 @@
 ## 🛠️ 技术栈与环境
 
 - **框架 & 语言**: Vue 3 (Composition API) / TypeScript (Strict Mode)
-- **UI & 样式**: Naive UI (针对毛玻璃美学与移动端微调)
+- **UI & 样式**: Naive UI (针对毛玻璃美学与移动端魔改)
 - **构建 & SEO**: Vite 7 / Vite SSG
 - **数据处理**: `js-yaml` (仅用于解析结构，DOM 渲染由自研 Parser 全权接管)
 - **依赖管理**: `pnpm` (>= 10.0.0), Node.js (>= 24.0.0)

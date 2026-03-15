@@ -29,20 +29,16 @@ const findRawClose = (text: string, start: number): number => {
 
   while (pos < text.length) {
     let lineEnd = text.indexOf("\n", pos);
+
     if (lineEnd === -1) {
       lineEnd = text.length;
     } else if (lineEnd > pos && text[lineEnd - 1] === "\r") {
       lineEnd--;
     }
-    if (lineEnd === -1) lineEnd = text.length;
-    let s = pos;
-    let e = lineEnd;
-    while (s < e && /\s/.test(text[s])) s++;
-    while (e > s && /\s/.test(text[e - 1])) e--;
-    if (e - s === RAW_CLOSE.length && text.startsWith(RAW_CLOSE, s)) {
-      return s;
-    }
 
+    if (text.startsWith(RAW_CLOSE, pos) && pos + RAW_CLOSE.length === lineEnd) {
+      return pos;
+    }
     pos = lineEnd + 1;
   }
 

@@ -23,13 +23,13 @@
 | **Nested Rendering**     | 核心引擎支持无限嵌套语法解析                       |
 | **Image Blocks**         | 图像块完美支持主干与双轨容灾备用地址                   |
 | **Responsive UI**        | 全端响应式设计，深度适配移动端与毛玻璃交互                |
-| **Theme System**         | 灵活的主题系统：背景壁纸 + 对应全场景覆盖主题色。       |
-| **Multi Language**       | 抛弃繁重框架，自制轻量级 i18n      |
-| **Anniversary Timeline** | 专属纪念日时间轴                    |
-| **Photo Wall**           | 专为晒猫与个人的照片墙展示                 |
+| **Theme System**         | 灵活的主题系统：背景壁纸 + 对应全场景覆盖主题色。           |
+| **Multi Language**       | 抛弃繁重框架，自制轻量级 i18n                    |
+| **Anniversary Timeline** | 专属纪念日时间轴                             |
+| **Photo Wall**           | 专为晒猫与个人的照片墙展示                        |
 | **Social Links**         | 全域联系方式收纳，支持 Web3 钱包地址展示              |
 | **Remote Data**          | 灵活的数据双轨：完美支持从本地、CDN 或 HTTP 动态拉取 YAML |
-| **Maimai Module**        | MaiMai DX AQUA API 接入     |
+| **Maimai Module**        | MaiMai DX AQUA API 接入                |
 
 ---
 
@@ -129,7 +129,8 @@ server {
 
 ## ✍️ 自研 DSL 语法指南 (DSL Grammar)
 
-yumeLog 采用块级架构与自研 DSL 引擎渲染博客文本。文章必须包含唯一 `id` 以便路由访问。
+yumeLog 采用块级架构与自研 DSL 引擎渲染博客文本。文章可以指定 `id` 以便路由访问，也可以直接使用 `文章标题`
+作为页面链接，但是这两个你肯定必须写一个。
 
 ### 基础语法
 
@@ -144,10 +145,11 @@ $$type(content)$$
 所有常规 type 均支持无限嵌套。
 **示例：** `$$bold($$underline(Hello)$$)$$`
 
-### 超链接语法 (Link)
+### 接语法
 
 ```text
 $$link(URL | content)$$
+$$info(我去，这怎么是title | 哇哦我是正文欸)$$
 ```
 
 **示例：** `$$link(https://example.com | 点我访问)$$`
@@ -156,16 +158,26 @@ $$link(URL | content)$$
 
 - **URL**：绝对 **不能嵌套**！必须在第一层级声明。
 - **content**：**可以嵌套** 其他指令。
-  **正确复合示例：** `$$link(https://google.com | $$bold(Google)$$)$$`
+- **正确复合示例：** `$$link(https://google.com | $$bold(Google)$$)$$`
+- **注意:** 如果你传了`$$info(我去，这怎么是title | 哇哦我是正文欸 | 欸我又跳出来了 | 欸我又进去了)$$`
+  因为info只会接受title和正文，所以正文最终会显示为 "哇哦我是正文欸欸我又跳出来了欸我又进去了"。
 
 ### 原始代码块 (Raw Code Block)
 
 Raw block 内部 **不会解析任何 DSL 指令**。
 
+- 理论上所有基础语法都可以支持RAW，但是做是一回事想是一回事，我只是给一些你们可能真的会用得到的加了RAW Support。
+
 ```text
 $$raw-code(lang | title)%
 content
 %end$$
+
+$$info(你好，我是标题)%
+content
+ %end$$ #因为缩进多了一个空格所以这个不会被认为是合法的end tag
+%end$$
+#endTag这一行不能有空格不能有任何其他东西，任何东西都会被认为是不合法闭合
 ```
 
 **示例：**
@@ -176,19 +188,22 @@ const a = 1
 %end$$
 ```
 
+- **注意:** RAW BLOCK为了防止意外闭合
+
 ### 支持的 Type 清单
 
-| Type          | Description |
-|:--------------|:------------|
-| **bold**      | 粗体          |
-| **thin**      | 细体          |
-| **underline** | 下划线         |
-| **strike**    | 删除线         |
-| **center**    | 居中对齐        |
-| **code**      | 行内代码        |
-| **link**      | 超链接         |
-| **info**      | 基础信息提示框     |
-| **warning**   | 警告提示框       |
+| Type          | Description | 是否支持Raw语法 | 是否支持嵌套语法 | 可以传入的参数                            |
+|:--------------|:------------|:----------|:---------|:-----------------------------------|
+| **bold**      | 粗体          | no        | yes      | `(text)`                           |
+| **thin**      | 细体          | no        | yes      | `(text)`                           |
+| **underline** | 下划线         | no        | yes      | `(text)`                           |
+| **strike**    | 删除线         | no        | yes      | `(text)`                           |
+| **center**    | 居中对齐        | no        | yes      | `(text)`                           |
+| **code**      | 行内代码        | no        | yes      | `(text)`                           |
+| **link**      | 超链接         | no        | yes      | `(URL \| text)`                    |
+| **info**      | 基础信息提示框     | yes       | yes      | `(title \| text)` or  `(title)%正文` |
+| **warning**   | 警告提示框       | yes       | yes      | `(title \| text)` or  `(title)%正文` |
+| **raw-code**  | 行内代码        | yes       | no       | `(code-lang \| code-title)%正文`     |
 
 ### 完整 YAML 块级驱动示例
 

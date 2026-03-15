@@ -3,7 +3,7 @@ import { useRoute, useRouter } from "vue-router";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
 import { $message } from "@/components/ts/msgUtils.ts";
-import { ModalOptions } from "@/components/ts/d.ts";
+import { ModalOptions, Post } from "@/components/ts/d.ts";
 
 export const useRouteModal = ({
   modals,
@@ -196,3 +196,10 @@ export const useRouteModal = ({
     syncModalWithRoute,
   };
 };
+
+export const getSlug = (post?: Post | null) =>
+  post?.id ??
+  post?.title
+    ?.trim()
+    .replace(/[\/\\?#]/g, "")
+    .replace(/\s+/g, "-");

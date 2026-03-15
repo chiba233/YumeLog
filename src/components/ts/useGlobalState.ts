@@ -2,7 +2,8 @@ import { computed, ref, shallowRef } from "vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
-import { NekoYamlResponse, Post, YamlNekoBlock } from "./d";
+import { NekoYamlResponse, Post, PostBlock, ProcessedPost, TextToken, YamlNekoBlock } from "./d";
+import { parseRichText, stripRichText } from "./blogFormat";
 
 export type WebTitleMap = Record<string, Record<string, string>>;
 export const globalWebTitleMap = shallowRef<WebTitleMap>({});
@@ -12,6 +13,8 @@ export const showWechatModel = ref<boolean>(false);
 export const showLineModel = ref<boolean>(false);
 export const currentPostTitle = ref<string | null>(null);
 export const selectedPost = ref<Post | null>(null);
+export const posts = ref<Post[]>([]);
+export const showModal = ref(false);
 export const blogDisplay = computed(() => {
   const currentLang = lang.value;
   const source = blogI18nData as Record<string, Record<string, string>>;
@@ -43,3 +46,44 @@ export const loadCat = async () => {
     );
   }
 };
+
+export const getDescriptionText = (blocks?: PostBlock[]) => {
+  if (!blocks) return "";
+  const text = blocks
+    .filter((b) => b.type === "text" || b.type === "center")
+    .map((b) => (typeof b.content === "string" ? stripRichText(b.content) : ""))
+    .join(" ");
+  return text.slice(0, 400);
+};
+
+export const processedPosts = computed<ProcessedPost[]>(() =>
+  posts.value.map((post) => {
+    const blocks = post.blocks ?? [];
+    const imageBlocks = blocks.filter((b) => b.type === "image");
+    return {
+      ...post,
+      blocks,
+      imageBlocks,
+      displayDescription: getDescriptionText(blocks),
+    };
+  }),
+);
+
+export const parsedBlocks = computed<PostBlock[]>(() => {
+  const richTextCache = new WeakMap<PostBlock, TextToken[]>();
+  if (!selectedPost.value?.blocks) return [];
+  return selectedPost.value.blocks.map((block) => {
+    if (block.type === "text") {
+      let tokens = richTextCache.get(block);
+      if (!tokens) {
+        tokens = parseRichText(block.content as string);
+        richTextCache.set(block, tokens);
+      }
+      return {
+        ...block,
+        tokens,
+      };
+    }
+    return block;
+  });
+});

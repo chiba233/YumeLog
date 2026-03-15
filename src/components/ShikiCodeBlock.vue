@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onBeforeMount, onServerPrefetch, shallowRef, watch } from "vue";
+import { onBeforeMount, shallowRef, watch } from "vue";
 import type { HighlighterCore } from "shiki/core";
 import type { ThemedToken } from "shiki";
 import { $message } from "@/components/ts/msgUtils.ts";
@@ -62,11 +62,11 @@ const init = async () => {
   updateTokens();
 };
 
-if (import.meta.env.SSR) {
-  onServerPrefetch(async () => {
-    await init();
-  });
-}
+// if (import.meta.env.SSR) {
+//   onServerPrefetch(async () => {
+//     await init();
+//   });
+// }
 
 onBeforeMount(async () => {
   if (tokenLines.value.length === 0) {

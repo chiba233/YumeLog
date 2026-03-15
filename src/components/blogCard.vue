@@ -1,123 +1,54 @@
 <script lang="ts" setup>
-import { computed, onMounted, onServerPrefetch, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useHead } from "@unhead/vue";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
 import {
   changeSpareUrl,
   faultTimes,
-  listPrimaryError,
   listSpareError,
   loadError,
   serverError,
   yamlLoading,
-  yamlLoadingFault,
   yamlRetrying,
 } from "@/components/ts/getYaml.ts";
 import { formatDate, formatTime, lang } from "@/components/ts/setupLang.ts";
 import Cancel from "@/icons/cancel.svg";
 import { NAlert, NButton, NCard, NIcon, NImage, NModal } from "naive-ui";
-import { parseRichText, stripRichText } from "@/components/ts/blogFormat.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
-import { useContentStore } from "./ts/contentStore";
 import {
   blogDisplay,
   currentPostTitle,
-  globalWebTitleMap,
+  parsedBlocks,
+  posts,
+  processedPosts,
   selectedPost,
-  WebTitleMap,
+  showModal,
 } from "@/components/ts/useGlobalState.ts";
-import { useRouteModal } from "@/components/ts/useRouteModal.ts";
-import { personRawData } from "@/components/ts/setupJson.ts";
+import { getSlug, useRouteModal } from "@/components/ts/useRouteModal.ts";
 import RichTextRenderer from "@/components/RichTextRenderer.vue";
-import { ImageContent, Post, PostBlock, ProcessedPost, TextToken } from "./ts/d";
+import { ImageContent, Post, ProcessedPost } from "./ts/d";
+import { isSSR } from "./ts/useHead";
 
-const router = useRouter();
-const { getPosts, getSingle } = useContentStore();
+const ssrHidePosts = computed(() => !(isSSR && selectedPost.value));
 const { onMove, onLeave, onEnter } = useCardGlow();
-
-const posts = ref<Post[]>([]);
-const showModal = ref(false);
-const route = useRoute();
-const getSlug = (post?: Post | null) =>
-  post?.id ??
-  post?.title
-    ?.trim()
-    .replace(/[\/\\?#]/g, "")
-    .replace(/\s+/g, "-");
-const isSSR = import.meta.env.SSR;
-if (import.meta.env.SSR) {
-  onServerPrefetch(async () => {
-    const currentId = route.params.id as string;
-    try {
-      const [postsData, titleData] = await Promise.all([
-        getPosts<Post>("blog"),
-        getSingle<WebTitleMap>("main", "webTitle.json"),
-      ]);
-      if (titleData) globalWebTitleMap.value = titleData;
-
-      if (postsData?.length) {
-        const targetPost = currentId
-          ? postsData.find(
-              (p) =>
-                p.id === currentId ||
-                p.title
-                  ?.trim()
-                  .replace(/[\/\\?#]/g, "")
-                  .replace(/\s+/g, "-") === currentId,
-            )
-          : null;
-        posts.value = postsData;
-        if (targetPost) {
-          selectedPost.value = targetPost;
-          showModal.value = true;
-          currentPostTitle.value = targetPost.title ?? null;
-        }
-      }
-    } catch (err) {
-      console.error("SSR Prefetch Error:", err);
-    }
-  });
-}
-
-const getImageBlocks = (blocks?: PostBlock[]) => {
-  if (!blocks) return [];
-
-  return blocks.filter((b) => b.type === "image");
-};
-
-const getDescriptionText = (blocks?: PostBlock[]) => {
-  if (!blocks) return "";
-  const text = blocks
-    .filter((b) => b.type === "text" || b.type === "center")
-    .map((b) => (typeof b.content === "string" ? stripRichText(b.content) : ""))
-    .join(" ");
-  return text.slice(0, 400);
-};
-
+const router = useRouter();
 const handleImgError = (e: Event, spareUrl?: string) => {
   const target = e.target as HTMLImageElement;
-
   if (spareUrl) target.src = spareUrl;
 };
-
 const blogModals = computed(() => {
   const map: Record<string, typeof showModal> = {};
-
   posts.value.forEach((post) => {
     const slug = getSlug(post);
     if (slug) {
       map[slug] = showModal;
     }
   });
-
   return map;
 });
-
 const blogHandlers = computed(() => {
   const handlers: Record<string, () => void> = {};
-
   posts.value.forEach((post) => {
     const slug = getSlug(post);
     if (!slug) return;
@@ -129,7 +60,6 @@ const blogHandlers = computed(() => {
 
   return handlers;
 });
-
 const { openModal } = useRouteModal({
   baseRouteName: "blog",
   paramKey: "id",
@@ -150,19 +80,6 @@ const { openModal } = useRouteModal({
   },
 });
 
-const processedPosts = computed<ProcessedPost[]>(() =>
-  posts.value.map((post) => {
-    const blocks = post.blocks ?? [];
-    const imageBlocks = blocks.filter((b) => b.type === "image");
-    return {
-      ...post,
-      blocks,
-      imageBlocks,
-      displayDescription: getDescriptionText(blocks),
-    };
-  }),
-);
-
 const cardClick = (post: Post) => {
   const slug = getSlug(post);
   if (!slug) {
@@ -177,183 +94,6 @@ const closePortal = async () => {
   await router.replace({ name: "blog" });
 };
 
-const baseTitle = computed(() => globalWebTitleMap.value?.blog?.[lang.value] ?? "Blog");
-const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
-
-useHead({
-  title: computed(() => {
-    if (showModal.value && selectedPost.value?.title) {
-      return `${selectedPost.value.title} - ${baseTitle.value}`;
-    }
-    return baseTitle.value;
-  }),
-
-  link: computed(() => {
-    if (!showModal.value || (!selectedPost.value?.id && !selectedPost.value?.title)) {
-      return [
-        {
-          rel: "canonical",
-          href: `${siteOrigin}/blog`,
-        },
-      ];
-    }
-
-    return [
-      {
-        rel: "canonical",
-        href: `${siteOrigin}/blog/${getSlug(selectedPost.value)}`,
-      },
-    ];
-  }),
-
-  script: computed(() => {
-    if (!isSSR) return [];
-    if (showModal.value && selectedPost.value) {
-      const blocks = selectedPost.value?.blocks ?? [];
-      const firstImg = (getImageBlocks(blocks)?.[0]?.content as ImageContent[])?.[0]?.src ?? "";
-      const post = selectedPost.value;
-      return [
-        {
-          type: "application/ld+json",
-          innerHTML: JSON.stringify({
-            "@context": "https://schema.org",
-            "@id": `${siteOrigin}/blog/${getSlug(selectedPost.value)}`,
-            url: `${siteOrigin}/blog/${getSlug(selectedPost.value)}`,
-            "@type": "BlogPosting",
-            headline: post.title,
-            datePublished: post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
-            image: firstImg,
-            author: {
-              "@type": "Person",
-              name: personRawData.value?.author[lang.value] ?? personRawData.value?.author?.en,
-            },
-            publisher: {
-              "@type": "Organization",
-              name: personRawData.value?.author[lang.value] ?? personRawData.value?.author?.en,
-            },
-            mainEntityOfPage: {
-              "@type": "WebPage",
-              "@id": `${siteOrigin}/blog/${getSlug(selectedPost.value)}`,
-            },
-          }),
-        },
-      ];
-    }
-
-    return [
-      {
-        type: "application/ld+json",
-        innerHTML: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Blog",
-          blogPost: posts.value.map((post) => ({
-            "@type": "BlogPosting",
-            headline: post.title,
-            url: `${siteOrigin}/blog/${getSlug(post)}`,
-            datePublished: post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
-            author: {
-              "@type": "Person",
-              name: personRawData.value?.author[lang.value] ?? personRawData.value?.author?.en,
-            },
-          })),
-        }),
-      },
-    ];
-  }),
-
-  meta: computed(() => {
-    if (!showModal.value || !selectedPost.value) {
-      return [
-        {
-          name: "description",
-          content: baseTitle.value,
-        },
-        {
-          property: "og:url",
-          content: `${siteOrigin}/blog`,
-        },
-        {
-          property: "og:type",
-          content: "website",
-        },
-      ];
-    }
-
-    const blocks = selectedPost.value?.blocks ?? [];
-
-    const desc = getDescriptionText(blocks);
-
-    const firstImg = (getImageBlocks(blocks)?.[0]?.content as ImageContent[])?.[0]?.src ?? "";
-
-    return [
-      {
-        name: "description",
-        content: desc,
-      },
-      {
-        property: "og:description",
-        content: desc,
-      },
-      {
-        property: "og:image",
-        content: firstImg,
-      },
-      {
-        property: "og:title",
-        content: selectedPost.value.title ?? "",
-      },
-      {
-        property: "article:published_time",
-        content: selectedPost.value.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
-      },
-      {
-        property: "og:type",
-        content: "article",
-      },
-      {
-        property: "og:url",
-        content: `${siteOrigin}/blog/${getSlug(selectedPost.value)}`,
-      },
-    ];
-  }),
-});
-
-const richTextCache = new WeakMap<PostBlock, TextToken[]>();
-const parsedBlocks = computed<PostBlock[]>(() => {
-  if (!selectedPost.value?.blocks) return [];
-  return selectedPost.value.blocks.map((block) => {
-    if (block.type === "text") {
-      let tokens = richTextCache.get(block);
-      if (!tokens) {
-        tokens = parseRichText(block.content as string);
-        richTextCache.set(block, tokens);
-      }
-      return {
-        ...block,
-        tokens,
-      };
-    }
-    return block;
-  });
-});
-
-onMounted(async () => {
-  const [postsData, titleData] = await Promise.all([
-    getPosts<Post>("blog"),
-    getSingle<WebTitleMap>("main", "webTitle.json"),
-  ]);
-
-  posts.value = postsData;
-  if (titleData) {
-    globalWebTitleMap.value = titleData;
-  }
-  if (Object.keys(route.query).length > 0) {
-    await router.replace({
-      path: route.path,
-      query: {},
-    });
-  }
-});
 const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
   const blocks = post.imageBlocks?.slice(0, 2) ?? [];
   return blocks
@@ -364,24 +104,10 @@ const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
     )
     .slice(0, 4);
 };
-watch(
-  () => yamlLoadingFault.value,
-  (v) => v && $message.warning(blogDisplay.value.partialLoadError, true, 3000),
-);
-
-watch(
-  () => listPrimaryError.value,
-  (v) => v && $message.warning(blogDisplay.value.listPrimaryError, true, 3000),
-);
-
-watch(
-  () => listSpareError.value,
-  (v) => v && $message.warning(blogDisplay.value.listSpareError, true, 3000),
-);
 </script>
 
 <template>
-  <div v-if="!(isSSR && selectedPost)" class="post-container">
+  <div v-if="ssrHidePosts" class="post-container">
     <article
       v-for="post in processedPosts"
       :key="post.time"

@@ -93,7 +93,7 @@ const getDescriptionText = (blocks?: PostBlock[]) => {
     .filter((b) => b.type === "text" || b.type === "center")
     .map((b) => (typeof b.content === "string" ? stripRichText(b.content) : ""))
     .join(" ");
-  return text.slice(0, 350);
+  return text.slice(0, 400);
 };
 
 const handleImgError = (e: Event, spareUrl?: string) => {

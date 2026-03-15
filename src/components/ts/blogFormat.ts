@@ -24,6 +24,31 @@ const isTagChar = (c: string) =>
   c === "_" ||
   c === "-";
 
+const findRawClose = (text: string, start: number): number => {
+  let pos = start;
+
+  while (pos < text.length) {
+    let lineEnd = text.indexOf("\n", pos);
+    if (lineEnd === -1) {
+      lineEnd = text.length;
+    } else if (lineEnd > pos && text[lineEnd - 1] === "\r") {
+      lineEnd--;
+    }
+    if (lineEnd === -1) lineEnd = text.length;
+    let s = pos;
+    let e = lineEnd;
+    while (s < e && /\s/.test(text[s])) s++;
+    while (e > s && /\s/.test(text[e - 1])) e--;
+    if (e - s === RAW_CLOSE.length && text.startsWith(RAW_CLOSE, s)) {
+      return s;
+    }
+
+    pos = lineEnd + 1;
+  }
+
+  return -1;
+};
+
 const extractText = (tokens?: TextToken[]): string => {
   if (!tokens?.length) return "";
   return tokens.map((t) => (typeof t.value === "string" ? t.value : extractText(t.value))).join("");
@@ -66,7 +91,9 @@ const splitTokensByPipe = (tokens: TextToken[]): TextToken[][] => {
     let pipeIdx: number;
     while ((pipeIdx = token.value.indexOf(TAG_DIVIDER, sPos)) !== -1) {
       let segment = token.value.slice(sPos, pipeIdx);
-      segment = segment.replace(/\s+$/, "");
+      let end = segment.length;
+      while (end > 0 && segment[end - 1] === " ") end--;
+      segment = segment.slice(0, end);
       pushText(segment);
       parts.push([]);
       sPos = pipeIdx + 1;
@@ -229,22 +256,7 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
             buffer = "";
             const arg = text.slice(j + 1, k).trim();
             const contentStart = k + RAW_OPEN.length;
-            let end = -1;
-            let pos = contentStart;
-            while (true) {
-              pos = text.indexOf(RAW_CLOSE, pos);
-              if (pos === -1) break;
-              const before = pos === 0 || text[pos - 1] === "\n";
-              const after =
-                pos + RAW_CLOSE.length === text.length ||
-                text[pos + RAW_CLOSE.length] === "\n" ||
-                text.startsWith("\r\n", pos + RAW_CLOSE.length);
-              if (before && after) {
-                end = pos;
-                break;
-              }
-              pos += RAW_CLOSE.length;
-            }
+            const end = findRawClose(text, contentStart);
             if (end === -1) {
               const rawEntry = commonI18n.richTextRawNotClosed as I18nMap;
               const rawMsg = (rawEntry[lang.value] || rawEntry.en).replace("{i}", String(i));
@@ -318,8 +330,12 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
       i += END_TAG.length;
 
       if (BLOCK_TYPES_SET.has(node.tag as BlockType)) {
-        if (text.startsWith("\r\n", i)) i += 2;
-        else if (text[i] === "\n") i++;
+        if (text[i] === "\r") {
+          if (text[i + 1] === "\n") i += 2;
+          else i += 1;
+        } else if (text[i] === "\n") {
+          i += 1;
+        }
       }
 
       continue;
@@ -371,24 +387,7 @@ export const stripRichText = (text?: string): string => {
           const closePos = k - 1;
           if (text.startsWith(RAW_OPEN, closePos)) {
             const contentStart = closePos + RAW_OPEN.length;
-            let end = -1;
-            let pos = contentStart;
-            while (true) {
-              pos = text.indexOf(RAW_CLOSE, pos);
-              if (pos === -1) break;
-
-              const before = pos === 0 || text[pos - 1] === "\n";
-              const after =
-                pos + RAW_CLOSE.length === text.length ||
-                text[pos + RAW_CLOSE.length] === "\n" ||
-                text.startsWith("\r\n", pos + RAW_CLOSE.length);
-              if (before && after) {
-                end = pos;
-                break;
-              }
-              pos += RAW_CLOSE.length;
-            }
-
+            const end = findRawClose(text, contentStart);
             if (end !== -1) {
               result += text.slice(contentStart, end);
               i = end + RAW_CLOSE.length;
@@ -402,8 +401,12 @@ export const stripRichText = (text?: string): string => {
             result += stripRichText(inner);
             i = closePos + END_TAG.length;
             if (BLOCK_TYPES_SET.has(tagName as BlockType)) {
-              if (text.startsWith("\r\n", i)) i += 2;
-              else if (text[i] === "\n") i++;
+              if (text[i] === "\r") {
+                if (text[i + 1] === "\n") i += 2;
+                else i += 1;
+              } else if (text[i] === "\n") {
+                i += 1;
+              }
             }
             matched = true;
           }

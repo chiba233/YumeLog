@@ -41,3 +41,5 @@ blocks:
       $$info(title|hello $$bold(world)$$|bye)$$
       $$info(a|b|c|d)$$
            $$link(https://baidu.com | $$bold($$underline(点我进)$$入)$$ 百  度| 百 |度)$$
+      $$bold-test(hello $$bold(world)$$)$$
+      $$bold(hello $$bold(world)$$ test)$$

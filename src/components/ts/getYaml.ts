@@ -171,10 +171,12 @@ export const loadAllPosts = async <T extends BaseMetadata>(type: string): Promis
       (p as unknown as T & { _ts: number })._ts = parseTime(p.time);
     });
     validData.sort((a, b) => {
-      if (a.pin && !b.pin) return -1;
-      if (!a.pin && b.pin) return 1;
-      const timeA = (a as unknown as T & { _ts: number })._ts;
-      const timeB = (b as unknown as T & { _ts: number })._ts;
+      const isPinA = a.pin === true || (a.pin as unknown) === "true";
+      const isPinB = b.pin === true || (b.pin as unknown) === "true";
+      if (isPinA && !isPinB) return -1;
+      if (!isPinA && isPinB) return 1;
+      const timeA = (a as unknown as { _ts: number })._ts;
+      const timeB = (b as unknown as { _ts: number })._ts;
       return timeB - timeA;
     });
     yamlLoading.value = false;

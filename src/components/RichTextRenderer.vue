@@ -107,7 +107,7 @@ const normalizeUrl = (raw: string): string | undefined => {
 <style lang="scss">
 %common-style {
   word-break: break-word;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   white-space: pre-wrap;
   color: #2b2628;
   text-shadow:
@@ -201,7 +201,6 @@ a.fw-link {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   z-index: 3;
-
   .rich-text-content,
   .center-text,
   .fw-link,

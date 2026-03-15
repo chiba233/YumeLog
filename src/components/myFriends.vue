@@ -12,7 +12,7 @@
       @mouseleave="onLeave"
       @mousemove="onMove"
     >
-      <div class="content">
+      <div class="friendsContent">
         <n-avatar
           :alt="lang === 'zh' ? friend.name : friend.alias"
           :fallback-src="friend.spare"
@@ -163,7 +163,7 @@ $transition-speed: 0.3s;
   }
 }
 
-.content {
+.friendsContent {
   display: flex;
   align-items: center;
   flex-direction: column;

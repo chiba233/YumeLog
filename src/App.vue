@@ -246,7 +246,7 @@ figure {
   backdrop-filter: blur(25px);
   max-height: 98dvh;
   .n-card-header {
-    padding: 1.3em 1.3em 0.5em !important;
+    padding: 1em 1.3em 0.5em !important;
   }
   .n-card-header__main {
     color: var(--global-theme-color-deep) !important;
@@ -310,7 +310,7 @@ figure {
       background-color: rgba(var(--global-theme-rgb-deep), 0.1);
     }
 
-    padding: 0.5em 1.3rem 1em !important;
+    padding: 0.2em 1rem 1em !important;
     -webkit-overflow-scrolling: touch;
   }
 }

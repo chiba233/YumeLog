@@ -1,5 +1,5 @@
 <template>
-  <div class="content">
+  <div class="homeContent">
     <h1 aria-hidden="false" class="sr-only">
       {{ globalWebTitleMap["home"]?.[lang] }}
     </h1>
@@ -35,7 +35,8 @@ import { lang } from "@/components/ts/setupLang.ts";
   white-space: nowrap;
   border-width: 0;
 }
-.content {
+
+.homeContent {
   width: 100%;
   display: flex;
   flex-direction: column;

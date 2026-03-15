@@ -1,7 +1,7 @@
 <template>
   <div class="root">
     <div class="title">
-      <h1 :lang="lang">{{ titleI18N[lang] || titleI18N.en }}</h1>
+      <h1 v-if="!(isSSR && selectedPost)" :lang="lang">{{ titleI18N[lang] || titleI18N.en }}</h1>
     </div>
 
     <blog-card></blog-card>
@@ -12,6 +12,9 @@
 import { lang } from "@/components/ts/setupLang.ts";
 import BlogCard from "@/components/blogCard.vue";
 import commonI18n from "@/data/I18N/commonI18n.json";
+import { selectedPost } from "@/components/ts/useGlobalState.ts";
+
+const isSSR = import.meta.env.SSR;
 
 const titleI18N = commonI18n.blogWelcome as Record<string, string>;
 </script>

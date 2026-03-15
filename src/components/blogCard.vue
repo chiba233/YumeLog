@@ -25,6 +25,7 @@ import {
   blogDisplay,
   currentPostTitle,
   globalWebTitleMap,
+  selectedPost,
   WebTitleMap,
 } from "@/components/ts/useGlobalState.ts";
 import { useRouteModal } from "@/components/ts/useRouteModal.ts";
@@ -37,7 +38,6 @@ const { getPosts, getSingle } = useContentStore();
 const { onMove, onLeave, onEnter } = useCardGlow();
 
 const posts = ref<Post[]>([]);
-const selectedPost = ref<Post | null>(null);
 const showModal = ref(false);
 const route = useRoute();
 const getSlug = (post?: Post | null) =>
@@ -93,7 +93,7 @@ const getDescriptionText = (blocks?: PostBlock[]) => {
     .filter((b) => b.type === "text" || b.type === "center")
     .map((b) => (typeof b.content === "string" ? stripRichText(b.content) : ""))
     .join(" ");
-  return text.slice(0, 250);
+  return text.slice(0, 350);
 };
 
 const handleImgError = (e: Event, spareUrl?: string) => {
@@ -119,10 +119,9 @@ const blogHandlers = computed(() => {
   const handlers: Record<string, () => void> = {};
 
   posts.value.forEach((post) => {
-    const key = getSlug(post);
-    if (!key) return;
-
-    handlers[key] = () => {
+    const slug = getSlug(post);
+    if (!slug) return;
+    handlers[slug] = () => {
       selectedPost.value = post;
       currentPostTitle.value = post.title ?? null;
     };
@@ -218,6 +217,8 @@ useHead({
           type: "application/ld+json",
           innerHTML: JSON.stringify({
             "@context": "https://schema.org",
+            "@id": `${siteOrigin}/blog/${getSlug(selectedPost.value)}`,
+            url: `${siteOrigin}/blog/${getSlug(selectedPost.value)}`,
             "@type": "BlogPosting",
             headline: post.title,
             datePublished: post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
@@ -280,7 +281,7 @@ useHead({
 
     const blocks = selectedPost.value?.blocks ?? [];
 
-    const desc = getDescriptionText(blocks).slice(0, 160);
+    const desc = getDescriptionText(blocks);
 
     const firstImg = (getImageBlocks(blocks)?.[0]?.content as ImageContent[])?.[0]?.src ?? "";
 
@@ -353,7 +354,16 @@ onMounted(async () => {
     });
   }
 });
-
+const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
+  const blocks = post.imageBlocks?.slice(0, 2) ?? [];
+  return blocks
+    .flatMap((block) =>
+      Array.isArray(block.content)
+        ? block.content.filter((img): img is ImageContent => !!img?.src)
+        : [],
+    )
+    .slice(0, 4);
+};
 watch(
   () => yamlLoadingFault.value,
   (v) => v && $message.warning(blogDisplay.value.partialLoadError, true, 3000),
@@ -381,11 +391,11 @@ watch(
       @mouseleave="onLeave"
       @mousemove="onMove"
     >
-      <div class="content">
+      <div class="postContent">
         <div class="post-header">
           <h2 :lang="post?.lang as string" class="post-title commonText">{{ post.title }}</h2>
           <div class="post-meta">
-            <n-icon v-if="post.pin" size="15">
+            <n-icon v-if="post.pin === true || (post.pin as unknown) === 'true'" size="15">
               <PushPinSharp />
             </n-icon>
             <span v-if="post.pin" class="time-divider">|</span>
@@ -397,16 +407,15 @@ watch(
 
         <div class="post-body">
           <div v-if="post.imageBlocks.length > 0" class="post-image">
-            <template v-for="(block, idx) in post.imageBlocks.slice(0, 2)" :key="idx">
-              <img
-                v-if="Array.isArray(block.content) && block.content[0]?.src"
-                :alt="block.content[0].desc"
-                :class="{ secondImg: idx === 1 }"
-                :src="block.content[0].src"
-                loading="lazy"
-                @error="(e) => handleImgError(e, (block.content as ImageContent[])?.[0]?.spareUrl)"
-              />
-            </template>
+            <img
+              v-for="(img, i) in getPreviewImages(post)"
+              :key="img.src"
+              :alt="img.desc"
+              :class="{ secondImg: i === 1, thirdImg: i === 2, fourthImg: i === 3 }"
+              :src="img.src"
+              loading="lazy"
+              @error="(e) => handleImgError(e, img.spareUrl)"
+            />
           </div>
 
           <div :class="{ 'expanded-text': !post.imageBlocks.length }" class="post-description">
@@ -436,13 +445,16 @@ watch(
       <p v-else :lang="lang">{{ blogDisplay.loading }}</p>
     </div>
   </div>
-  <div v-if="isSSR && selectedPost" aria-hidden="true" style="position: absolute; left: -9999px">
+  <div v-if="isSSR && selectedPost" style="position: absolute; left: -9999px">
     <article>
-      <h2>{{ selectedPost.title }}</h2>
-      <time :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')">
+      <h1 :lang="selectedPost?.lang as string">{{ selectedPost.title }}</h1>
+      <time
+        :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')"
+        :lang="lang"
+      >
         {{ selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") }}
       </time>
-      <span>{{ formatTime(selectedPost.time) }}</span>
+      <span :lang="lang">{{ formatTime(selectedPost.time) }}</span>
       <div v-for="(block, index) in parsedBlocks" :key="index">
         <div v-if="block.type === 'text'">
           <RichTextRenderer
@@ -469,13 +481,12 @@ watch(
     @mouseleave="onLeave"
     @mousemove="onMove"
   >
-    <n-card
-      v-if="selectedPost"
-      :lang="selectedPost?.lang as string"
-      :title="selectedPost.title"
-      class="postModel"
-      size="huge"
-    >
+    <n-card v-if="selectedPost" :lang="selectedPost?.lang as string" class="postModel" size="huge">
+      <template #header>
+        <h2 :lang="selectedPost?.lang as string" class="postCardTitle">
+          {{ selectedPost.title }}
+        </h2>
+      </template>
       <template #header-extra>
         <n-button circle tertiary @click="closePortal">
           <template #icon>
@@ -534,6 +545,12 @@ watch(
 <style lang="scss">
 @use "sass:color";
 
+.postCardTitle {
+  padding: 0;
+  font-size: 1.2rem;
+  margin: 0;
+  font-weight: normal;
+}
 .separator-icon {
   display: flex;
   align-items: center;
@@ -705,15 +722,18 @@ $border-radius: 16px;
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
-  gap: 1rem;
+  align-items: stretch;
+  gap: 0.8rem;
   padding: 1rem 0.5rem 4rem 0.5rem;
 }
 
-.content {
+.postContent {
   position: relative;
-  z-index: 10; // 必须高于伪元素
+  z-index: 10;
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .post-card {
@@ -723,11 +743,9 @@ $border-radius: 16px;
   -webkit-backdrop-filter: blur(15px);
   border-radius: $border-radius;
   padding: 0.8rem;
-
-  // 核心变量
   --mx: -100px;
   --my: -100px;
-  --opacity: 0; // 默认光是隐藏的
+  --opacity: 0;
   position: relative;
   overflow: hidden;
   transition:
@@ -737,7 +755,7 @@ $border-radius: 16px;
   @media (min-width: 900px) {
     width: 25rem;
   }
-  // 1. 面光 (Surface Glow) - 柔和的大范围光晕
+
   &::before {
     content: "";
     position: absolute;
@@ -753,38 +771,24 @@ $border-radius: 16px;
     pointer-events: none;
   }
 
-  // 2. 边框光 (Border Glow)
   &::after {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    padding: 1px; // 边框粗细
-
-    // 1. 定义遮罩源（IDE 现在能理解 mask-image 接受渐变了）
-    // noinspection CssInvalidPropertyValue
+    padding: 1px;
     -webkit-mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
     mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-
-    // 2. 分别指定裁剪区域
-    // 第一层对应 content-box，第二层对应 border-box
-    // noinspection CssInvalidPropertyValue
     -webkit-mask-clip: content-box, border-box;
     mask-clip: content-box, border-box;
-
-    // 3. 核心：排除操作
-    // Webkit 使用 xor，标准使用 exclude
     -webkit-mask-composite: xor;
     mask-composite: exclude;
-
-    // 4. 背景光斑逻辑（保持不变）
     background: radial-gradient(
       120px circle at var(--mx) var(--my),
       rgba(251, 238, 241, 0.7),
       rgba(251, 238, 241, 0.2) 30%,
       transparent 70%
     );
-
     z-index: 2;
     opacity: var(--opacity);
     transition: opacity 0.4s ease;
@@ -852,7 +856,7 @@ $border-radius: 16px;
   .post-body {
     display: flex;
     gap: 0.5rem;
-    align-items: center;
+    align-items: stretch;
     overflow: hidden;
     flex: 1;
 
@@ -864,11 +868,14 @@ $border-radius: 16px;
     .post-image {
       display: flex;
       justify-content: center;
+      align-content: center;
+      text-align: center;
+      align-items: center;
+      flex-shrink: 0;
 
       img {
         z-index: 3;
         width: 120px;
-        flex-shrink: 0;
         height: 120px;
         object-fit: cover;
         border-radius: 12px;
@@ -876,12 +883,29 @@ $border-radius: 16px;
         margin: 0 0.25rem;
       }
 
-      .secondImg {
+      .thirdImg,
+      .secondImg,
+      .fourthImg {
         z-index: 3;
         @media (min-width: 900px) {
           display: none;
         }
+      }
+
+      .thirdImg {
+        @media (max-width: 450px) {
+          display: none;
+        }
+      }
+
+      .secondImg {
         @media (max-width: 300px) {
+          display: none;
+        }
+      }
+
+      .fourthImg {
+        @media (max-width: 600px) {
           display: none;
         }
       }
@@ -891,6 +915,7 @@ $border-radius: 16px;
       display: flex;
       flex: 1;
       min-width: 0;
+      align-items: center;
 
       &.expanded-text p {
         @media (max-width: 900px) {

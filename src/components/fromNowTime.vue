@@ -107,7 +107,6 @@ const buttonTitle = computed(() => {
 
 <style lang="scss">
 .n-modal-container .fromTimeCard {
-  max-height: 92dvh;
   --mx: -100px;
   --my: -100px;
   --opacity: 0;

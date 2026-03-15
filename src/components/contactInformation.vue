@@ -419,7 +419,7 @@ watch([showWechatModel, showLineModel], async ([wechat, line]) => {
 }
 
 .catCard {
-  max-width: 48em;
+  width: 53em;
 }
 
 .maiCard {

@@ -160,6 +160,7 @@ $transition-speed: 0.3s;
   margin-bottom: 4rem;
   @media (min-width: 975px) {
     max-width: 95%;
+    margin: auto;
   }
 }
 

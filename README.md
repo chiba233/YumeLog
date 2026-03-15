@@ -71,7 +71,8 @@
 - **框架 & 语言**: Vue 3 (Composition API) / TypeScript (Strict Mode)
 - **UI & 样式**: Naive UI (针对毛玻璃美学与移动端魔改)
 - **构建 & SEO**: Vite 7 / Vite SSG
-- **数据处理**: `js-yaml` (仅用于解析结构，DOM 渲染由自研 Parser 全权接管)
+- **数据处理**: `js-yaml` (仅用于解析非富文本内容，自制递归DSL语法不是很适配yaml所以用了特殊替代，DOM 渲染由自研 Parser
+  全权接管)
 - **依赖管理**: `pnpm` (>= 10.0.0), Node.js (>= 24.0.0)
 
 ---
@@ -205,34 +206,70 @@ const a = 1
 | **warning**   | 警告提示框       | yes       | yes      | `(title \| text)` or  `(title)%正文` |
 | **raw-code**  | 行内代码        | yes       | no       | `(code-lang \| code-title)%正文`     |
 
-### 完整 YAML 块级驱动示例
+### 🏗️ 块级架构语法指南 (Block-level Syntax)
 
-```yaml
-id: "test"
-time: "20260106"
-pin: true
-title: "DSL 渲染测试"
-blocks:
-  - type: "text"
-    content: |
-      $$center($$bold($$underline(多层嵌套测试)$$)$$)$$
-      $$info(typescript | const a = ref(true))$$
-      $$warning(error | 发生未知错误！)$$
-      $$link([https://baidu.com](https://baidu.com) | $$bold(点我进入百度)$$)$$
-      $$raw-code(yaml | 示例)%
-      纯净文本，忽略所有 $$tag()$$
-      %end$$
-  - type: "divider"
-  - type: "image"
-    content:
-      - src: /background0.webp
-        spareUrl: /background0.webp
-        desc: "绝美风景"
+yumeLog 采用自研的 **块驱动架构 (Block-driven Architecture)**。文章由多个独立的 `@type` 块组成，这种设计让静态页面也能拥有极强的组件化能力和解析效率。
+
+#### 1. 基础结构 (Base Structure)
+
+每个块必须以 `@` 符号开始，并以 `@end` 独立占行闭合。
+
+#### 2. 标准块清单 (Available Blocks)
+
+| 块指令 (@type)  | 角色定位      | 内部语法要求                          |  是否必选   |
+|:-------------|:----------|:--------------------------------|:-------:|
+| **@meta**    | **文章元数据** | **YAML** (定义 id, title, time 等) | **YES** |
+| **@text**    | **富文本正文** | **DSL** + 纯文本 (支持嵌套)            |   NO    |
+| **@divider** | **逻辑分割线** | (留空即可)                          |   NO    |
+| **@image**   | **多轨媒体块** | **YAML List** (支持容灾链接)          |   NO    |
+
+#### 文章元信息 (`@meta`)
+
+每篇文章**必须**以 `@meta` 开头，用于驱动 SEO、路由映射及页面布局。
+
+```text
+@meta
+layout: common        # 布局模板
+time: 20260316        # 日期 (YYYYMMDD)
+lang: zh              # 语言 (zh/en/ja等)
+id: bangkok-life      # 唯一 ID (用于路由访问)
+pin: true             # 是否置顶
+title: 曼谷的午后喵     # 文章标题
+@end
 ```
 
+#### 富文本容器 (@text)
+
+渲染引擎的核心。内部支持所有 `dsl` 指令，负责承载主要的文字内容。
+
+```text
+@text
+这是一段普通的文字。
+$$center($$bold(这是居中且加粗的文字喵！))$$
+@end
+```
+
+#### 容灾图像块 (@image)
+
+专为图片高可用设计，支持定义主地址与热备地址。
+
+```text
+@image
+- src: /images/main.webp
+  spareUrl: [https://cdn.example.com/backup.webp](https://cdn.example.com/backup.webp)
+  desc: 三花猫 Mīkè 的日常
+@end
+```
+
+#### 视觉分割线 (@divider)
+
+```text
+@divider
+@end
+```
 ---
 
-## ⚙️ 核心配置与自定义指南
+## 核心配置与自定义指南
 
 由于 **yumeLog 是纯前端静态架构（无后端）**，所有数据均通过仓库中的本地文件或远程 JSON/YAML 驱动。如果需要修改内容，请严格按照以下说明操作。
 

@@ -5,6 +5,8 @@ import { $message } from "@/components/ts/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
 import { BaseMetadata, YamlUrlConfig } from "@/components/ts/d.ts";
+import { parseDSL } from "./dsl/parseDSL";
+import { astToPost } from "@/components/ts/adapter/astToPost.ts";
 
 const limit = pLimit(6);
 
@@ -146,11 +148,8 @@ export const loadAllPosts = async <T extends BaseMetadata>(type: string): Promis
         }
         if (res && res.ok) {
           const text = await res.text();
-          const parsed: unknown = yaml.load(text, { schema: yaml.FAILSAFE_SCHEMA });
-          if (parsed === null || typeof parsed !== "object") {
-            return null;
-          }
-          return parsed as T;
+          const ast = parseDSL(text);
+          return astToPost(ast) as T;
         } else {
           yamlLoadingFault.value = true;
           return null;

@@ -269,6 +269,8 @@ const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
 </template>
 
 <style lang="scss">
+$text-color: #2b2628;
+$border-radius: 16px;
 @use "sass:color";
 .postCardTitle {
   padding: 0;
@@ -284,22 +286,18 @@ const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
   margin: 0.5rem 0;
   font-weight: bold;
 }
-
 .separator-icon::before,
 .separator-icon::after {
   content: "";
   flex: 1;
   height: 2px;
 }
-
 .separator-icon::before {
   background: linear-gradient(to right, transparent, rgba(var(--global-theme-rgb-deep), 0.6));
 }
-
 .separator-icon::after {
   background: linear-gradient(to right, rgba(var(--global-theme-rgb-deep), 0.6), transparent);
 }
-
 .separator-icon span {
   padding: 0 20px;
   font-size: 14px;
@@ -313,25 +311,6 @@ const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
   white-space: pre-line;
   text-align: center;
 }
-
-.n-modal-container {
-  .postModel.n-card {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    max-height: 96dvh;
-    @media (max-width: 500px) {
-      max-height: 98dvh;
-    }
-
-    :deep(.n-card-header) {
-      flex-shrink: 0;
-    }
-  }
-}
-
-$text-color: #191919;
-$border-radius: 16px;
 
 .postCardImage {
   display: flex !important;
@@ -372,12 +351,23 @@ $border-radius: 16px;
 }
 
 .postModel {
-  max-width: 96%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: 99dvh !important;
+
+  :deep(.n-card-header) {
+    flex-shrink: 0;
+  }
+
+  max-width: 99%;
+  @media (min-width: 1050px) {
+    max-width: 75em !important;
+  }
   --mx: -100px;
   --my: -100px;
   --opacity: 0;
   position: relative;
-  overflow: hidden;
   transition:
     transform 0.2s,
     background-color 0.3s;
@@ -448,13 +438,13 @@ $border-radius: 16px;
   flex-wrap: wrap;
   justify-content: center;
   align-items: stretch;
-  gap: 0.8rem;
+  gap: 0.6rem;
   padding: 1rem 0.5rem 4rem 0.5rem;
 }
 
 .postContent {
   position: relative;
-  z-index: 10;
+  z-index: 3;
   width: 100%;
   height: 100%;
   display: flex;

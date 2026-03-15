@@ -244,7 +244,8 @@ figure {
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
   backdrop-filter: blur(25px);
-  max-height: 98dvh;
+  max-height: 99dvh;
+  max-width: 99%;
   .n-card-header {
     padding: 1em 1.3em 0.5em !important;
   }

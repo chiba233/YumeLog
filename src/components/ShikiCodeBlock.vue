@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { shallowRef, watch } from "vue";
+import { onBeforeMount, onServerPrefetch, shallowRef, watch } from "vue";
 import type { HighlighterCore } from "shiki/core";
 import type { ThemedToken } from "shiki";
 import { $message } from "@/components/ts/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
+import { getShiki } from "@/components/ts/shiki.ts";
 
 type I18nMap = Record<string, string>;
-
 type CodeLang = "typescript" | "html" | "bash" | "json" | "yaml" | "text" | "vue";
 
 interface Props {
@@ -15,7 +15,6 @@ interface Props {
   codeLang?: CodeLang;
   label?: string;
   title?: string;
-  highlighter: HighlighterCore | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -24,52 +23,66 @@ const props = withDefaults(defineProps<Props>(), {
   title: "",
 });
 
-function dedent(code: string): string {
+const tokenLines = shallowRef<ThemedToken[][]>([]);
+const internalHighlighter = shallowRef<HighlighterCore | null>(null);
+
+const dedent = (code: string): string => {
+  if (!code) return "";
   const lines = code.replace(/\t/g, "  ").split("\n");
   const indents = lines.filter((l) => l.trim().length).map((l) => l.match(/^ */)![0].length);
-
-  const minIndent = Math.min(...indents, Infinity);
-
+  const minIndent = indents.length ? Math.min(...indents) : 0;
   return lines
     .map((l) => l.slice(minIndent))
     .join("\n")
     .trim();
-}
+};
 
-const tokenLines = shallowRef<ThemedToken[][]>([]);
-
-function updateTokens() {
-  const highlighter = props.highlighter;
-
-  if (!highlighter) {
-    tokenLines.value = [];
-    return;
-  }
+const updateTokens = () => {
+  const h = internalHighlighter.value;
+  if (!h) return;
 
   try {
     const cleanCode = dedent(props.code);
-
-    tokenLines.value = highlighter.codeToTokens(cleanCode, {
+    tokenLines.value = h.codeToTokens(cleanCode, {
       lang: props.codeLang,
       theme: "github-light-high-contrast",
     }).tokens;
-  } catch {
+  } catch (e) {
+    if (import.meta.env.SSR) {
+      console.error("[Shiki Error]:", e);
+    }
     const ShikiErrorLanguage = commonI18n.ShikiErrorLanguage as I18nMap;
     $message.error(ShikiErrorLanguage[lang.value], true, 3000);
     tokenLines.value = [];
   }
-}
-watch(
-  () => props.highlighter,
-  () => updateTokens(),
-  { immediate: true },
-);
+};
 
+const init = async () => {
+  internalHighlighter.value = await getShiki();
+  updateTokens();
+};
+
+if (import.meta.env.SSR) {
+  onServerPrefetch(async () => {
+    await init();
+  });
+}
+
+onBeforeMount(async () => {
+  if (tokenLines.value.length === 0) {
+    await init();
+  } else {
+    await getShiki().then((h) => {
+      internalHighlighter.value = h;
+    });
+  }
+});
+
+watch(internalHighlighter, () => updateTokens());
 watch(
   () => props.code,
   () => updateTokens(),
 );
-
 watch(
   () => props.codeLang,
   () => updateTokens(),
@@ -94,7 +107,7 @@ watch(
       v-text="token.content"
     /></span></code><code
       v-else
-      class="fallback-code"
+      class="fallback-code "
       v-text="code"
     /></pre>
   </div>

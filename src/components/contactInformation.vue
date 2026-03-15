@@ -270,7 +270,7 @@ const handleContactClick = async (item: PlatformConfig): Promise<void> => {
   if (item.type === "link") {
     const url = socialLinks.value[item.id as keyof typeof socialLinks.value];
     if (url) {
-      window.open(url);
+      window.open(url, "_blank", "noopener,noreferrer");
     } else {
       const socialEntry = commonI18n.socialLinkNotFound as I18nMap;
       const socialMsg = (socialEntry[lang.value] || socialEntry.en).replace("{id}", item.id);

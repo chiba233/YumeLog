@@ -34,7 +34,7 @@ const pathEntry = commonI18n.configPathFetchFailed as I18nMap;
 const configTypeError = commonI18n.configTypeError as I18nMap;
 const yamlLoadFailed = commonI18n.yamlLoadFailed as I18nMap;
 
-export function getYamlConfig(): Promise<YamlUrlConfig> {
+export const getYamlConfig = (): Promise<YamlUrlConfig> => {
   const now = Date.now();
   if (!memoizedConfig || now - cacheTime > TTL) {
     cacheTime = now;
@@ -54,7 +54,7 @@ export function getYamlConfig(): Promise<YamlUrlConfig> {
   }
 
   return memoizedConfig;
-}
+};
 
 export const yamlLoading = ref<boolean>(false);
 export const yamlRetrying = ref<boolean>(false);

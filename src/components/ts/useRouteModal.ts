@@ -5,7 +5,7 @@ import { lang } from "@/components/ts/setupLang.ts";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { ModalOptions } from "@/components/ts/d.ts";
 
-export function useRouteModal({
+export const useRouteModal = ({
   modals,
   paramKey,
   paramSource = "query",
@@ -14,7 +14,7 @@ export function useRouteModal({
   loadHandlers,
   onAllClosed,
   onInvalidId,
-}: ModalOptions) {
+}: ModalOptions) => {
   if (import.meta.env.SSR) {
     return {
       openModal: async () => {},
@@ -195,4 +195,4 @@ export function useRouteModal({
     openModal,
     syncModalWithRoute,
   };
-}
+};

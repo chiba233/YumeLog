@@ -78,9 +78,9 @@ const friendsTitle = computed(() => {
     title: source.title[lang.value] ?? source.title.en,
   };
 });
-function openURL(url: string) {
-  window.open(url, "_blank");
-}
+const openURL = (url: string) => {
+  window.open(url, "_blank", "noopener,noreferrer");
+};
 const getAutoHostname = () => {
   if (import.meta.env.SSR) {
     if (import.meta.env.VITE_SITE_URL) {

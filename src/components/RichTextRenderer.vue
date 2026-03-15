@@ -1,16 +1,9 @@
 <script lang="ts" setup>
-import { type Component, onMounted, ref } from "vue";
 import { NAlert } from "naive-ui";
 import type { RichType, TextToken } from "./ts/d";
-import ShikiCodeBlock from "./ShikiCodeBlock.vue";
-import { getShiki } from "@/components/ts/shiki.ts";
-import { HighlighterCore } from "shiki/core";
+import { type Component, defineAsyncComponent } from "vue";
 
-const highlighter = ref<HighlighterCore | null>(null);
-
-onMounted(async () => {
-  highlighter.value = await getShiki();
-});
+const ShikiCodeBlock = defineAsyncComponent(() => import("@/components/ShikiCodeBlock.vue"));
 
 defineOptions({ name: "RichTextRenderer" });
 
@@ -19,7 +12,7 @@ defineProps<{
   lang?: string;
 }>();
 
-type RenderTarget = string | Component;
+type RenderTarget = string | Component | ReturnType<typeof defineAsyncComponent>;
 
 const tagMap: Record<RichType, RenderTarget> = {
   bold: "strong",
@@ -72,7 +65,6 @@ const normalizeUrl = (raw: string): string | undefined => {
               codeLang: token.codeLang,
               title: token.title,
               label: token.label,
-              highlighter: highlighter || null,
             }
           : {}
       "

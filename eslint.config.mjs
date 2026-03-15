@@ -13,6 +13,7 @@ export default tseslint.config(
       ".idea/**",
       "public/**",
       "eslint.config.mjs",
+      "components.d.ts",
     ],
   },
   ...tseslint.configs.recommendedTypeChecked,

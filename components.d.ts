@@ -19,6 +19,12 @@ declare module 'vue' {
     I18nComponents: typeof import('./src/components/i18nComponents.vue')['default']
     MessageProvider: typeof import('./src/components/MessageProvider.vue')['default']
     MyFriends: typeof import('./src/components/myFriends.vue')['default']
+    NAlert: typeof import("naive-ui")["NAlert"];
+    NButton: typeof import("naive-ui")["NButton"];
+    NCard: typeof import("naive-ui")["NCard"];
+    NIcon: typeof import("naive-ui")["NIcon"];
+    NImage: typeof import("naive-ui")["NImage"];
+    NModal: typeof import("naive-ui")["NModal"];
     PersonalIntroduction: typeof import('./src/components/personalIntroduction.vue')['default']
     RichTextRenderer: typeof import('./src/components/RichTextRenderer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

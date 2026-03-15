@@ -1,6 +1,6 @@
 import { ref } from "vue";
 
-export function useCardGlow() {
+export const useCardGlow = () => {
   const cardRef = ref<HTMLElement | null>(null);
 
   let rect: DOMRect | null = null;
@@ -45,4 +45,4 @@ export function useCardGlow() {
     onMove,
     onLeave,
   };
-}
+};

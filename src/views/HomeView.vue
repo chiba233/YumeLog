@@ -35,7 +35,6 @@ import { lang } from "@/components/ts/setupLang.ts";
   white-space: nowrap;
   border-width: 0;
 }
-
 .homeContent {
   width: 100%;
   display: flex;

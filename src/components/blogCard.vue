@@ -449,8 +449,8 @@ watch(
     <article>
       <h1 :lang="selectedPost?.lang as string">{{ selectedPost.title }}</h1>
       <time
-        :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')"
         :lang="lang"
+        :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')"
       >
         {{ selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") }}
       </time>
@@ -544,7 +544,6 @@ watch(
 
 <style lang="scss">
 @use "sass:color";
-
 .postCardTitle {
   padding: 0;
   font-size: 1.2rem;
@@ -882,7 +881,6 @@ $border-radius: 16px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         margin: 0 0.25rem;
       }
-
       .thirdImg,
       .secondImg,
       .fourthImg {
@@ -891,19 +889,16 @@ $border-radius: 16px;
           display: none;
         }
       }
-
       .thirdImg {
         @media (max-width: 450px) {
           display: none;
         }
       }
-
       .secondImg {
         @media (max-width: 300px) {
           display: none;
         }
       }
-
       .fourthImg {
         @media (max-width: 600px) {
           display: none;

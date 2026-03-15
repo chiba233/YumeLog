@@ -27,7 +27,13 @@ export const blogUseHead = () => {
     return blocks.filter((b) => b.type === "image");
   };
   const postContext = computed(() => {
-    if (!showModal.value || !selectedPost.value) return null;
+    if (
+      !showModal.value ||
+      !selectedPost.value ||
+      (!selectedPost.value.id && !selectedPost.value.title)
+    ) {
+      return null;
+    }
     const post = selectedPost.value;
     const blocks = post.blocks ?? [];
     const slug = getSlug(post);
@@ -58,7 +64,6 @@ export const blogUseHead = () => {
 
     script: computed(() => {
       if (!isSSR) return [];
-
       if (postContext.value) {
         const ctx = postContext.value;
         return [

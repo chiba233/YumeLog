@@ -89,9 +89,8 @@ const normalizeUrl = (raw: string): string | undefined => {
         :tokens="token.value"
         :lang="lang"
       />
-      <template v-else-if="typeof token.value === 'string' && token.type !== 'raw-code'">{{
-          token.value
-        }}
+      <template v-else-if="typeof token.value === 'string' && token.type !== 'raw-code'"
+        >{{ token.value }}
       </template>
     </component>
   </template>

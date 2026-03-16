@@ -206,11 +206,11 @@ bold
 
 DSL 支持使用 `|` 传递多个参数，例如：
 
-$$link(url | text)$$
+`$$link(url | text)$$`
 
 解析为：
 
-[url, text]
+`[url, text]`
 
 注意：  
 

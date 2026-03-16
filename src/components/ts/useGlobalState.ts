@@ -83,7 +83,6 @@ export const parsedBlocks = shallowRef<PostBlock[]>([]);
 
 watch([selectedPost, showModal], async ([newPost, isShow]) => {
   if (!isShow || !newPost?.blocks) {
-    if (!import.meta.env.SSR) parsedBlocks.value = [];
     return;
   }
 

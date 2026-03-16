@@ -38,6 +38,11 @@ const handleImgError = (e: Event, spareUrl?: string) => {
   const target = e.target as HTMLImageElement;
   if (spareUrl) target.src = spareUrl;
 };
+const handleModalFinishedLeaving = () => {
+  if (!showModal.value) {
+    parsedBlocks.value = [];
+  }
+};
 const blogModals = computed(() => {
   const map: Record<string, typeof showModal> = {};
   posts.value.forEach((post) => {
@@ -212,6 +217,7 @@ const vA11y: Directive = {
   </div>
   <n-modal
     v-model:show="showModal"
+    :on-after-leave="handleModalFinishedLeaving"
     to="#modal-target"
     @mouseenter="onEnter"
     @mouseleave="onLeave"
@@ -258,16 +264,16 @@ const vA11y: Directive = {
                   v-if="img.src && changeSpareUrl === false"
                   :alt="img.desc"
                   :src="img.src"
-                  class="postCardImg"
                   lazy
+                  class="postCardImg"
                   width="120"
                 />
                 <n-image
                   v-if="img.src && changeSpareUrl === true"
                   :alt="img.desc"
                   :src="img.spareUrl"
-                  class="postCardImg"
                   lazy
+                  class="postCardImg"
                   width="120"
                 />
                 <div v-if="img.desc" class="postCardImageDesc">

@@ -667,6 +667,15 @@ title: 曼谷的午后喵     # 文章标题
 \@end
 @end
 
+@text
+\@image                     -->   @image
+\\@image                    -->   \@image
+\\\@image                   -->   \\@image
+- desc: "I \"love\" BKK"     -->   I "love" BKK
+- path: "C:\\\\Users"       -->   C:\\Users
+- mixed: "\\\\\\" "         -->   \\" 
+@end
+
 @image
 - desc: "I \"love\" Bangkok" //输出为I "love" Bangkok
 - desc: |

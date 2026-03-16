@@ -179,7 +179,7 @@ HTML Output
 
 扫描文本并识别 DSL 指令，例如：
 
-$$bold(Hello)$$
+`$$bold(Hello)$$`
 
 会被识别为：
 
@@ -192,7 +192,7 @@ content: Hello
 
 解析器会递归解析嵌套 DSL，例如：
 
-$$bold($$underline(Hello)$$)$$
+`$$bold($$underline(Hello)$$)$$`
 
 解析结构：
 

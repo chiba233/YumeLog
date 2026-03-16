@@ -128,10 +128,87 @@ server {
 
 ---
 
-## ✍️ 自研 DSL 语法指南 (DSL Grammar)
+## 自研 DSL 语法指南 (DSL Grammar)
 
 yumeLog 采用块级架构与自研 DSL 引擎渲染博客文本。文章可以指定 `id` 以便路由访问，也可以直接使用 `文章标题`
 作为页面链接，但是这两个你肯定必须写一个。
+
+### DSL 解析流程 (Parsing Pipeline)
+
+yumeLog 的富文本系统不是简单字符串替换，而是一个递归解析引擎。  
+DSL 文本会被转换为一棵 **Rich-Text AST（抽象语法树）**，再渲染为 Vue 组件。
+
+解析流程如下：
+
+Raw Text
+   │
+   ▼
+Tokenizer
+(识别 $$type(...)$$ 结构)
+   │
+   ▼
+AST Builder
+(递归解析嵌套 DSL)
+   │
+   ▼
+Argument Parser
+(解析 | 参数系统)
+   │
+   ▼
+Renderer
+(转换为 Vue 渲染结构)
+   │
+   ▼
+HTML Output
+
+1 Tokenizer  
+扫描文本并识别 DSL 指令，例如：
+
+$$bold(Hello)$$
+
+会被识别为：
+
+type: bold  
+content: Hello
+
+普通文本会作为 Text Token 保留。
+
+2 AST 构建  
+
+解析器会递归解析嵌套 DSL，例如：
+
+$$bold($$underline(Hello)$$)$$
+
+解析结构：
+
+bold  
+ └ underline  
+     └ Hello  
+
+因此 DSL 可以无限嵌套。
+
+3 参数解析  
+
+DSL 支持使用 `|` 传递多个参数，例如：
+
+$$link(url | text)$$
+
+解析为：
+
+[url, text]
+
+注意：  
+`|` 只会在 **纯文本 token** 中被识别，因此不会破坏嵌套结构。
+
+4 渲染阶段  
+
+最终 AST 会交给对应的渲染器，将 DSL 节点转换为 Vue 渲染结构，例如：
+
+bold → `<b>`  
+link → `<a>`  
+info → InfoBox 组件  
+
+最终输出为 HTML。
 
 ### 基础语法
 

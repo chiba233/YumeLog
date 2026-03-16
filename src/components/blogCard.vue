@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed, Directive } from "vue";
 import { useRouter } from "vue-router";
 import {
   changeSpareUrl,
@@ -29,6 +29,7 @@ import { getSlug, useRouteModal } from "@/components/ts/useRouteModal.ts";
 import RichTextRenderer from "@/components/RichTextRenderer.vue";
 import { ImageContent, Post, ProcessedPost } from "./ts/d";
 import { isSSR } from "./ts/useHead";
+import LazyBlock from "@/components/LazyBlock.vue";
 
 const ssrHidePosts = computed(() => !(isSSR && selectedPost.value));
 const { onMove, onLeave, onEnter } = useCardGlow();
@@ -103,6 +104,15 @@ const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
         : [],
     )
     .slice(0, 4);
+};
+
+const vA11y: Directive = {
+  mounted(el: HTMLElement) {
+    const header = el.querySelector(".n-card-header");
+    const main = el.querySelector(".n-card-header__main");
+    if (header) header.setAttribute("aria-level", "2");
+    if (main) main.setAttribute("aria-level", "2");
+  },
 };
 </script>
 
@@ -207,14 +217,20 @@ const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
     @mouseleave="onLeave"
     @mousemove="onMove"
   >
-    <n-card v-if="selectedPost" :lang="selectedPost?.lang as string" class="postModel" size="huge">
+    <n-card
+      v-if="selectedPost"
+      v-a11y
+      :lang="selectedPost?.lang as string"
+      class="postModel"
+      size="huge"
+    >
       <template #header>
         <h2 :lang="selectedPost?.lang as string" class="postCardTitle">
           {{ selectedPost.title }}
         </h2>
       </template>
       <template #header-extra>
-        <n-button circle tertiary @click="closePortal">
+        <n-button aria-label="Close" circle tertiary @click="closePortal">
           <template #icon>
             <n-icon size="20">
               <Cancel />
@@ -231,39 +247,41 @@ const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
           <span :lang="lang">{{ formatTime(selectedPost.time) }}</span>
         </div>
         <div v-for="(block, a) in parsedBlocks" :key="a" class="postCardBody">
-          <div v-if="block.type === 'image'" class="postCardImage">
-            <div
-              v-for="img in block.content as ImageContent[]"
-              :key="img.src"
-              class="postCardNImage"
-            >
-              <n-image
-                v-if="img.src && changeSpareUrl === false"
-                :alt="img.desc"
-                :src="img.src"
-                lazy
-                class="postCardImg"
-                width="120"
-              />
-              <n-image
-                v-if="img.src && changeSpareUrl === true"
-                :alt="img.desc"
-                :src="img.spareUrl"
-                lazy
-                class="postCardImg"
-                width="120"
-              />
-              <div v-if="img.desc" class="postCardImageDesc">
-                <span :lang="selectedPost?.lang as string" class="themeText">{{ img.desc }}</span>
+          <LazyBlock v-slot="{ combinedTokens }" :block="block">
+            <div v-if="block.type === 'image'" class="postCardImage">
+              <div
+                v-for="img in block.content as ImageContent[]"
+                :key="img.src"
+                class="postCardNImage"
+              >
+                <n-image
+                  v-if="img.src && changeSpareUrl === false"
+                  :alt="img.desc"
+                  :src="img.src"
+                  class="postCardImg"
+                  lazy
+                  width="120"
+                />
+                <n-image
+                  v-if="img.src && changeSpareUrl === true"
+                  :alt="img.desc"
+                  :src="img.spareUrl"
+                  class="postCardImg"
+                  lazy
+                  width="120"
+                />
+                <div v-if="img.desc" class="postCardImageDesc">
+                  <span :lang="selectedPost?.lang as string" class="themeText">{{ img.desc }}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div v-if="block.type === 'divider'" class="divider">
-            <div class="separator-icon"><span>✦</span></div>
-          </div>
-          <div v-if="block.type === 'text'" class="postCardText">
-            <RichTextRenderer :lang="selectedPost?.lang as string" :tokens="block.tokens!" />
-          </div>
+            <div v-if="block.type === 'divider'" class="divider">
+              <div class="separator-icon"><span>✦</span></div>
+            </div>
+            <div v-if="block.type === 'text'" class="postCardText">
+              <RichTextRenderer :lang="selectedPost?.lang as string" :tokens="combinedTokens" />
+            </div>
+          </LazyBlock>
         </div>
       </div>
     </n-card>

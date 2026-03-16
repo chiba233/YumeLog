@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { NAlert } from "naive-ui";
 import type { RichType, TextToken } from "./ts/d";
 import { type Component, defineAsyncComponent } from "vue";
+import { NAlert } from "naive-ui";
 
 const ShikiCodeBlock = defineAsyncComponent(() => import("@/components/ShikiCodeBlock.vue"));
 
@@ -89,9 +89,8 @@ const normalizeUrl = (raw: string): string | undefined => {
         :tokens="token.value"
         :lang="lang"
       />
-      <template v-else-if="typeof token.value === 'string' && token.type !== 'raw-code'">{{
-          token.value
-        }}
+      <template v-else-if="typeof token.value === 'string' && token.type !== 'raw-code'"
+        >{{ token.value }}
       </template>
     </component>
   </template>

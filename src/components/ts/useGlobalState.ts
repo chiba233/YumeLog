@@ -1,16 +1,8 @@
-import { computed, ref, shallowRef } from "vue";
+import { computed, ref, shallowRef, watch } from "vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
-import {
-  Friend,
-  NekoYamlResponse,
-  Post,
-  PostBlock,
-  ProcessedPost,
-  TextToken,
-  YamlNekoBlock,
-} from "./d";
+import { Friend, NekoYamlResponse, Post, PostBlock, ProcessedPost, YamlNekoBlock } from "./d";
 import { parseRichText, stripRichText } from "./dsl/semantic/blogFormat.ts";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
 import { socialRawData } from "@/components/ts/setupJson.ts";
@@ -87,23 +79,41 @@ export const processedPosts = computed<ProcessedPost[]>(() =>
   }),
 );
 
-export const parsedBlocks = computed<PostBlock[]>(() => {
-  const richTextCache = new WeakMap<PostBlock, TextToken[]>();
-  if (!selectedPost.value?.blocks) return [];
-  return selectedPost.value.blocks.map((block) => {
-    if (block.type === "text") {
-      let tokens = richTextCache.get(block);
-      if (!tokens) {
-        tokens = parseRichText(block.content as string);
-        richTextCache.set(block, tokens);
+export const parsedBlocks = shallowRef<PostBlock[]>([]);
+
+watch([selectedPost, showModal], async ([newPost, isShow]) => {
+  if (!isShow || !newPost?.blocks) {
+    if (!import.meta.env.SSR) parsedBlocks.value = [];
+    return;
+  }
+
+  const rawBlocks = newPost.blocks;
+  if (import.meta.env.SSR) {
+    parsedBlocks.value = rawBlocks.map((block) => {
+      if (block.type === "text" && typeof block.content === "string") {
+        return {
+          ...block,
+          tokens: parseRichText(block.content),
+        };
       }
+
       return {
         ...block,
-        tokens,
+        tokens: [],
       };
+    });
+    return;
+  }
+  const temp: PostBlock[] = [];
+  for (let i = 0; i < rawBlocks.length; i++) {
+    if (!showModal.value) break;
+    temp.push({ ...rawBlocks[i], tokens: [] });
+
+    if (i % 10 === 0 || i === rawBlocks.length - 1) {
+      parsedBlocks.value = [...temp];
+      await new Promise((r) => requestAnimationFrame(r));
     }
-    return block;
-  });
+  }
 });
 
 export const friendsTitle = computed(() => {

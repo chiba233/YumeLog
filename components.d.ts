@@ -17,6 +17,7 @@ declare module 'vue' {
     FromNowTime: typeof import('./src/components/fromNowTime.vue')['default']
     HomeTitle: typeof import('./src/components/homeTitle.vue')['default']
     I18nComponents: typeof import('./src/components/i18nComponents.vue')['default']
+    LazyBlock: typeof import("./src/components/LazyBlock.vue")["default"];
     MessageProvider: typeof import('./src/components/MessageProvider.vue')['default']
     MyFriends: typeof import('./src/components/myFriends.vue')['default']
     PersonalIntroduction: typeof import('./src/components/personalIntroduction.vue')['default']

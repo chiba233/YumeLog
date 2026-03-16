@@ -299,6 +299,238 @@ const a = 1
 | **warning**   | 警告提示框       | yes       | yes      | `(title \| text)` or  `(title)%正文` |
 | **raw-code**  | 行内代码        | yes       | no       | `(code-lang \| code-title)%正文`     |
 
+## 参数解析与 Fallback 规则
+
+DSL 在解析时会执行 **参数拆分与容错处理**。  
+为了保证 DSL 在各种输入情况下都能稳定运行，解析器定义了一套明确的 fallback 规则。
+
+---
+
+### 1 单参数 DSL
+
+当 DSL 只定义 **一个参数** 时：
+
+```text
+$$bold(text)$$
+```
+
+如果用户写：
+
+```text
+$$bold(hello world)$$
+```
+
+解析器会把整个内容视为一个参数：
+
+```text
+text = "hello world"
+```
+
+不会进行任何拆分。
+
+---
+
+### 2 多参数 DSL
+
+当 DSL 定义多个参数时，使用 `|` 分隔：
+
+```text
+$$link(url | text)$$
+```
+
+示例：
+
+```text
+$$link(https://google.com | Google)$$
+```
+
+解析结果：
+
+```text
+url = "https://google.com"
+text = "Google"
+```
+
+---
+
+### 3 参数数量不足
+
+当 DSL 需要多个参数，但只提供 **一个参数** 时，解析器会执行 fallback。
+
+例如：
+
+```text
+$$link(https://google.com)$$
+```
+
+解析器行为：
+
+```text
+url = "https://google.com"
+text = "https://google.com"
+```
+
+即：
+
+text 会 fallback 为 url。
+
+最终渲染效果：
+
+```html
+<a href="https://google.com">https://google.com</a>
+```
+
+---
+
+### 4 参数数量过多
+
+当参数数量 **超过 DSL 定义数量** 时：
+
+额外参数会被 **合并到最后一个参数**。
+
+示例：
+
+```text
+$$info(title | text | extra | more)$$
+```
+
+解析结果：
+
+```text
+title = "title"
+text = "textextramore"
+```
+
+解析器只会保留：
+
+```text
+(title, text)
+```
+
+---
+
+### 5 `|` 分隔符解析规则
+
+`|` 只会在 **纯文本 token** 中被识别。
+
+这意味着：
+
+```text
+$$link(url | $$bold(hello | world)$$)$$
+```
+
+内部的 `|` **不会影响外层参数解析**。
+
+解析器只会拆分：
+
+```text
+url
+$$bold(hello | world)$$
+```
+
+---
+
+### 6 空参数处理
+
+如果参数为空：
+
+```text
+$$info(|hello)$$
+```
+
+解析结果：
+
+```text
+title = ""
+text = "hello"
+```
+
+是否允许空值取决于 DSL 类型本身。
+
+---
+
+### 7 未注册 DSL 类型
+
+如果解析器遇到未注册 DSL：
+
+```text
+$$something(hello world)$$
+```
+
+解析器会执行 fallback：
+
+整个 DSL 会被当作普通文本输出：
+
+```text
+$$something(hello world)$$
+```
+
+不会进行任何渲染。
+
+这样可以避免解析器崩溃。
+
+---
+
+### 8 RAW BLOCK 特殊规则
+
+RAW BLOCK 内部 **不会解析任何 DSL 指令**。
+
+示例：
+
+```text
+$$raw-code(ts)%
+$$bold(this will not parse)$$
+%end$$
+```
+
+输出内容：
+
+```text
+$$bold(this will not parse)$$
+```
+
+RAW 只会检测：
+
+```text
+%end$$
+```
+
+作为闭合标记。
+
+并且：
+
+- `%end$$` **必须独占一行**
+- 不能有空格
+- 不能有任何额外字符
+
+否则 RAW block 不会被认为是合法闭合。
+
+---
+
+### 9 URL 参数限制
+
+对于 `link` 这样的 DSL：
+
+```text
+$$link(url | text)$$
+```
+
+URL **必须是纯文本 token**，不能嵌套 DSL。
+
+正确写法：
+
+```text
+$$link(https://google.com | $$bold(Google)$$)$$
+```
+
+错误写法：
+
+```text
+$$link($$bold(https://google.com)$$ | Google)$$
+```
+
+URL 位置必须保持为纯文本，否则行为未定义。
+
 ### 🏗️ 块级架构语法指南 (Block-level Syntax)
 
 yumeLog 采用自研的 **块驱动架构 (Block-driven Architecture)**。文章由多个独立的 `@type` 块组成，这种设计让静态页面也能拥有极强的组件化能力和解析效率。

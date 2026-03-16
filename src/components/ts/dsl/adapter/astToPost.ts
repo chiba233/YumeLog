@@ -1,6 +1,6 @@
-import { PostBlock } from "../d.ts";
-import { DSLTree } from "../dsl/ast.ts";
+import { PostBlock } from "../../d.ts";
 import { blockParsers } from "../semantic/blockParsers.ts";
+import { DSLTree } from "../parseDSL.ts";
 
 function applyMeta(content: string, target: Record<string, unknown>) {
   const lines = content.split(/\r\n|\n|\r/);

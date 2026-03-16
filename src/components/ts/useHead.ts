@@ -1,11 +1,17 @@
 import { useHead } from "@unhead/vue";
 import { computed } from "vue";
 import {
+  displayContent,
+  displayTitle,
+  friends,
+  friendsTitle,
   getDescriptionText,
   globalWebTitleMap,
+  platforms,
   posts,
   selectedPost,
   showModal,
+  socialLinks,
 } from "@/components/ts/useGlobalState.ts";
 import { lang } from "@/components/ts/setupLang.ts";
 import { getSlug } from "@/components/ts/useRouteModal.ts";
@@ -14,12 +20,10 @@ import { personRawData } from "@/components/ts/setupJson.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 
 export const isSSR = import.meta.env.SSR;
+const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
 
 export const blogUseHead = () => {
   const titleI18N = commonI18n.blogWelcome as Record<string, string>;
-  const siteOrigin = import.meta.env.SSR
-    ? import.meta.env.VITE_SSR_SITE_URL
-    : window.location.origin;
   const baseTitle = computed(() => globalWebTitleMap.value?.blog?.[lang.value] ?? "Blog");
   const getImageBlocks = (blocks?: PostBlock[]) => {
     if (!blocks) return [];
@@ -192,5 +196,108 @@ export const blogUseHead = () => {
         { property: "og:type", content: "article" },
       ];
     }),
+  });
+};
+export const friendsUseHead = () => {
+  const getAutoHostname = () => {
+    if (import.meta.env.SSR) {
+      if (import.meta.env.VITE_SITE_URL) {
+        return import.meta.env.VITE_SITE_URL.replace(/\/+$/, "");
+      }
+      return "localhost:14514";
+    }
+    return window.location.origin;
+  };
+  const baseOrigin = getAutoHostname();
+  const toAbsolute = (path: string) => {
+    if (!path) return "";
+    if (/^https?:\/\//.test(path)) return path;
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return `${baseOrigin}${cleanPath}`;
+  };
+  useHead({
+    script: [
+      {
+        type: "application/ld+json",
+        key: "friends-jsonld",
+        innerHTML: computed(() => {
+          return JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "@id": `${baseOrigin}#friends-list`,
+            name: friendsTitle.value.title,
+            numberOfItems: friends.value?.length || 0,
+            itemListElement: (friends.value || []).map((f, index) => ({
+              "@type": "ListItem",
+              position: index + 1,
+              item: {
+                "@type": "Person",
+                name: lang.value === "zh" ? f.name : f.alias,
+                image: toAbsolute(f.icon),
+                url: f.url,
+              },
+            })),
+          });
+        }),
+      },
+    ],
+  });
+};
+export const headLinks = computed(() => {
+  const links = socialLinks.value;
+  const social = platforms.value
+    .filter((p) => p.type === "link" && links[p.id as keyof typeof links])
+    .map((p) => ({
+      rel: "me",
+      href: links[p.id as keyof typeof links],
+      title: p.label,
+    }));
+  return [
+    ...social,
+    {
+      rel: "canonical",
+      href: `${siteOrigin}/blog`,
+      title: "Blog",
+    },
+    {
+      property: "og:url",
+      content: siteOrigin,
+    },
+  ];
+});
+export const homeTitleUseHead = () => {
+  useHead(() => ({
+    meta: [
+      {
+        property: "og:title",
+        content: displayTitle.value.slice(0, 160),
+      },
+      {
+        property: "og:image",
+        content: `${siteOrigin}/icon/icon.webp`,
+      },
+    ],
+  }));
+};
+export const personalIntroductionUseHead = () => {
+  useHead({
+    meta: [
+      {
+        name: "description",
+        content: computed(() => displayContent.value.slice(0, 160) || ""),
+      },
+      {
+        property: "og:description",
+        content: computed(() => displayContent.value.slice(0, 160) || ""),
+      },
+      {
+        property: "og:type",
+        content: "website",
+      },
+      {
+        property: "twitter:description",
+        content: computed(() => displayContent.value.slice(0, 160) || ""),
+      },
+    ],
   });
 };

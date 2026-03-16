@@ -241,6 +241,7 @@ const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
                 v-if="img.src && changeSpareUrl === false"
                 :alt="img.desc"
                 :src="img.src"
+                lazy
                 class="postCardImg"
                 width="120"
               />
@@ -248,6 +249,7 @@ const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
                 v-if="img.src && changeSpareUrl === true"
                 :alt="img.desc"
                 :src="img.spareUrl"
+                lazy
                 class="postCardImg"
                 width="120"
               />
@@ -355,11 +357,9 @@ $border-radius: 16px;
   flex-direction: column;
   overflow: hidden;
   max-height: 99dvh !important;
-
   :deep(.n-card-header) {
     flex-shrink: 0;
   }
-
   max-width: 99%;
   @media (min-width: 1050px) {
     max-width: 75em !important;

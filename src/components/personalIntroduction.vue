@@ -10,33 +10,11 @@
 
 <script lang="ts" setup>
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import { useYamlText } from "@/components/ts/useYamlI18n.ts";
-import { useHead } from "@unhead/vue";
-import { computed } from "vue";
 import { lang } from "@/components/ts/setupLang.ts";
+import { displayContent } from "@/components/ts/useGlobalState.ts";
+import { personalIntroductionUseHead } from "@/components/ts/useHead.ts";
 
-const displayContent = useYamlText("main", "introduction.yaml", "introduction");
-
-useHead({
-  meta: [
-    {
-      name: "description",
-      content: computed(() => displayContent.value.slice(0, 160) || ""),
-    },
-    {
-      property: "og:description",
-      content: computed(() => displayContent.value.slice(0, 160) || ""),
-    },
-    {
-      property: "og:type",
-      content: "website",
-    },
-    {
-      property: "twitter:description",
-      content: computed(() => displayContent.value.slice(0, 160) || ""),
-    },
-  ],
-});
+personalIntroductionUseHead();
 const { onMove, onLeave, onEnter } = useCardGlow();
 </script>
 

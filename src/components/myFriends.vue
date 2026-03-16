@@ -21,6 +21,7 @@
           }"
           :size="100"
           :src="friend.icon || friend.spare"
+          lazy
           bordered
           round
         />
@@ -33,24 +34,21 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onServerPrefetch, ref } from "vue";
+import { onMounted, onServerPrefetch } from "vue";
 import { NAvatar } from "naive-ui";
-import friendsMessage from "@/data/I18N/friendsMessage.json";
 import { lang } from "@/components/ts/setupLang.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
-import { useHead } from "@unhead/vue";
 import { $message } from "@/components/ts/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
-import { Friend, FriendsYamlResponse } from "./ts/d";
+import { FriendsYamlResponse } from "./ts/d";
+import { friends, friendsTitle } from "./ts/useGlobalState";
+import { friendsUseHead } from "@/components/ts/useHead.ts";
 
 type I18nMap = Record<string, string>;
 
-type I18nSource = Record<string, Record<string, string>>;
-
 const { onMove, onLeave, onEnter } = useCardGlow();
 const { getSingle } = useContentStore();
-const friends = ref<Friend[]>([]);
 const loadFriendsData = async () => {
   try {
     const rawData = await getSingle<FriendsYamlResponse>("main", "friends.yaml");
@@ -72,60 +70,12 @@ onMounted(() => {
     void loadFriendsData();
   }
 });
-const friendsTitle = computed(() => {
-  const source = friendsMessage as I18nSource;
-  return {
-    title: source.title[lang.value] ?? source.title.en,
-  };
-});
+
 const openURL = (url: string) => {
   window.open(url, "_blank", "noopener,noreferrer");
 };
-const getAutoHostname = () => {
-  if (import.meta.env.SSR) {
-    if (import.meta.env.VITE_SITE_URL) {
-      return import.meta.env.VITE_SITE_URL.replace(/\/+$/, "");
-    }
-    return "114.5.1.4";
-  }
-  return window.location.origin;
-};
-const baseOrigin = getAutoHostname();
 
-const toAbsolute = (path: string) => {
-  if (!path) return "";
-  if (/^https?:\/\//.test(path)) return path;
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  return `${baseOrigin}${cleanPath}`;
-};
-
-useHead({
-  script: [
-    {
-      type: "application/ld+json",
-      key: "friends-jsonld",
-      innerHTML: computed(() => {
-        return JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "ItemList",
-          "@id": `${baseOrigin}#friends-list`,
-          name: friendsTitle.value.title,
-          numberOfItems: friends.value?.length || 0,
-          itemListElement: (friends.value || []).map((f, index) => ({
-            "@type": "ListItem",
-            position: index + 1,
-            item: {
-              "@type": "Person",
-              name: lang.value === "zh" ? f.name : f.alias,
-              image: toAbsolute(f.icon),
-              url: f.url,
-            },
-          })),
-        });
-      }),
-    },
-  ],
-});
+friendsUseHead();
 </script>
 
 <style lang="scss">

@@ -6,7 +6,7 @@ import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
 import { BaseMetadata, YamlUrlConfig } from "@/components/ts/d.ts";
 import { parseDSL } from "./dsl/parseDSL";
-import { astToPost } from "@/components/ts/adapter/astToPost.ts";
+import { astToPost } from "@/components/ts/dsl/adapter/astToPost.ts";
 
 const limit = pLimit(6);
 

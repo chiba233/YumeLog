@@ -26,6 +26,7 @@
                 :fallback-src="item.imgError"
                 :src="item.img"
                 width="160"
+                lazy
               ></n-image>
               <figcaption :lang="lang" class="themeText">{{ item.imgName }}</figcaption>
             </figure>
@@ -135,12 +136,12 @@ import { useAsyncState, useStorage } from "@vueuse/core";
 import { lang } from "@/components/ts/setupLang.ts";
 import { themeColor } from "@/components/ts/useTheme.ts";
 import { getMaiUrl } from "./ts/maimaiScore";
-import { maiSections, socialRawData } from "@/components/ts/setupJson.ts";
-import { useHead } from "@unhead/vue";
+import { maiSections } from "@/components/ts/setupJson.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import {
   loadCat,
   nekoImg,
+  platforms,
   showCatModel,
   showLineModel,
   showMaiModal,
@@ -149,14 +150,11 @@ import {
 import { $message } from "./ts/msgUtils.ts";
 import { useRouteModal } from "./ts/useRouteModal.ts";
 import { PlatformConfig, PlatformId, UserDataType } from "./ts/d.ts";
+import { socialLinks } from "@/components/ts/useGlobalState.ts";
+import { headLinks } from "@/components/ts/useHead.ts";
+import { useHead } from "@unhead/vue";
 
 const { onMove, onLeave, onEnter } = useCardGlow();
-const platforms = computed(() => {
-  return socialRawData.value?.platforms ?? [];
-});
-const socialLinks = computed(() => {
-  return socialRawData.value?.socialLinks ?? {};
-});
 const syncContactWidth = () => {
   if (import.meta.env.SSR) return;
   const buttons = document.querySelectorAll<HTMLElement>(".cButton");
@@ -290,29 +288,13 @@ const getLabel = (item: PlatformConfig): string => {
   return item.label;
 };
 
-const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
-const headLinks = computed(() => {
-  const links = socialLinks.value;
+watch([showWechatModel, showLineModel], async ([wechat, line]) => {
+  if (!wechat && !line) return;
 
-  const social = platforms.value
-    .filter((p) => p.type === "link" && links[p.id as keyof typeof links])
-    .map((p) => ({
-      rel: "me",
-      href: links[p.id as keyof typeof links],
-      title: p.label,
-    }));
-  return [
-    ...social,
-    {
-      rel: "canonical",
-      href: `${siteOrigin}/blog`,
-      title: "Blog",
-    },
-    {
-      property: "og:url",
-      content: siteOrigin,
-    },
-  ];
+  await nextTick();
+
+  const overlay = document.querySelector(".n-image-preview-overlay");
+  overlay?.classList.add("contacts-overlay");
 });
 useHead({
   link: headLinks,
@@ -322,14 +304,6 @@ useHead({
       content: computed(() => data.value?.playerRating?.toString() || ""),
     },
   ],
-});
-watch([showWechatModel, showLineModel], async ([wechat, line]) => {
-  if (!wechat && !line) return;
-
-  await nextTick();
-
-  const overlay = document.querySelector(".n-image-preview-overlay");
-  overlay?.classList.add("contacts-overlay");
 });
 </script>
 

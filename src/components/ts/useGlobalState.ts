@@ -2,9 +2,21 @@ import { computed, ref, shallowRef } from "vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
 import { loadSingleYaml } from "@/components/ts/getYaml.ts";
-import { NekoYamlResponse, Post, PostBlock, ProcessedPost, TextToken, YamlNekoBlock } from "./d";
-import { parseRichText, stripRichText } from "./blogFormat";
+import {
+  Friend,
+  NekoYamlResponse,
+  Post,
+  PostBlock,
+  ProcessedPost,
+  TextToken,
+  YamlNekoBlock,
+} from "./d";
+import { parseRichText, stripRichText } from "./dsl/semantic/blogFormat.ts";
+import friendsMessage from "@/data/I18N/friendsMessage.json";
+import { socialRawData } from "@/components/ts/setupJson.ts";
+import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 
+type I18nSource = Record<string, Record<string, string>>;
 export type WebTitleMap = Record<string, Record<string, string>>;
 export const globalWebTitleMap = shallowRef<WebTitleMap>({});
 export const showCatModel = ref<boolean>(false);
@@ -15,6 +27,7 @@ export const currentPostTitle = ref<string | null>(null);
 export const selectedPost = ref<Post | null>(null);
 export const posts = ref<Post[]>([]);
 export const showModal = ref(false);
+export const friends = ref<Friend[]>([]);
 export const blogDisplay = computed(() => {
   const currentLang = lang.value;
   const source = blogI18nData as Record<string, Record<string, string>>;
@@ -31,6 +44,11 @@ export const blogDisplay = computed(() => {
 
   return displayObj;
 });
+export const socialLinks = computed(() => {
+  return socialRawData.value?.socialLinks ?? {};
+});
+export const displayTitle = useYamlText("main", "title.yaml", "title");
+export const displayContent = useYamlText("main", "introduction.yaml", "introduction");
 
 export const nekoImg = ref<YamlNekoBlock[]>([]);
 export const loadCat = async () => {
@@ -86,4 +104,15 @@ export const parsedBlocks = computed<PostBlock[]>(() => {
     }
     return block;
   });
+});
+
+export const friendsTitle = computed(() => {
+  const source = friendsMessage as I18nSource;
+  return {
+    title: source.title[lang.value] ?? source.title.en,
+  };
+});
+
+export const platforms = computed(() => {
+  return socialRawData.value?.platforms ?? [];
 });

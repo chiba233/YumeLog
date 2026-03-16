@@ -1,7 +1,7 @@
 import { $message } from "@/components/ts/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
-import { BLOCK_TYPES, BlockType, RICH_TYPES, RichType, TagHandler, TextToken } from "./d";
+import { BLOCK_TYPES, BlockType, RICH_TYPES, RichType, TagHandler, TextToken } from "../../d.ts";
 
 type I18nMap = Record<string, string>;
 const TAG_PREFIX = "$$";

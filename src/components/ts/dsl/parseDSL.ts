@@ -1,5 +1,19 @@
-import { DSLNode, DSLTree } from "./ast";
-import { syntax } from "./syntax";
+export interface DSLNode {
+  name: string;
+  content: string;
+}
+
+export type DSLTree = DSLNode[];
+
+export interface SyntaxConfig {
+  blockPrefix: string;
+  blockEnd: string;
+}
+
+export const syntax: SyntaxConfig = {
+  blockPrefix: "@",
+  blockEnd: "end",
+};
 
 function getBlockName(line: string): string | null {
   if (!line.startsWith(syntax.blockPrefix)) {
@@ -20,25 +34,24 @@ export function parseDSL(text: string): DSLTree {
   const lines = text.split(/\r\n|\n|\r/);
 
   const nodes: DSLNode[] = [];
-
   let currentName: string | null = null;
   let buffer: string[] = [];
 
   function flush(): void {
-    if (!currentName) {
-      return;
-    }
-
-    nodes.push({
-      name: currentName,
-      content: buffer.join("\n").trim(),
-    });
-
+    if (!currentName) return;
+    nodes.push({ name: currentName, content: buffer.join("\n").trim() });
     buffer = [];
     currentName = null;
   }
 
   for (const line of lines) {
+    if (line.startsWith("\\")) {
+      if (currentName) {
+        buffer.push(line.slice(1));
+      }
+      continue;
+    }
+
     const name = getBlockName(line);
 
     if (name !== null) {
@@ -53,8 +66,12 @@ export function parseDSL(text: string): DSLTree {
       currentName = name;
       continue;
     }
-    buffer.push(line);
+
+    if (currentName) {
+      buffer.push(line);
+    }
   }
+
   flush();
   if (currentName) {
     console.error(`DSL block not closed: ${currentName}`);

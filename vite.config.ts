@@ -35,7 +35,6 @@ interface Post extends BaseContent {
 }
 
 let cachedPosts: Post[] | null = null;
-
 function getSlug(post: Post): string | null {
   if (post.id) return post.id;
   if (post.title)

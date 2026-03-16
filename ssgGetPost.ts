@@ -1,5 +1,8 @@
-import yaml from "js-yaml";
+// noinspection ES6PreferShortImport
+
 import pLimit from "p-limit";
+import { parseDSL } from "./src/components/ts/dsl/parseDSL.ts";
+import { astToPost } from "./src/components/ts/dsl/adapter/astToPost.ts";
 
 const limit = pLimit(6);
 
@@ -60,10 +63,9 @@ export async function loadAllPostsForSSG(type: string): Promise<BaseContent[]> {
         if (!res.ok) return null;
 
         const text = await res.text();
-        const parsed = yaml.load(text);
-
+        const ast = parseDSL(text);
+        const parsed = astToPost(ast);
         if (!parsed || typeof parsed !== "object") return null;
-
         return parsed as BaseContent;
       }),
     ),

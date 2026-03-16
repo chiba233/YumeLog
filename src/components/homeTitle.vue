@@ -19,25 +19,12 @@
 <script lang="ts" setup>
 import { NAvatar } from "naive-ui";
 import icon from "../icons/icon.webp";
-import { useYamlText } from "@/components/ts/useYamlI18n.ts";
-import { useHead } from "@unhead/vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import { personRawData } from "@/components/ts/setupJson.ts";
+import { displayTitle } from "@/components/ts/useGlobalState.ts";
+import { homeTitleUseHead } from "@/components/ts/useHead.ts";
 
-const displayTitle = useYamlText("main", "title.yaml", "title");
-const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
-useHead(() => ({
-  meta: [
-    {
-      property: "og:title",
-      content: displayTitle.value.slice(0, 160),
-    },
-    {
-      property: "og:image",
-      content: `${siteOrigin}/icon/icon.webp`,
-    },
-  ],
-}));
+homeTitleUseHead();
 </script>
 
 <style lang="scss">

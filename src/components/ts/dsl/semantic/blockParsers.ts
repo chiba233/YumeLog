@@ -1,6 +1,5 @@
-import { ImageContent } from "../../d.ts";
+import { ImageContent, PostBlock } from "../../d.ts";
 import { parseDashObjectList } from "./parseDashList.ts";
-import { PostBlock } from "@/components/ts/d.ts";
 
 export type BlockContent = PostBlock["content"];
 

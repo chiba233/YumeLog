@@ -1,3 +1,11 @@
+// noinspection DuplicatedCode
+
+import commonI18n from "../../../../data/I18N/commonI18n.json";
+import { lang } from "../../setupLang.ts";
+import { $message } from "../../msgUtils.ts";
+
+type I18nMap = Record<string, string>;
+
 export const parseDashObjectList = (content: string): Record<string, string>[] => {
   const lines = content.split(/\r?\n/);
   const result: Record<string, string>[] = [];
@@ -41,8 +49,12 @@ export const parseDashObjectList = (content: string): Record<string, string>[] =
       const i = contentPart.indexOf(": ");
 
       if (i === -1) {
-        console.error(`[DSL Error] 格式错误，已忽略该行: "${raw}"`);
-        continue;
+        const FormatError = commonI18n.dslFormatError as I18nMap;
+        const FormatErrorMsg = (FormatError[lang.value] || FormatError.en).replace(
+          "{raw}",
+          String(raw),
+        );
+        $message.error(FormatErrorMsg, true, 3000);
       }
 
       if (isListItem) {
@@ -51,7 +63,11 @@ export const parseDashObjectList = (content: string): Record<string, string>[] =
       }
 
       if (!current) {
-        console.error(`[DSL Error] 孤立属性行，已忽略: "${raw}"`);
+        const dslIsolatedProperty = commonI18n.dslIsolatedProperty as I18nMap;
+        const dslIsolatedPropertyMsg = (
+          dslIsolatedProperty[lang.value] || dslIsolatedProperty.en
+        ).replace("{raw}", String(raw));
+        $message.error(dslIsolatedPropertyMsg, true, 3000);
         continue;
       }
 
@@ -65,7 +81,11 @@ export const parseDashObjectList = (content: string): Record<string, string>[] =
 
       current[key] = processValue(valuePart);
     } else {
-      console.error(`[DSL Warning] 无法识别的行，已跳过: "${raw}"`);
+      const dslUnrecognizedLine = commonI18n.dslUnrecognizedLine as I18nMap;
+      const dslUnrecognizedLineMsg = (
+        dslUnrecognizedLine[lang.value] || dslUnrecognizedLine.en
+      ).replace("{raw}", String(raw));
+      $message.error(dslUnrecognizedLineMsg, true, 3000);
     }
   }
 
@@ -75,7 +95,7 @@ export const parseDashObjectList = (content: string): Record<string, string>[] =
   return result;
 };
 
-function stripQuotes(value: string): string {
+const stripQuotes = (value: string): string => {
   if (/^(['"]).*\1$/.test(value)) {
     const quote = value[0];
     const content = value.slice(1, -1);
@@ -88,4 +108,4 @@ function stripQuotes(value: string): string {
   }
 
   return value;
-}
+};

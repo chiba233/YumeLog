@@ -1,3 +1,11 @@
+// noinspection DuplicatedCode
+
+import commonI18n from "@/data/I18N/commonI18n.json";
+import { lang } from "@/components/ts/setupLang.ts";
+import { $message } from "@/components/ts/msgUtils.ts";
+
+type I18nMap = Record<string, string>;
+
 export interface DSLNode {
   name: string;
   content: string;
@@ -15,7 +23,7 @@ export const syntax: SyntaxConfig = {
   blockEnd: "end",
 };
 
-function getBlockName(line: string): string | null {
+const getBlockName = (line: string): string | null => {
   if (!line.startsWith(syntax.blockPrefix)) {
     return null;
   }
@@ -27,9 +35,9 @@ function getBlockName(line: string): string | null {
   }
 
   return name;
-}
+};
 
-export function parseDSL(text: string): DSLTree {
+export const parseDSL = (text: string): DSLTree => {
   text = text.replace(/^\uFEFF/, "");
   const lines = text.split(/\r\n|\n|\r/);
 
@@ -37,12 +45,12 @@ export function parseDSL(text: string): DSLTree {
   let currentName: string | null = null;
   let buffer: string[] = [];
 
-  function flush(): void {
+  const flush = (): void => {
     if (!currentName) return;
     nodes.push({ name: currentName, content: buffer.join("\n").trim() });
     buffer = [];
     currentName = null;
-  }
+  };
 
   for (const line of lines) {
     if (line.startsWith("\\")) {
@@ -60,7 +68,11 @@ export function parseDSL(text: string): DSLTree {
         continue;
       }
       if (currentName) {
-        console.error(`Nested DSL block not allowed: ${name}`);
+        const dslNestedBlockNotAllowed = commonI18n.dslNestedBlockNotAllowed as I18nMap;
+        const dslNestedBlockNotAllowedMsg = (
+          dslNestedBlockNotAllowed[lang.value] || dslNestedBlockNotAllowed.en
+        ).replace("{name}", String(name));
+        $message.error(dslNestedBlockNotAllowedMsg, true, 3000);
       }
       flush();
       currentName = name;
@@ -74,7 +86,12 @@ export function parseDSL(text: string): DSLTree {
 
   flush();
   if (currentName) {
-    console.error(`DSL block not closed: ${currentName}`);
+    const dslBlockNotClosed = commonI18n.dslBlockNotClosed as I18nMap;
+    const dslBlockNotClosedMsg = (dslBlockNotClosed[lang.value] || dslBlockNotClosed.en).replace(
+      "{name}",
+      String(currentName),
+    );
+    $message.error(dslBlockNotClosedMsg, true, 3000);
   }
   return nodes;
-}
+};

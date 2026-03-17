@@ -1,8 +1,8 @@
-import { computed, onServerPrefetch, ref } from "vue"; // 记得引入 onMounted
+import { computed, onServerPrefetch, ref } from "vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 import { $message } from "@/components/ts/msgUtils.ts";
-import { I18nBlock } from "./d";
+import { CommonI18nBlock } from "./d";
 import commonI18n from "@/data/I18N/commonI18n.json";
 
 type I18nMap = Record<string, string>;
@@ -14,31 +14,40 @@ export const useYamlText = (type: string, fileName: string, keyName: string = "b
   const introData = ref<DynamicIntroduction | null>(null);
   const { getSingle } = useContentStore();
   const loadData = async () => {
+    if (introData.value) return;
     try {
       const res = await getSingle<DynamicIntroduction>(type, fileName);
       if (res) introData.value = res;
     } catch (e) {
-      const pathMsg = (yamlLoadFailed[lang.value] || yamlLoadFailed.en).replace("{err}", String(e));
-      $message.error(pathMsg, true, 3000);
+      if (!import.meta.env.SSR) {
+        const pathMsg = (yamlLoadFailed[lang.value] || yamlLoadFailed.en).replace(
+          "{err}",
+          String(e),
+        );
+        $message.error(pathMsg, true, 3000);
+      }
+      console.error(`[YAML Load Error] ${type}/${fileName}:`, e);
     }
   };
-  const loadPromise = loadData();
+
   if (import.meta.env.SSR) {
     onServerPrefetch(async () => {
-      await loadPromise;
+      await loadData();
     });
+  } else {
+    void loadData();
   }
+
   return computed(() => {
-    if (!introData.value || !Array.isArray(introData.value[keyName])) {
-      return "...";
-    }
-    const targetBlocks = introData.value[keyName] as I18nBlock[];
-    const targetLang = lang.value;
-    return (
-      targetBlocks.find((b) => b.type === targetLang)?.content ||
-      targetBlocks.find((b) => b.type === "en")?.content ||
-      targetBlocks[0]?.content ||
-      ""
-    );
+    const data = introData.value;
+    if (!data || !Array.isArray(data[keyName])) return "...";
+    const targetBlocks = data[keyName] as CommonI18nBlock[];
+    const currentLang = lang.value;
+    const found =
+      targetBlocks.find((b) => b.type === currentLang) ||
+      targetBlocks.find((b) => b.type === "en") ||
+      targetBlocks[0];
+
+    return found?.content ?? "";
   });
 };

@@ -166,5 +166,40 @@
     "ja": "Shiki が壊れちゃったみたい！確認してみて！",
     "th": "Shiki พังแล้ว! รีบตรวจสอบหน่อยนะ!",
     "other": "Shiki error occurred. Please check the configuration."
+  },
+  "dslFormatError": {
+    "zh": "[DSL Error] 格式错误，已忽略该行: \"{raw}\"",
+    "en": "[DSL Error] Format error, line ignored: \"{raw}\"",
+    "ja": "[DSL Error] フォーマットエラー。この行を無視しました: \"{raw}\"",
+    "th": "[DSL Error] รูปแบบผิดพลาด ข้ามบรรทัดนี้: \"{raw}\"",
+    "other": "[DSL Error] Format error, line ignored: \"{raw}\""
+  },
+  "dslIsolatedProperty": {
+    "zh": "[DSL Error] 发现孤立属性行，已忽略: \"{raw}\"",
+    "en": "[DSL Error] Isolated property line found, ignored: \"{raw}\"",
+    "ja": "[DSL Error] 孤立した属性行が見つかりました。無視されました: \"{raw}\"",
+    "th": "[DSL Error] พบบรรทัดคุณสมบัติที่แยกตัวออกมา ข้ามบรรทัดนี้: \"{raw}\"",
+    "other": "[DSL Error] Isolated property line found, ignored: \"{raw}\""
+  },
+  "dslUnrecognizedLine": {
+    "zh": "[DSL Warning] 无法识别的行，已跳过: \"{raw}\"",
+    "en": "[DSL Warning] Unrecognized line, skipped: \"{raw}\"",
+    "ja": "[DSL Warning] 認識できない行です。スキップしました: \"{raw}\"",
+    "th": "[DSL Warning] ไม่สามารถระบุบรรทัดนี้ได้ ข้ามบรรทัดนี้: \"{raw}\"",
+    "other": "[DSL Warning] Unrecognized line, skipped: \"{raw}\""
+  },
+  "dslNestedBlockNotAllowed": {
+    "zh": "[DSL Error] 不允许嵌套 DSL 块：\"{name}\"",
+    "en": "[DSL Error] Nested DSL block not allowed: \"{name}\"",
+    "ja": "[DSL Error] DSL ブロックの入れ子は許可されていません: \"{name}\"",
+    "th": "[DSL Error] ไม่อนุญาตให้ซ้อนบล็อก DSL: \"{name}\"",
+    "other": "[DSL Error] Nested DSL block not allowed: \"{name}\""
+  },
+  "dslBlockNotClosed": {
+    "zh": "[DSL Error] DSL 块未关闭：\"{name}\"",
+    "en": "[DSL Error] DSL block not closed: \"{name}\"",
+    "ja": "[DSL Error] DSL ブロックが閉じられていません: \"{name}\"",
+    "th": "[DSL Error] บล็อก DSL ยังไม่ได้ปิด: \"{name}\"",
+    "other": "[DSL Error] DSL block not closed: \"{name}\""
   }
 }

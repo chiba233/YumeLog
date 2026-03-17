@@ -8,9 +8,9 @@ import "dayjs/locale/th";
 import { ref, type Ref, watch } from "vue";
 import relativeTime from "dayjs/plugin/relativeTime";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import { $message } from "@/components/ts/msgUtils.ts";
-import { SelectOption } from "@/components/ts/d.ts";
-import commonI18n from "@/data/I18N/commonI18n.json";
+import { $message } from "./msgUtils.ts";
+import { SelectOption } from "./d.ts";
+import commonI18n from "../../data/I18N/commonI18n.json";
 
 dayjs.extend(buddhistEra);
 dayjs.extend(localizedFormat);

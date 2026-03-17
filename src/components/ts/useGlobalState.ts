@@ -6,7 +6,6 @@ import { Friend, NekoYamlResponse, Post, PostBlock, ProcessedPost, YamlNekoBlock
 import { parseRichText, stripRichText } from "./dsl/semantic/blogFormat.ts";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
 import { socialRawData } from "@/components/ts/setupJson.ts";
-import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 
 type I18nSource = Record<string, Record<string, string>>;
 export type WebTitleMap = Record<string, Record<string, string>>;
@@ -39,8 +38,6 @@ export const blogDisplay = computed(() => {
 export const socialLinks = computed(() => {
   return socialRawData.value?.socialLinks ?? {};
 });
-export const displayTitle = useYamlText("main", "title.yaml", "title");
-export const displayContent = useYamlText("main", "introduction.yaml", "introduction");
 
 export const nekoImg = ref<YamlNekoBlock[]>([]);
 export const loadCat = async () => {
@@ -57,27 +54,51 @@ export const loadCat = async () => {
   }
 };
 
-export const getDescriptionText = (blocks?: PostBlock[]) => {
-  if (!blocks) return "";
-  const text = blocks
-    .filter((b) => b.type === "text" || b.type === "center")
-    .map((b) => (typeof b.content === "string" ? stripRichText(b.content) : ""))
-    .join(" ");
-  return text.slice(0, 400);
+export const getDescriptionText = (blocks?: PostBlock[], targetLength = 160): string => {
+  if (!blocks || blocks.length === 0) return "";
+  let result = "";
+  for (const block of blocks) {
+    if (block.type === "text") {
+      const content = block.content;
+      if (typeof content === "string" && content.trim().length > 0) {
+        const strippedBlock = stripRichText(content);
+        if (strippedBlock.length > 0) {
+          result += (result ? " " : "") + strippedBlock;
+        }
+        if (result.length >= targetLength) {
+          break;
+        }
+      }
+    }
+  }
+
+  if (result.length > targetLength) {
+    return result.slice(0, targetLength).trim() + "...";
+  }
+
+  return result.trim();
 };
 
-export const processedPosts = computed<ProcessedPost[]>(() =>
-  posts.value.map((post) => {
+const descriptionCache = new WeakMap<object, string>();
+
+export const processedPosts = computed<ProcessedPost[]>(() => {
+  if (!posts.value) return [];
+  return posts.value.map((post) => {
     const blocks = post.blocks ?? [];
     const imageBlocks = blocks.filter((b) => b.type === "image");
+    let description = descriptionCache.get(post);
+    if (description === undefined) {
+      description = getDescriptionText(blocks, 350);
+      descriptionCache.set(post, description);
+    }
     return {
       ...post,
       blocks,
       imageBlocks,
-      displayDescription: getDescriptionText(blocks),
-    };
-  }),
-);
+      displayDescription: description,
+    } as ProcessedPost;
+  });
+});
 
 export const parsedBlocks = shallowRef<PostBlock[]>([]);
 

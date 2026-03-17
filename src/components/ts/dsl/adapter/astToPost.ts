@@ -1,8 +1,10 @@
+// noinspection DuplicatedCode
+
 import { PostBlock } from "../../d.ts";
 import { blockParsers } from "../semantic/blockParsers.ts";
 import { DSLTree } from "../parseDSL.ts";
 
-function applyMeta(content: string, target: Record<string, unknown>) {
+const applyMeta = (content: string, target: Record<string, unknown>) => {
   const lines = content.split(/\r\n|\n|\r/);
   for (const line of lines) {
     const i = line.indexOf(":");
@@ -10,9 +12,9 @@ function applyMeta(content: string, target: Record<string, unknown>) {
     const key = line.slice(0, i).trim();
     target[key] = line.slice(i + 1).trim();
   }
-}
+};
 
-export function astToPost(ast: DSLTree): Record<string, unknown> & { blocks: PostBlock[] } {
+export const astToPost = (ast: DSLTree): Record<string, unknown> & { blocks: PostBlock[] } => {
   const meta: Record<string, unknown> = {};
   const blocks: PostBlock[] = [];
 
@@ -23,7 +25,7 @@ export function astToPost(ast: DSLTree): Record<string, unknown> & { blocks: Pos
     }
 
     const block: PostBlock = {
-      type: node.name,
+      type: node.name as PostBlock["type"],
     };
 
     const parser = blockParsers[node.name];
@@ -41,4 +43,4 @@ export function astToPost(ast: DSLTree): Record<string, unknown> & { blocks: Pos
     ...meta,
     blocks,
   };
-}
+};

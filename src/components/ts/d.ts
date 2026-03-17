@@ -15,9 +15,14 @@ export interface SelectOption {
   label: string;
   value: string;
 }
+
+export interface CommonI18nBlock<T = string> {
+  type: string;
+  content?: T;
+}
 // 抽象所有“块”结构的基类，减少重复定义 type 和 content
 export interface BaseBlock<T = string> {
-  type: string;
+  type: "image" | "text" | "divider";
   content?: T;
 }
 // 基础元数据
@@ -105,7 +110,7 @@ export interface YamlConfigItem {
 }
 export type YamlUrlConfig = Record<string, YamlConfigItem>;
 // 国际化文本块
-export type I18nBlock = BaseBlock<string>;
+export type I18nBlock = CommonI18nBlock<string>;
 // 喵喵图模块
 export interface YamlNekoBlock {
   imgError: string;

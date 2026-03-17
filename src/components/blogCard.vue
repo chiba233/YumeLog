@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, Directive } from "vue";
+import { computed, Directive, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import {
   changeSpareUrl,
@@ -30,6 +30,65 @@ import RichTextRenderer from "@/components/RichTextRenderer.vue";
 import { ImageContent, Post, ProcessedPost } from "./ts/d";
 import { isSSR } from "./ts/useHead";
 import LazyBlock from "@/components/LazyBlock.vue";
+
+const visibleIds = ref(new Set<string>());
+const isHydrated = ref(false);
+let observer: IntersectionObserver | null = null;
+
+const getPostId = (post: ProcessedPost) => {
+  return getSlug(post) || post.time || post.title;
+};
+
+const initObserver = () => {
+  if (observer) observer.disconnect();
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const id = (entry.target as HTMLElement).dataset.id;
+          if (id) {
+            visibleIds.value.add(id);
+            visibleIds.value = new Set(visibleIds.value);
+            observer?.unobserve(entry.target);
+          }
+        }
+      });
+    },
+    {
+      root: null,
+      rootMargin: "300px",
+      threshold: 0.01,
+    },
+  );
+
+  document.querySelectorAll(".post-card[data-id]").forEach((el) => {
+    observer?.observe(el);
+  });
+};
+
+onMounted(async () => {
+  isHydrated.value = true;
+  await nextTick(() => {
+    initObserver();
+  });
+});
+
+watch(
+  () => processedPosts.value.length,
+  async () => {
+    await nextTick(() => initObserver());
+  },
+);
+
+onBeforeUnmount(() => {
+  if (observer) observer.disconnect();
+});
+
+const isVisible = (post: ProcessedPost, index: number) => {
+  if (!isHydrated.value) return true;
+  if (index < 10) return true;
+  return visibleIds.value.has(getPostId(post));
+};
 
 const ssrHidePosts = computed(() => !(isSSR && selectedPost.value));
 const { onMove, onLeave, onEnter } = useCardGlow();
@@ -124,8 +183,9 @@ const vA11y: Directive = {
 <template>
   <div v-if="ssrHidePosts" class="post-container">
     <article
-      v-for="post in processedPosts"
-      :key="post.time"
+      v-for="(post, index) in processedPosts"
+      :key="getPostId(post) + index"
+      :data-id="getPostId(post)"
       class="post-card glass"
       @click="cardClick(post)"
       @mouseenter="onEnter"
@@ -133,36 +193,53 @@ const vA11y: Directive = {
       @mousemove="onMove"
     >
       <div class="postContent">
-        <div class="post-header">
-          <h2 :lang="post?.lang as string" class="post-title commonText">{{ post.title }}</h2>
-          <div class="post-meta">
-            <n-icon v-if="post.pin === true || (post.pin as unknown) === 'true'" size="15">
-              <PushPinSharp />
-            </n-icon>
-            <span v-if="post.pin" class="time-divider">|</span>
-            <time :datetime="post.time" :lang="lang">{{ formatDate(post.time!) }}</time>
-            <span class="time-divider">|</span>
-            <span :lang="lang">{{ formatTime(post.time) }}</span>
+        <template v-if="isVisible(post, index)">
+          <div class="post-header">
+            <h2 :lang="post?.lang as string" class="post-title commonText">{{ post.title }}</h2>
+            <div class="post-meta">
+              <n-icon v-if="post.pin === true || (post.pin as unknown) === 'true'" size="15">
+                <PushPinSharp />
+              </n-icon>
+              <span v-if="post.pin" class="time-divider">|</span>
+              <time :datetime="post.time" :lang="lang">{{ formatDate(post.time!) }}</time>
+              <span class="time-divider">|</span>
+              <span :lang="lang">{{ formatTime(post.time) }}</span>
+            </div>
           </div>
-        </div>
+          <div class="post-body">
+            <div v-if="post.imageBlocks.length > 0" class="post-image">
+              <img
+                v-for="(img, i) in getPreviewImages(post)"
+                :key="img.src"
+                :alt="img.desc"
+                :class="{ secondImg: i === 1, thirdImg: i === 2, fourthImg: i === 3 }"
+                :src="img.src"
+                loading="lazy"
+                @error="(e) => handleImgError(e, img.spareUrl)"
+              />
+            </div>
 
-        <div class="post-body">
-          <div v-if="post.imageBlocks.length > 0" class="post-image">
-            <img
-              v-for="(img, i) in getPreviewImages(post)"
-              :key="img.src"
-              :alt="img.desc"
-              :class="{ secondImg: i === 1, thirdImg: i === 2, fourthImg: i === 3 }"
-              :src="img.src"
-              loading="lazy"
-              @error="(e) => handleImgError(e, img.spareUrl)"
-            />
+            <div :class="{ 'expanded-text': !post.imageBlocks.length }" class="post-description">
+              <p :lang="post?.lang as string" class="commonText">
+                {{ post.displayDescription }}
+              </p>
+            </div>
+          </div>
+        </template>
+        <div v-else class="post-skeleton">
+          <div class="skeleton-header">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-meta"></div>
           </div>
 
-          <div :class="{ 'expanded-text': !post.imageBlocks.length }" class="post-description">
-            <p :lang="post?.lang as string" class="commonText">
-              {{ post.displayDescription }}
-            </p>
+          <div class="skeleton-body">
+            <div class="skeleton-image"></div>
+            <div class="skeleton-description">
+              <div class="skeleton-text-line line-1"></div>
+              <div class="skeleton-text-line line-2"></div>
+              <div class="skeleton-text-line line-3"></div>
+              <div class="skeleton-text-line line-4"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -298,6 +375,111 @@ const vA11y: Directive = {
 $text-color: #2b2628;
 $border-radius: 16px;
 @use "sass:color";
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.post-skeleton {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.8rem;
+  border-radius: $border-radius;
+  background: rgba(var(--global-theme-rgb-deep), 0.05);
+  backdrop-filter: blur(15px);
+  gap: 0.5rem;
+  @media (min-width: 900px) {
+    width: 25rem;
+    height: 210px;
+  }
+
+  .skeleton-title,
+  .skeleton-meta,
+  .skeleton-image,
+  .skeleton-text-line {
+    background: linear-gradient(
+      90deg,
+      rgba(var(--global-theme-rgb-deep), 0.06) 25%,
+      rgba(var(--global-theme-rgb-deep), 0.12) 37%,
+      rgba(var(--global-theme-rgb-deep), 0.06) 63%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite linear;
+    border-radius: 8px;
+  }
+
+  .skeleton-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0.4rem;
+    gap: 0.4rem;
+
+    .skeleton-title {
+      width: 70%;
+      height: 1.25rem;
+    }
+
+    .skeleton-meta {
+      width: 40%;
+      height: 1rem;
+    }
+  }
+
+  .skeleton-body {
+    display: flex;
+    gap: 0.5rem;
+    flex: 1;
+    @media (max-width: 900px) {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .skeleton-image {
+      width: 120px;
+      height: 120px;
+      flex-shrink: 0;
+      border-radius: 12px;
+    }
+
+    .skeleton-description {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+      gap: 0.5rem;
+      justify-content: center;
+
+      .skeleton-text-line {
+        height: 0.8rem;
+
+        &.line-1 {
+          width: 100%;
+        }
+
+        &.line-2 {
+          width: 95%;
+        }
+
+        &.line-3 {
+          width: 90%;
+        }
+
+        &.line-4 {
+          width: 40%;
+        }
+      }
+    }
+  }
+}
+
 .postCardTitle {
   padding: 0;
   font-size: 1.2rem;
@@ -478,6 +660,7 @@ $border-radius: 16px;
 .post-card {
   display: flex;
   flex-direction: column;
+  width: 100%;
   cursor: pointer;
   -webkit-backdrop-filter: blur(15px);
   border-radius: $border-radius;

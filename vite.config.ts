@@ -35,7 +35,7 @@ interface Post extends BaseContent {
 }
 
 let cachedPosts: Post[] | null = null;
-function getSlug(post: Post): string | null {
+const getSlug = (post: Post): string | null => {
   if (post.id) return post.id;
   if (post.title)
     return post.title
@@ -43,14 +43,14 @@ function getSlug(post: Post): string | null {
       .replace(/[\/\\?#]/g, "")
       .replace(/\s+/g, "-");
   return null;
-}
+};
 
-async function getPosts(): Promise<Post[]> {
+const getPosts = async (): Promise<Post[]> => {
   if (!cachedPosts) {
     cachedPosts = (await loadAllPostsForSSG("blog")) as Post[];
   }
   return cachedPosts;
-}
+};
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());

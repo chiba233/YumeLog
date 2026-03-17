@@ -1,8 +1,6 @@
 import { useHead } from "@unhead/vue";
 import { computed } from "vue";
 import {
-  displayContent,
-  displayTitle,
   friends,
   friendsTitle,
   getDescriptionText,
@@ -121,7 +119,12 @@ export const blogUseHead = () => {
 
     meta: computed(() => {
       if (!postContext.value) {
-        const desc = titleI18N[lang.value] || titleI18N.en;
+        const baseDesc = titleI18N[lang.value] || titleI18N.en;
+        const postsTitles = posts.value
+          ?.map((p) => p.title)
+          .filter(Boolean)
+          .join(", ");
+        const desc = `${baseDesc}: ${postsTitles}`.slice(0, 200);
 
         return [
           { name: "description", content: desc },
@@ -265,39 +268,3 @@ export const headLinks = computed(() => {
     },
   ];
 });
-export const homeTitleUseHead = () => {
-  useHead(() => ({
-    meta: [
-      {
-        property: "og:title",
-        content: displayTitle.value.slice(0, 160),
-      },
-      {
-        property: "og:image",
-        content: `${siteOrigin}/icon/icon.webp`,
-      },
-    ],
-  }));
-};
-export const personalIntroductionUseHead = () => {
-  useHead({
-    meta: [
-      {
-        name: "description",
-        content: computed(() => displayContent.value.slice(0, 160) || ""),
-      },
-      {
-        property: "og:description",
-        content: computed(() => displayContent.value.slice(0, 160) || ""),
-      },
-      {
-        property: "og:type",
-        content: "website",
-      },
-      {
-        property: "twitter:description",
-        content: computed(() => displayContent.value.slice(0, 160) || ""),
-      },
-    ],
-  });
-};

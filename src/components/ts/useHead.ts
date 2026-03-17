@@ -259,8 +259,8 @@ export const headLinks = computed(() => {
     ...social,
     {
       rel: "canonical",
-      href: `${siteOrigin}/blog`,
-      title: "Blog",
+      href: `${siteOrigin}`,
+      title: "Home",
     },
     {
       property: "og:url",

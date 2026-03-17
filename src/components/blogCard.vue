@@ -1,5 +1,15 @@
 <script lang="ts" setup>
-import { computed, Directive, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  Directive,
+  h,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  VNodeChild,
+  watch,
+} from "vue";
 import { useRouter } from "vue-router";
 import {
   changeSpareUrl,
@@ -27,10 +37,11 @@ import {
 } from "@/components/ts/useGlobalState.ts";
 import { getSlug, useRouteModal } from "@/components/ts/useRouteModal.ts";
 import RichTextRenderer from "@/components/RichTextRenderer.vue";
-import { ImageContent, Post, ProcessedPost } from "./ts/d";
+import { ImageContent, Post, PostBlock, ProcessedPost, TextToken } from "./ts/d";
 import { isSSR } from "./ts/useHead";
 import LazyBlock from "@/components/LazyBlock.vue";
 
+const hydrated = ref(false);
 const visibleIds = ref(new Set<string>());
 const isHydrated = ref(false);
 let observer: IntersectionObserver | null = null;
@@ -54,11 +65,7 @@ const initObserver = () => {
         }
       });
     },
-    {
-      root: null,
-      rootMargin: "300px",
-      threshold: 0.01,
-    },
+    { root: null, rootMargin: "300px", threshold: 0.01 },
   );
 
   document.querySelectorAll(".post-card[data-id]").forEach((el) => {
@@ -68,6 +75,7 @@ const initObserver = () => {
 
 onMounted(async () => {
   isHydrated.value = true;
+  hydrated.value = true;
   await nextTick(() => {
     initObserver();
   });
@@ -106,9 +114,7 @@ const blogModals = computed(() => {
   const map: Record<string, typeof showModal> = {};
   posts.value.forEach((post) => {
     const slug = getSlug(post);
-    if (slug) {
-      map[slug] = showModal;
-    }
+    if (slug) map[slug] = showModal;
   });
   return map;
 });
@@ -122,9 +128,9 @@ const blogHandlers = computed(() => {
       currentPostTitle.value = post.title ?? null;
     };
   });
-
   return handlers;
 });
+
 const { openModal } = useRouteModal({
   baseRouteName: "blog",
   paramKey: "id",
@@ -135,13 +141,9 @@ const { openModal } = useRouteModal({
   onAllClosed: () => {
     currentPostTitle.value = null;
   },
-
   onInvalidId: async () => {
     $message.warning(blogDisplay.value.unknownPostId, true, 3000);
-
-    await router.replace({
-      name: "blog",
-    });
+    await router.replace({ name: "blog" });
   },
 });
 
@@ -151,7 +153,6 @@ const cardClick = (post: Post) => {
     $message.warning(blogDisplay.value.errorPostId, true, 3000);
     return;
   }
-
   void openModal(slug);
 };
 
@@ -177,6 +178,94 @@ const vA11y: Directive = {
     if (header) header.setAttribute("aria-level", "2");
     if (main) main.setAttribute("aria-level", "2");
   },
+};
+
+const renderDetailContent = (): VNodeChild => {
+  const post = selectedPost.value as ProcessedPost | null;
+  if (!post) return null;
+
+  const blocks = parsedBlocks.value || [];
+
+  return h("div", { class: "postCardMain" }, [
+    h("div", { class: "postCardMeta themeText" }, [
+      h("time", { datetime: post.time, lang: lang.value }, formatDate(post.time)),
+      h("span", { class: "time-divider" }, "|"),
+      h("span", { lang: lang.value }, formatTime(post.time)),
+    ]),
+
+    blocks.map((block: PostBlock, a: number) => {
+      const renderInnerContent = (tokensFromSlot?: TextToken[]): VNodeChild[] => [
+        block.type === "image" && Array.isArray(block.content)
+          ? h(
+              "div",
+              { class: "postCardImage" },
+              block.content.map((img: ImageContent) =>
+                h("div", { key: img.src, class: "postCardNImage" }, [
+                  isHydrated.value
+                    ? h(NImage, {
+                        alt: img.desc,
+                        src: changeSpareUrl.value && img.spareUrl ? img.spareUrl : img.src,
+                        lazy: true,
+                        class: "postCardImg",
+                        width: 120,
+                      })
+                    : h("div", { class: "n-image", style: { width: "120px" } }, [
+                        h("img", {
+                          src: img.src,
+                          alt: img.desc,
+                          class: "postCardImg",
+                          style: { width: "120px", borderRadius: "8px", objectFit: "cover" },
+                          onError: (e: Event) => handleImgError(e, img.spareUrl),
+                        }),
+                      ]),
+                  img.desc &&
+                    h("div", { class: "postCardImageDesc" }, [
+                      h(
+                        "span",
+                        {
+                          lang: post.lang as string,
+                          class: "themeText",
+                          style: { display: "block", textAlign: "center" },
+                        },
+                        img.desc,
+                      ),
+                    ]),
+                ]),
+              ),
+            )
+          : null,
+
+        block.type === "divider"
+          ? h("div", { class: "divider" }, [
+              h("div", { class: "separator-icon" }, [h("span", "✦")]),
+            ])
+          : null,
+
+        block.type === "text"
+          ? h("div", { class: "postCardText" }, [
+              h(RichTextRenderer, {
+                lang: post.lang as string,
+                tokens:
+                  tokensFromSlot && tokensFromSlot.length > 0 ? tokensFromSlot : block.tokens || [],
+              }),
+            ])
+          : null,
+      ];
+
+      return h("div", { key: a, class: "postCardBody" }, [
+        h(
+          LazyBlock,
+          { block: block, ssr: isSSR },
+          {
+            default: (slotProps: unknown): VNodeChild[] => {
+              const props = slotProps as { combinedTokens: TextToken[] };
+              return renderInnerContent(props.combinedTokens);
+            },
+          },
+        ),
+      ]);
+    }),
+  ]);
 };
 </script>
 
@@ -218,7 +307,6 @@ const vA11y: Directive = {
                 @error="(e) => handleImgError(e, img.spareUrl)"
               />
             </div>
-
             <div :class="{ 'expanded-text': !post.imageBlocks.length }" class="post-description">
               <p :lang="post?.lang as string" class="commonText">
                 {{ post.displayDescription }}
@@ -231,7 +319,6 @@ const vA11y: Directive = {
             <div class="skeleton-title"></div>
             <div class="skeleton-meta"></div>
           </div>
-
           <div class="skeleton-body">
             <div class="skeleton-image"></div>
             <div class="skeleton-description">
@@ -263,35 +350,15 @@ const vA11y: Directive = {
       <p v-else :lang="lang">{{ blogDisplay.loading }}</p>
     </div>
   </div>
-  <div v-if="isSSR && selectedPost" style="position: absolute; left: -9999px">
-    <article>
-      <h1 :lang="selectedPost?.lang as string">{{ selectedPost.title }}</h1>
-      <time
-        :lang="lang"
-        :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')"
-      >
-        {{ selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") }}
-      </time>
-      <span :lang="lang">{{ formatTime(selectedPost.time) }}</span>
-      <div v-for="(block, index) in parsedBlocks" :key="index">
-        <div v-if="block.type === 'text'">
-          <RichTextRenderer
-            v-if="block.tokens"
-            :lang="selectedPost?.lang as string"
-            :tokens="block.tokens!"
-          />
-        </div>
-        <div v-if="block.type === 'image'">
-          <img
-            v-for="img in block.content as ImageContent[]"
-            :key="img.src"
-            :alt="img.desc"
-            :src="img.src"
-          />
-        </div>
-      </div>
-    </article>
-  </div>
+
+  <article v-if="isSSR && selectedPost" class="sr-only-article">
+    <h1 :lang="selectedPost?.lang as string">{{ selectedPost.title }}</h1>
+    <time :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')" :lang="lang">
+      {{ selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") }}
+    </time>
+    <component :is="renderDetailContent()" />
+  </article>
+
   <n-modal
     v-model:show="showModal"
     :on-after-leave="handleModalFinishedLeaving"
@@ -321,52 +388,8 @@ const vA11y: Directive = {
           </template>
         </n-button>
       </template>
-      <div class="postCardMain">
-        <div class="postCardMeta themeText">
-          <time :datetime="selectedPost.time" :lang="lang"
-            >{{ formatDate(selectedPost.time) }}
-          </time>
-          <span class="time-divider">|</span>
-          <span :lang="lang">{{ formatTime(selectedPost.time) }}</span>
-        </div>
-        <div v-for="(block, a) in parsedBlocks" :key="a" class="postCardBody">
-          <LazyBlock v-slot="{ combinedTokens }" :block="block">
-            <div v-if="block.type === 'image'" class="postCardImage">
-              <div
-                v-for="img in block.content as ImageContent[]"
-                :key="img.src"
-                class="postCardNImage"
-              >
-                <n-image
-                  v-if="img.src && changeSpareUrl === false"
-                  :alt="img.desc"
-                  :src="img.src"
-                  lazy
-                  class="postCardImg"
-                  width="120"
-                />
-                <n-image
-                  v-if="img.src && changeSpareUrl === true"
-                  :alt="img.desc"
-                  :src="img.spareUrl"
-                  lazy
-                  class="postCardImg"
-                  width="120"
-                />
-                <div v-if="img.desc" class="postCardImageDesc">
-                  <span :lang="selectedPost?.lang as string" class="themeText">{{ img.desc }}</span>
-                </div>
-              </div>
-            </div>
-            <div v-if="block.type === 'divider'" class="divider">
-              <div class="separator-icon"><span>✦</span></div>
-            </div>
-            <div v-if="block.type === 'text'" class="postCardText">
-              <RichTextRenderer :lang="selectedPost?.lang as string" :tokens="combinedTokens" />
-            </div>
-          </LazyBlock>
-        </div>
-      </div>
+
+      <component :is="renderDetailContent()" v-if="isHydrated" />
     </n-card>
   </n-modal>
 </template>
@@ -376,6 +399,17 @@ $text-color: #2b2628;
 $border-radius: 16px;
 @use "sass:color";
 
+.sr-only-article {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
 @keyframes skeleton-shimmer {
   0% {
     background-position: -200% 0;
@@ -384,7 +418,6 @@ $border-radius: 16px;
     background-position: 200% 0;
   }
 }
-
 .post-skeleton {
   display: flex;
   flex-direction: column;
@@ -399,7 +432,6 @@ $border-radius: 16px;
     width: 25rem;
     height: 210px;
   }
-
   .skeleton-title,
   .skeleton-meta,
   .skeleton-image,
@@ -414,25 +446,21 @@ $border-radius: 16px;
     animation: skeleton-shimmer 1.5s infinite linear;
     border-radius: 8px;
   }
-
   .skeleton-header {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 0.4rem;
     gap: 0.4rem;
-
     .skeleton-title {
       width: 70%;
       height: 1.25rem;
     }
-
     .skeleton-meta {
       width: 40%;
       height: 1rem;
     }
   }
-
   .skeleton-body {
     display: flex;
     gap: 0.5rem;
@@ -441,14 +469,12 @@ $border-radius: 16px;
       flex-direction: column;
       align-items: center;
     }
-
     .skeleton-image {
       width: 120px;
       height: 120px;
       flex-shrink: 0;
       border-radius: 12px;
     }
-
     .skeleton-description {
       display: flex;
       flex-direction: column;
@@ -456,22 +482,17 @@ $border-radius: 16px;
       width: 100%;
       gap: 0.5rem;
       justify-content: center;
-
       .skeleton-text-line {
         height: 0.8rem;
-
         &.line-1 {
           width: 100%;
         }
-
         &.line-2 {
           width: 95%;
         }
-
         &.line-3 {
           width: 90%;
         }
-
         &.line-4 {
           width: 40%;
         }

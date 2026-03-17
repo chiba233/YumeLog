@@ -15,7 +15,6 @@ export interface SelectOption {
   label: string;
   value: string;
 }
-
 export interface CommonI18nBlock<T = string> {
   type: string;
   content?: T;

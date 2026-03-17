@@ -1,28 +1,53 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, onUnmounted, ref, shallowRef } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { parseRichText } from "@/components/ts/dsl/semantic/blogFormat.ts";
 import type { PostBlock, TextToken } from "./ts/d";
 
 interface Props {
   block?: PostBlock;
+  ssr?: boolean;
 }
 
 const props = defineProps<Props>();
 
 const isVisible = ref(false);
 const container = ref<HTMLElement | null>(null);
-const localTokens = shallowRef<TextToken[]>([]);
 const isParsed = ref(false);
 let observer: IntersectionObserver | null = null;
 
+const getInitialTokens = (): TextToken[] => {
+  if (Array.isArray(props.block?.tokens) && props.block.tokens.length > 0) {
+    isParsed.value = true;
+    return props.block.tokens;
+  }
+
+  if (props.ssr && props.block?.type === "text" && typeof props.block.content === "string") {
+    try {
+      const tokens = parseRichText(props.block.content);
+      isParsed.value = true;
+      return tokens;
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
+const localTokens = shallowRef<TextToken[]>(getInitialTokens());
+
+const shouldLazy = computed(() => {
+  if (props.ssr) return false;
+  return !isParsed.value;
+});
+
+const shouldRenderContent = computed(() => {
+  return !shouldLazy.value || isVisible.value;
+});
+
 onMounted(async () => {
   await nextTick();
-
   if (!props.block || !container.value) return;
-
-  if (Array.isArray(props.block.tokens) && props.block.tokens.length > 0) {
-    localTokens.value = props.block.tokens;
-    isParsed.value = true;
+  if (!shouldLazy.value) {
     isVisible.value = true;
     return;
   }
@@ -43,7 +68,7 @@ onMounted(async () => {
             localTokens.value = parseRichText(props.block.content);
             isParsed.value = true;
           } catch (e) {
-            console.error("LogicPolice Error: Parse failed", e);
+            console.error("Lazy Parse Error:", e);
           }
         }
         isVisible.value = true;
@@ -55,7 +80,6 @@ onMounted(async () => {
       rootMargin: "300px",
     },
   );
-
   observer.observe(container.value);
 });
 
@@ -65,13 +89,16 @@ const stopObserving = () => {
     observer = null;
   }
 };
-
-onUnmounted(stopObserving);
+onUnmounted(() => {
+  stopObserving();
+  localTokens.value = [];
+  container.value = null;
+});
 </script>
 
 <template>
-  <div ref="container" :class="{ 'is-loaded': isVisible }" class="lazy-block-wrapper">
-    <slot v-if="isVisible" :combined-tokens="localTokens" />
+  <div ref="container" :class="{ 'is-loaded': shouldRenderContent }" class="lazy-block-wrapper">
+    <slot v-if="shouldRenderContent" :combined-tokens="localTokens" />
     <div v-else class="lazy-placeholder">
       <div class="skeleton-glow"></div>
     </div>

@@ -25,8 +25,8 @@
                 :alt="item.imgName"
                 :fallback-src="item.imgError"
                 :src="item.img"
-                width="160"
                 lazy
+                width="160"
               ></n-image>
               <figcaption :lang="lang" class="themeText">{{ item.imgName }}</figcaption>
             </figure>
@@ -89,7 +89,7 @@
       @click="handleContactClick(item)"
     >
       <template #icon>
-        <n-icon size="23">
+        <n-icon :color="globalColorDeep" size="23">
           <component :is="iconMap[item.id]" />
         </n-icon>
       </template>
@@ -134,7 +134,7 @@ import {
 import axios from "axios";
 import { useAsyncState, useStorage } from "@vueuse/core";
 import { lang } from "@/components/ts/setupLang.ts";
-import { themeColor } from "@/components/ts/useTheme.ts";
+import { globalColorDeep, themeColor } from "@/components/ts/useTheme.ts";
 import { getMaiUrl } from "./ts/maimaiScore";
 import { maiSections } from "@/components/ts/setupJson.ts";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
@@ -387,8 +387,7 @@ useHead({
     text-align: center;
     font-size: 0.85rem;
     text-decoration: none;
-    -webkit-text-stroke: 0.15px var(--global-theme-color-deep);
-    font-weight: Normal;
+    font-weight: 500;
   }
 }
 
@@ -400,13 +399,12 @@ useHead({
   display: flex;
   width: 42em;
 
+  .n-collapse .n-collapse-item:not(:first-child) {
+    border-top: 1.5px solid var(--direct-font-color);
+  }
   .connecter {
     padding-right: 0.6em;
     padding-left: 0.2em;
-  }
-
-  span {
-    padding-bottom: 1em;
   }
 
   .maiCardDiv {
@@ -416,7 +414,8 @@ useHead({
     object-fit: scale-down;
 
     span {
-      -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
+      padding-bottom: 1em;
+      font-weight: normal;
     }
   }
 }
@@ -436,8 +435,6 @@ useHead({
   .cButton {
     height: 2.2em;
     margin: 0.35rem;
-    border: 1px solid rgba(251, 238, 241, 0.2);
-
     &:focus,
     &:active,
     &:hover {
@@ -447,7 +444,6 @@ useHead({
 
     a {
       font-weight: normal;
-      margin-left: 3px;
     }
     @media (max-width: 550px) {
       .n-icon {

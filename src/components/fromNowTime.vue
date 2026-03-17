@@ -209,13 +209,13 @@ const buttonTitle = computed(() => {
     padding: 0.5rem;
 
     strong {
-      font-weight: Normal;
-      -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
+      font-weight: 500;
     }
 
     time {
-      font-weight: Normal;
-      -webkit-text-stroke: 0.05px var(--global-theme-color-deep);
+      font-weight: 500;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
     }
   }
 }

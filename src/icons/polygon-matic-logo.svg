@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Generator: Adobe Illustrator 24.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-
 <svg
-        version="1.1"
-        id="Layer_1"
-        x="0px"
-        y="0px"
-        viewBox="0 0 22.999999 23"
-        xml:space="preserve"
-        sodipodi:docname="polygon-matic-logo.svg"
-        inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
-        width="23"
+        xmlns:svg="http://www.w3.org/2000/svg"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:cc="http://creativecommons.org/ns#"
         height="23"
+        xmlns:dc="http://purl.org/dc/elements/1.1/"
+        role="img"
+        viewBox="0 0 23 23"
+        id="Polygon--Streamline-Simple-Icons"
         xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
         xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-        xmlns="http://www.w3.org/2000/svg"><defs
-   id="defs1">
-	
-</defs>
+        width="23"
+        version="1.1"
+        sodipodi:docname="Polygon--Streamline-Simple-Icons.svg"
+        inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+        xmlns="http://www.w3.org/2000/svg">
+    <defs
+            id="defs1"/>
     <sodipodi:namedview
             id="namedview1"
             pagecolor="#ffffff"
@@ -27,23 +26,34 @@
             inkscape:pageopacity="0.0"
             inkscape:pagecheckerboard="0"
             inkscape:deskcolor="#d1d1d1"
-            inkscape:zoom="25.253731"
-            inkscape:cx="19.185284"
-            inkscape:cy="16.690603"
+            inkscape:zoom="12.006084"
+            inkscape:cx="-17.282904"
+            inkscape:cy="10.119869"
             inkscape:window-width="1920"
-            inkscape:window-height="1111"
-            inkscape:window-x="-9"
-            inkscape:window-y="-9"
+            inkscape:window-height="1017"
+            inkscape:window-x="1912"
+            inkscape:window-y="-8"
             inkscape:window-maximized="1"
-            inkscape:current-layer="Layer_1"/>
-    <style
-            type="text/css"
-            id="style1">
-	.st0{fill:#8247E5;}
-</style>
+            inkscape:current-layer="Polygon--Streamline-Simple-Icons"/>
+    <desc
+            id="desc1">
+        Polygon Streamline Icon: https://streamlinehq.com
+    </desc>
+    <title
+            id="title1">Polygon
+    </title>
     <path
-            class="st0"
-            d="m 17.415144,7.0296737 c -0.420366,-0.2729971 -0.960836,-0.2729971 -1.441254,0 l -3.362924,2.2522255 -2.281984,1.4332348 -3.3028723,2.252225 c -0.4203656,0.272998 -0.9608355,0.272998 -1.4412533,0 L 3.002611,11.192879 C 2.5822454,10.919881 2.2819843,10.373887 2.2819843,9.7596441 v -3.412463 c 0,-0.5459941 0.2402089,-1.0919882 0.7206267,-1.4332344 L 5.5848564,3.2077151 c 0.4203655,-0.2729969 0.9608355,-0.2729969 1.4412533,0 L 9.6083551,4.9821959 C 10.028721,5.2551929 10.328982,5.801187 10.328982,6.4154302 V 8.6676559 L 12.610966,7.1661721 V 4.8456974 c 0,-0.5459941 -0.240209,-1.0919881 -0.720627,-1.4332344 L 7.0861619,0.20474778 c -0.4203656,-0.27299704 -0.9608355,-0.27299704 -1.4412533,0 L 0.72062663,3.4807123 C 0.24020888,3.7537093 0,4.2997033 0,4.8456974 v 6.4154296 c 0,0.545994 0.24020888,1.091989 0.72062663,1.433235 l 4.86422977,3.207715 c 0.4203655,0.272997 0.9608355,0.272997 1.4412533,0 l 3.3028723,-2.183977 2.281984,-1.501484 3.302872,-2.183975 c 0.420366,-0.2729969 0.960836,-0.2729969 1.441253,0 l 2.582246,1.706231 c 0.420365,0.272997 0.720626,0.818991 0.720626,1.433234 v 3.412463 c 0,0.545995 -0.240208,1.091989 -0.720626,1.433235 l -2.522193,1.706231 c -0.420366,0.272997 -0.960836,0.272997 -1.441254,0 l -2.582245,-1.706231 c -0.420366,-0.272996 -0.720627,-0.818991 -0.720627,-1.433235 v -2.183976 l -2.281984,1.501484 v 2.252226 c 0,0.545995 0.240209,1.091987 0.720627,1.433234 l 4.864229,3.207715 c 0.420366,0.272997 0.960836,0.272997 1.441254,0 l 4.864229,-3.207715 C 22.699739,19.31454 23,18.768546 23,18.154303 v -6.483678 c 0,-0.545996 -0.240209,-1.09199 -0.720627,-1.433236 z"
-            id="path1"
-            style="fill:#ffffff;stroke-width:0.640197"/>
+            d="m 17.0775,15.660705 5.454833,-3.150042 A 0.93916667,0.93916667 0 0 0 23,11.700871 V 5.3998296 a 0.93916667,0.93916667 0 0 0 -0.467667,-0.81075 L 17.076542,1.4399963 a 0.93916667,0.93916667 0 0 0 -0.936292,0 l -5.454833,3.1490833 a 0.93916667,0.93916667 0 0 0 -0.468625,0.81075 V 16.657371 l -3.8247087,2.208 -3.8256666,-2.208 v -4.417916 l 3.8256666,-2.208 2.5232917,1.456666 V 8.5249546 L 6.85975,7.3385379 a 0.93916667,0.93916667 0 0 0 -0.9362917,0 L 0.46766667,10.48858 A 0.93916667,0.93916667 0 0 0 0,11.29933 v 6.299125 a 0.93916667,0.93916667 0 0 0 0.46766667,0.811708 l 5.45579163,3.149083 a 0.940125,0.940125 0 0 0 0.9362917,0 l 5.454833,-3.149083 a 0.93916667,0.93916667 0 0 0 0.468625,-0.81075 V 6.3418713 l 0.069,-0.039292 3.756667,-2.1687083 3.82375,2.2089583 v 4.4169587 l -3.82375,2.208 -2.520417,-1.453792 v 2.963167 l 2.050834,1.1845 a 0.940125,0.940125 0 0 0 0.93725,0 v -9.58e-4 z"
+            fill="#000000"
+            stroke-width="0.958333"
+            id="path1"/>
+    <metadata
+            id="metadata1">
+        <rdf:RDF>
+            <cc:Work
+                    rdf:about="">
+                <dc:title>Polygon</dc:title>
+            </cc:Work>
+        </rdf:RDF>
+    </metadata>
 </svg>

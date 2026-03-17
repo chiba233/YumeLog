@@ -101,10 +101,8 @@ const normalizeUrl = (raw: string): string | undefined => {
   word-break: break-word;
   font-size: 1.2rem;
   white-space: pre-wrap;
-  color: #2b2628;
-  text-shadow:
-    0 1px 1px rgba(255, 255, 255, 0.25),
-    0 2px 4px rgba(0, 0, 0, 0.08);
+  color: var(--glass-font-color);
+  text-shadow: var(--glass-text-shadow);
   letter-spacing: 0.02em;
   line-height: 1.6;
 }

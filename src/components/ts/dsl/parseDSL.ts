@@ -3,7 +3,6 @@
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
 import { $message } from "@/components/ts/msgUtils.ts";
-
 type I18nMap = Record<string, string>;
 
 export interface DSLNode {

@@ -180,6 +180,85 @@ const vA11y: Directive = {
   },
 };
 
+type PostRenderContext = {
+  post: ProcessedPost;
+};
+type PostsRenderer = (
+  block: PostBlock,
+  ctx: PostRenderContext,
+  tokensFromSlot?: TextToken[],
+) => VNodeChild | null;
+
+const PostsRenderers: Record<string, PostsRenderer> = {
+  image: (block, ctx) => {
+    if (!Array.isArray(block.content)) return null;
+
+    return h(
+      "div",
+      { class: "postCardImage" },
+      block.content.map((img: ImageContent) =>
+        h("div", { key: img.src, class: "postCardNImage" }, [
+          isHydrated.value
+            ? h(NImage, {
+                alt: img.desc,
+                src: changeSpareUrl.value && img.spareUrl ? img.spareUrl : img.src,
+                lazy: true,
+                class: "postCardImg",
+                width: 120,
+              })
+            : h("div", { class: "n-image", style: { width: "120px" } }, [
+                h("img", {
+                  src: img.src,
+                  alt: img.desc,
+                  class: "postCardImg",
+                  style: {
+                    width: "120px",
+                    borderRadius: "8px",
+                    objectFit: "cover",
+                  },
+                  onError: (e: Event) => handleImgError(e, img.spareUrl),
+                }),
+              ]),
+
+          img.desc &&
+            h("div", { class: "postCardImageDesc" }, [
+              h(
+                "span",
+                {
+                  lang: ctx.post.lang as string,
+                  class: "themeText",
+                  style: { display: "block", textAlign: "center" },
+                },
+                img.desc,
+              ),
+            ]),
+        ]),
+      ),
+    );
+  },
+
+  divider: () =>
+    h("div", { class: "divider" }, [h("div", { class: "separator-icon" }, [h("span", "✦")])]),
+
+  text: (block, ctx, tokensFromSlot) =>
+    h("div", { class: "postCardText" }, [
+      h(RichTextRenderer, {
+        lang: ctx.post.lang as string,
+        tokens: tokensFromSlot && tokensFromSlot.length > 0 ? tokensFromSlot : block.tokens || [],
+      }),
+    ]),
+};
+const renderInnerContent = (
+  block: PostBlock,
+  ctx: PostRenderContext,
+  tokensFromSlot?: TextToken[],
+): VNodeChild[] => {
+  const PostsRenderer = PostsRenderers[block.type];
+  if (!PostsRenderer) return [];
+
+  const vNode = PostsRenderer(block, ctx, tokensFromSlot);
+  return vNode ? [vNode] : [];
+};
 const renderDetailContent = (): VNodeChild => {
   const post = selectedPost.value as ProcessedPost | null;
   if (!post) return null;
@@ -194,63 +273,7 @@ const renderDetailContent = (): VNodeChild => {
     ]),
 
     blocks.map((block: PostBlock, a: number) => {
-      const renderInnerContent = (tokensFromSlot?: TextToken[]): VNodeChild[] => [
-        block.type === "image" && Array.isArray(block.content)
-          ? h(
-              "div",
-              { class: "postCardImage" },
-              block.content.map((img: ImageContent) =>
-                h("div", { key: img.src, class: "postCardNImage" }, [
-                  isHydrated.value
-                    ? h(NImage, {
-                        alt: img.desc,
-                        src: changeSpareUrl.value && img.spareUrl ? img.spareUrl : img.src,
-                        lazy: true,
-                        class: "postCardImg",
-                        width: 120,
-                      })
-                    : h("div", { class: "n-image", style: { width: "120px" } }, [
-                        h("img", {
-                          src: img.src,
-                          alt: img.desc,
-                          class: "postCardImg",
-                          style: { width: "120px", borderRadius: "8px", objectFit: "cover" },
-                          onError: (e: Event) => handleImgError(e, img.spareUrl),
-                        }),
-                      ]),
-                  img.desc &&
-                    h("div", { class: "postCardImageDesc" }, [
-                      h(
-                        "span",
-                        {
-                          lang: post.lang as string,
-                          class: "themeText",
-                          style: { display: "block", textAlign: "center" },
-                        },
-                        img.desc,
-                      ),
-                    ]),
-                ]),
-              ),
-            )
-          : null,
-
-        block.type === "divider"
-          ? h("div", { class: "divider" }, [
-              h("div", { class: "separator-icon" }, [h("span", "✦")]),
-            ])
-          : null,
-
-        block.type === "text"
-          ? h("div", { class: "postCardText" }, [
-              h(RichTextRenderer, {
-                lang: post.lang as string,
-                tokens:
-                  tokensFromSlot && tokensFromSlot.length > 0 ? tokensFromSlot : block.tokens || [],
-              }),
-            ])
-          : null,
-      ];
+      const ctx: PostRenderContext = { post };
 
       return h("div", { key: a, class: "postCardBody" }, [
         h(
@@ -259,7 +282,7 @@ const renderDetailContent = (): VNodeChild => {
           {
             default: (slotProps: unknown): VNodeChild[] => {
               const props = slotProps as { combinedTokens: TextToken[] };
-              return renderInnerContent(props.combinedTokens);
+              return renderInnerContent(block, ctx, props.combinedTokens);
             },
           },
         ),
@@ -505,7 +528,7 @@ $border-radius: 16px;
   padding: 0;
   font-size: 1.2rem;
   margin: 0;
-  font-weight: normal;
+  font-weight: bold;
 }
 .separator-icon {
   display: flex;
@@ -571,7 +594,7 @@ $border-radius: 16px;
         word-break: break-all;
         white-space: pre-line;
         font-size: 0.92rem;
-        -webkit-text-stroke: 0.1px var(--global-theme-color-deep);
+        font-weight: 400;
         text-align: center;
         display: block;
       }
@@ -654,7 +677,7 @@ $border-radius: 16px;
       gap: 0.5em;
       margin-bottom: 0.5em;
       font-size: 0.95rem;
-      -webkit-text-stroke: 0.1px var(--global-theme-color-deep);
+      font-weight: 500;
     }
   }
 }
@@ -739,7 +762,7 @@ $border-radius: 16px;
   }
 
   &:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     transition:
       transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -767,8 +790,9 @@ $border-radius: 16px;
       display: flex;
       justify-content: center;
       align-items: center;
-      color: color.adjust($text-color, $lightness: 80%);
-      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
+      color: var(--global-theme-color-deep) !important;
+      font-weight: 500;
+      paint-order: stroke fill;
       font-size: 1em;
       gap: 0.3rem;
       line-height: 1;
@@ -782,7 +806,7 @@ $border-radius: 16px;
 
         svg {
           display: block;
-          stroke: rgba(0, 0, 0, 0.5);
+          stroke: rgb(var(--global-theme-color-deep));
           stroke-width: 1px;
         }
       }
@@ -933,13 +957,9 @@ $border-radius: 16px;
     p {
       text-align: center;
       font-size: 3rem;
-      color: #eaeaea;
-      font-weight: normal;
-      text-shadow:
-        0.5px 0 0 rgba(0, 0, 0, 0.7),
-        -0.5px 0 0 rgba(0, 0, 0, 0.7),
-        0 0.5px 0 rgba(0, 0, 0, 0.7),
-        0 -0.5px 0 rgba(0, 0, 0, 0.7);
+      font-weight: 500;
+      color: var(--direct-font-color);
+      text-shadow: var(--direct-font-shadow);
       opacity: 0.8;
       animation: loading-pulse 1.5s infinite ease-in-out;
     }

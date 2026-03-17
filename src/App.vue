@@ -2,7 +2,7 @@
 import { RouterView, useRoute, useRouter } from "vue-router";
 import { computed, onMounted, watch } from "vue";
 import { NButton, NIcon, NMessageProvider } from "naive-ui";
-import { AnimalRabbit28Regular, Home12Regular } from "@vicons/fluent";
+import { Document28Regular, Home12Regular } from "@vicons/fluent";
 import MessageProvider from "@/components/MessageProvider.vue";
 import TopBar from "@/components/topBar.vue";
 import { lang } from "@/components/ts/setupLang.ts";
@@ -201,7 +201,7 @@ watch(
             <n-button :color="themeColor" class="bottomButton" round @click="goTo('blog')">
               <template #icon>
                 <n-icon size="23">
-                  <AnimalRabbit28Regular />
+                  <Document28Regular />
                 </n-icon>
               </template>
               <a :lang="lang" class="commonText">{{ blogLabel[lang] || blogLabel.en }}</a>
@@ -220,8 +220,8 @@ figure {
 }
 
 .n-modal-mask {
-  background-color: rgba(var(--global-theme-rgb-deep), 0.2) !important;
-  backdrop-filter: blur(3px);
+  background-color: rgba(var(--global-theme-rgb-deep), 0.15) !important;
+  backdrop-filter: saturate(110%) blur(5px);
   max-height: 100dvh;
 }
 
@@ -231,7 +231,7 @@ figure {
 
 .n-image-preview-toolbar {
   background-color: rgba(var(--global-theme-rgb-deep), 0.4) !important;
-  backdrop-filter: blur(25px);
+  backdrop-filter: saturate(110%) blur(25px);
 }
 
 .n-scrollbar-content {
@@ -243,7 +243,7 @@ figure {
   border-radius: 20px !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
-  backdrop-filter: blur(25px);
+  backdrop-filter: saturate(110%) blur(25px);
   max-height: 99dvh;
   max-width: 99%;
   .n-card-header {
@@ -251,7 +251,7 @@ figure {
   }
   .n-card-header__main {
     color: var(--global-theme-color-deep) !important;
-    -webkit-text-stroke: 0.2px var(--global-theme-color-deep);
+    font-weight: bold;
     paint-order: stroke fill;
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
@@ -288,7 +288,9 @@ figure {
     scrollbar-gutter: stable both-edges;
     .n-collapse-item__header-main {
       color: var(--global-theme-color-deep) !important;
-      -webkit-text-stroke: 0.15px var(--global-theme-color-deep);
+      font-weight: 500;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
       .n-base-icon {
         svg {
           color: var(--global-theme-color-deep) !important;
@@ -317,24 +319,19 @@ figure {
 }
 
 :root {
-  --glass-bg: rgba(251, 238, 241, 0.35);
-  --glass-border: 1.25px solid rgba(251, 238, 241, 0.35);
-  --glass-blur: blur(25px);
-  --glass-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  --glass-bg: var(--global-theme-glass);
+  --glass-border: 1px solid var(--global-theme-glass);
+  --glass-blur: saturate(110%) blur(25px);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
 }
 
 .themeText {
   color: var(--global-theme-color-deep) !important;
-  paint-order: stroke fill;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-font-smoothing: antialiased;
 }
 
 .commonText {
-  color: #2b2628;
-  text-shadow:
-    0 1px 1px rgba(255, 255, 255, 0.25),
-    0 2px 4px rgba(0, 0, 0, 0.08);
+  color: var(--glass-font-color);
+  text-shadow: var(--glass-text-shadow);
 }
 
 .glass {
@@ -383,8 +380,8 @@ figure {
   border: 1px solid rgba(251, 238, 241, 0.2);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   border-radius: 1.4em;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: saturate(110%) blur(5px);
+  -webkit-backdrop-filter: saturate(110%) blur(5px);
   display: flex;
   justify-content: center;
   align-items: center;

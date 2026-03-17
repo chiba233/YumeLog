@@ -85,13 +85,9 @@ $transition-speed: 0.3s;
   left: 0;
   right: 0;
   text-align: center;
-  color: #eaeaea;
-  text-shadow:
-    0.5px 0 0 rgba(0, 0, 0, 0.7),
-    -0.5px 0 0 rgba(0, 0, 0, 0.7),
-    0 0.5px 0 rgba(0, 0, 0, 0.7),
-    0 -0.5px 0 rgba(0, 0, 0, 0.7);
-  font-weight: normal;
+  color: var(--direct-font-color);
+  text-shadow: var(--direct-font-shadow);
+  font-weight: 500;
   margin-bottom: 0.5rem;
   margin-top: 0;
   @media (min-width: 840px) {
@@ -139,7 +135,7 @@ $transition-speed: 0.3s;
     background-color 0.3s;
 
   &:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     transition:
       transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);

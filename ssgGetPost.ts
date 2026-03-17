@@ -3,7 +3,6 @@
 import pLimit from "p-limit";
 
 const limit = pLimit(6);
-
 interface TextToken {
   type: string;
   value: string | TextToken[];
@@ -12,36 +11,29 @@ interface TextToken {
   title?: string;
   url?: string;
 }
-
 interface BaseBlock<T = string> {
   type: string;
   content?: T;
 }
-
 interface PostBlock extends BaseBlock<string | ImageContent[]> {
   tokens?: TextToken[];
 }
-
 interface ImageContent {
   src: string;
   spareUrl?: string;
   desc?: string;
 }
-
 interface PostBlock extends BaseBlock<string | ImageContent[]> {
   tokens?: TextToken[];
 }
-
 interface DSLNode {
   name: string;
   content: string;
 }
-
 interface SyntaxConfig {
   blockPrefix: string;
   blockEnd: string;
 }
-
 type BlockContent = PostBlock["content"];
 type DSLTree = DSLNode[];
 type BlockParser = (content: string) => BlockContent;

@@ -33,7 +33,7 @@ import { themeColor, useTheme } from "@/components/ts/useTheme.ts";
 import { NButton, NIcon, NPopselect, type SelectOption } from "naive-ui";
 import LangIcon from "../icons/langIcon.svg";
 
-useTheme(90);
+useTheme();
 interface Props {
   btnWidth?: string;
 }
@@ -137,7 +137,9 @@ watchEffect(() => {
         .n-base-select-option__content {
           color: var(--global-theme-color-deep) !important;
           font-weight: bold !important;
-          -webkit-text-stroke: 0.5px var(--global-theme-color-deep);
+          text-shadow:
+            0 0 0.3px var(--global-theme-color-deep),
+            0 0 0.3px var(--global-theme-color-deep);
           paint-order: stroke fill;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;

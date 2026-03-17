@@ -119,13 +119,9 @@ watch(
       display: flex;
       flex-wrap: wrap;
       align-content: center;
-      color: #eaeaea;
-      text-shadow:
-        0.5px 0 0 rgba(0, 0, 0, 0.7),
-        -0.5px 0 0 rgba(0, 0, 0, 0.7),
-        0 0.5px 0 rgba(0, 0, 0, 0.7),
-        0 -0.5px 0 rgba(0, 0, 0, 0.7);
-      font-weight: normal;
+      color: var(--direct-font-color);
+      text-shadow: var(--direct-font-shadow);
+      font-weight: 500;
       margin: 0;
       @media (min-width: 840px) {
         font-size: 2em;

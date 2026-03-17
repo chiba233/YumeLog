@@ -64,13 +64,9 @@ useHead(() => ({
     display: flex;
     flex-wrap: wrap;
     align-content: center;
-    color: #eaeaea;
-    text-shadow:
-      0.5px 0 0 rgba(0, 0, 0, 0.7),
-      -0.5px 0 0 rgba(0, 0, 0, 0.7),
-      0 0.5px 0 rgba(0, 0, 0, 0.7),
-      0 -0.5px 0 rgba(0, 0, 0, 0.7);
-    font-weight: normal;
+    color: var(--direct-font-color);
+    font-weight: 500;
+    text-shadow: var(--direct-font-shadow);
     margin: 0;
     text-align: center;
     @media (min-width: 840px) {

@@ -92,7 +92,7 @@ watch(
 <template>
   <div class="shiki-code-block-container light-theme">
     <div v-if="label || codeLang" class="code-block-header">
-      <span class="code-title">{{ title }}</span>
+      <span :lang="lang" class="code-title">{{ title }}</span>
       <span class="code-lang-label">{{ codeLang }}</span>
     </div>
 

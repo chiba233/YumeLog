@@ -3,6 +3,7 @@
 import commonI18n from "../../../../data/I18N/commonI18n.json";
 import { lang } from "../../setupLang.ts";
 import { $message } from "../../msgUtils.ts";
+
 type I18nMap = Record<string, string>;
 
 export const parseDashObjectList = (content: string): Record<string, string>[] => {
@@ -11,27 +12,36 @@ export const parseDashObjectList = (content: string): Record<string, string>[] =
   let current: Record<string, string> | null = null;
   let multiKey: string | null = null;
   let multiBuffer: string[] = [];
-
   const flushMulti = () => {
-    if (current && multiKey) {
-      current[multiKey] = multiBuffer.join("\n").trimEnd();
+    if (current && multiKey && multiBuffer.length > 0) {
+      const indents = multiBuffer
+        .filter((l) => l.trim() !== "")
+        .map((l) => l.match(/^(\s*)/)?.[1].length ?? 0);
+
+      const minIndent = indents.length ? Math.min(...indents) : 0;
+
+      current[multiKey] = multiBuffer
+        .map((l) => l.slice(minIndent))
+        .join("\n")
+        .trimEnd();
     }
+
     multiKey = null;
     multiBuffer = [];
   };
 
   const processValue = (raw: string): string => {
-    const trimmedRaw = raw.trim();
-    if (/^(['"]).*\1$/.test(trimmedRaw)) {
-      return stripQuotes(trimmedRaw);
-    }
-    return raw.trim();
+    return stripQuotes(raw.trim());
   };
-
   for (const raw of lines) {
     if (multiKey) {
-      if (raw.startsWith("    ") || raw.trim() === "") {
-        multiBuffer.push(raw.startsWith("    ") ? raw.slice(4) : "");
+      if (/^\s+/.test(raw) || raw.trim() === "") {
+        if (raw.trim() === "") {
+          multiBuffer.push("");
+          continue;
+        }
+
+        multiBuffer.push(raw);
         continue;
       } else {
         flushMulti();
@@ -42,22 +52,12 @@ export const parseDashObjectList = (content: string): Record<string, string>[] =
 
     if (raw.startsWith("- ") || raw.startsWith("  ")) {
       const isListItem = raw.startsWith("- ");
-      if (isListItem) flushMulti();
-
-      const contentPart = isListItem ? raw.slice(2) : raw.trimStart();
-      const i = contentPart.indexOf(": ");
-
-      if (i === -1) {
-        const FormatError = commonI18n.dslFormatError as I18nMap;
-        const FormatErrorMsg = (FormatError[lang.value] || FormatError.en).replace(
-          "{raw}",
-          String(raw),
-        );
-        $message.error(FormatErrorMsg, true, 3000);
-      }
 
       if (isListItem) {
-        if (current) result.push(current);
+        flushMulti();
+        if (current && Object.keys(current).length > 0) {
+          result.push(current);
+        }
         current = {};
       }
 
@@ -67,6 +67,18 @@ export const parseDashObjectList = (content: string): Record<string, string>[] =
           dslIsolatedProperty[lang.value] || dslIsolatedProperty.en
         ).replace("{raw}", String(raw));
         $message.error(dslIsolatedPropertyMsg, true, 3000);
+        continue;
+      }
+
+      const contentPart = isListItem ? raw.slice(2) : raw.trimStart();
+      const i = contentPart.indexOf(": ");
+      if (i === -1) {
+        const FormatError = commonI18n.dslFormatError as I18nMap;
+        const FormatErrorMsg = (FormatError[lang.value] || FormatError.en).replace(
+          "{raw}",
+          String(raw),
+        );
+        $message.error(FormatErrorMsg, true, 3000);
         continue;
       }
 
@@ -89,22 +101,21 @@ export const parseDashObjectList = (content: string): Record<string, string>[] =
   }
 
   flushMulti();
-  if (current) result.push(current);
-
+  if (current && Object.keys(current).length > 0) {
+    result.push(current);
+  }
   return result;
 };
 
 const stripQuotes = (value: string): string => {
-  if (/^(['"]).*\1$/.test(value)) {
-    const quote = value[0];
+  const len = value.length;
+  if (len < 2) return value;
+  const first = value[0];
+  if ((first === '"' || first === "'") && value[len - 1] === first) {
     const content = value.slice(1, -1);
-    return content.replace(/\\([\\'"])/g, (match: string, p1: string): string => {
-      if (p1 === "\\" || p1 === quote) {
-        return p1;
-      }
-      return match;
-    });
+    return content.includes("\\")
+      ? content.replace(/\\(["\\])/g, (_: string, p1: string): string => p1)
+      : content;
   }
-
   return value;
 };

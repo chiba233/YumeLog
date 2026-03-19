@@ -29,7 +29,7 @@ $$code(const a = ref(true))$$
 $$info(typescript | const a = ref(true))$$
 $$warning(error | 我去，原地爆炸了！
 爆炸了)$$
-$$warning(error | $$center(我去，原地爆炸了！这个有居中效果喵！
+$$warning($$center(我去，原地爆炸了！这个有居中效果喵！
 爆炸了)$$)$$
 $$bold(粗体$$underline(嵌套下划线$$link(http://baidu.com)$$)$$)$$
 $$link(https://baidu.com | $$bold($$underline(点我进入百度)$$)$$)$$
@@ -52,4 +52,15 @@ $$info(a|b|c|d)$$
      $$link(https://baidu.com | $$bold($$underline(点我进)$$入)$$ 百  度| 百 |度)$$
 $$bold-test(hello $$bold(world)$$)$$
 $$bold(hello $$bold(world)$$ test)$$
+$$raw-code(js)%
+function test() {
+  console.log(")");
+}
+%end$$
+\\\\1
+$$code\(hello\)$$
+test \$$code(hello)$$
+$$code(hello)$$
+$$test(hello \| world)$$
+
 @end

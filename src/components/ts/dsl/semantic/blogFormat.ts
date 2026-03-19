@@ -1,3 +1,5 @@
+// noinspection DuplicatedCode
+
 import { $message } from "@/components/ts/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
@@ -11,6 +13,14 @@ const TAG_DIVIDER = "|";
 const END_TAG = ")$$";
 const RAW_OPEN = ")%";
 const RAW_CLOSE = "%end$$";
+const ESCAPE_CHAR = "\\";
+
+const ESCAPABLE_CHARS = new Set(
+  [TAG_OPEN, TAG_CLOSE, TAG_DIVIDER, ESCAPE_CHAR]
+    .flatMap((str) => str.split(""))
+    .filter((char) => !/[a-zA-Z0-9]/.test(char))
+    .filter((char, i, self) => self.indexOf(char) === i),
+);
 
 const RICH_TYPE_SET: ReadonlySet<RichType> = new Set(RICH_TYPES);
 const BLOCK_TYPES_SET: ReadonlySet<BlockType> = new Set(BLOCK_TYPES);
@@ -24,24 +34,48 @@ const isTagChar = (c: string) =>
   c === "_" ||
   c === "-";
 
+const unescapeInline = (str: string): string => {
+  let result = "";
+  let i = 0;
+  while (i < str.length) {
+    if (str[i] === ESCAPE_CHAR && i + 1 < str.length && ESCAPABLE_CHARS.has(str[i + 1])) {
+      result += str[i + 1];
+      i += 2;
+      continue;
+    }
+    result += str[i++];
+  }
+  return result;
+};
+
+const readEscaped = (text: string, i: number): [string, number] => {
+  if (text[i] === ESCAPE_CHAR && i + 1 < text.length) {
+    const nextChar = text[i + 1];
+    if (ESCAPABLE_CHARS.has(nextChar)) {
+      // 只有遇到 | 和 \ 时保留转义符面具，其他全部直接脱壳
+      if (nextChar === TAG_DIVIDER[0] || nextChar === ESCAPE_CHAR) {
+        return [ESCAPE_CHAR + nextChar, i + 2];
+      }
+      return [nextChar, i + 2];
+    }
+  }
+  return [text[i], i + 1];
+};
+
 const findRawClose = (text: string, start: number): number => {
   let pos = start;
-
   while (pos < text.length) {
     let lineEnd = text.indexOf("\n", pos);
-
     if (lineEnd === -1) {
       lineEnd = text.length;
     } else if (lineEnd > pos && text[lineEnd - 1] === "\r") {
       lineEnd--;
     }
-
     if (text.startsWith(RAW_CLOSE, pos) && pos + RAW_CLOSE.length === lineEnd) {
       return pos;
     }
     pos = lineEnd + 1;
   }
-
   return -1;
 };
 
@@ -49,6 +83,7 @@ const extractText = (tokens?: TextToken[]): string => {
   if (!tokens?.length) return "";
   return tokens.map((t) => (typeof t.value === "string" ? t.value : extractText(t.value))).join("");
 };
+
 const ALLOWED_LANGS = ["typescript", "bash", "json", "yaml", "vue", "html", "text"] as const;
 type SupportedLang = (typeof ALLOWED_LANGS)[number];
 const normalizeLang = (codeLang?: string): SupportedLang => {
@@ -83,23 +118,35 @@ const splitTokensByPipe = (tokens: TextToken[]): TextToken[][] => {
       continue;
     }
 
-    let sPos = 0;
-    let pipeIdx: number;
-    while ((pipeIdx = token.value.indexOf(TAG_DIVIDER, sPos)) !== -1) {
-      let segment = token.value.slice(sPos, pipeIdx);
-      let end = segment.length;
-      while (end > 0 && segment[end - 1] === " ") end--;
-      segment = segment.slice(0, end);
-      pushText(segment);
-      parts.push([]);
-      sPos = pipeIdx + 1;
-      while (token.value[sPos] === " ") sPos++;
+    let buffer = "";
+    let i = 0;
+    const val = token.value;
+
+    const flush = () => {
+      if (buffer) {
+        pushText(buffer);
+        buffer = "";
+      }
+    };
+
+    while (i < val.length) {
+      if (val[i] === ESCAPE_CHAR && i + 1 < val.length && ESCAPABLE_CHARS.has(val[i + 1])) {
+        buffer += val[i + 1];
+        i += 2;
+        continue;
+      }
+
+      if (val[i] === TAG_DIVIDER) {
+        flush();
+        parts.push([]);
+        i++;
+        while (i < val.length && val[i] === " ") i++;
+        continue;
+      }
+      buffer += val[i++];
     }
-
-    const remaining = token.value.slice(sPos);
-    pushText(remaining);
+    flush();
   }
-
   return parts;
 };
 
@@ -108,29 +155,21 @@ const TAG_HANDLERS: Record<string, TagHandler> = {
     inline: (tokens) => {
       const parts = splitTokensByPipe(tokens);
       const titlePart = parts.shift() ?? [];
-
       return {
         type: "link",
-        url: extractText(titlePart).trim(),
+        url: unescapeInline(extractText(titlePart)).trim(),
         value: parts.length ? parts.flat() : titlePart,
       };
     },
   },
-
   info: {
     inline: (tokens) => {
       const parts = splitTokensByPipe(tokens);
-      if (parts.length === 1) {
-        return {
-          type: "info",
-          title: "Info:",
-          value: parts[0],
-        };
-      }
+      if (parts.length === 1) return { type: "info", title: "Info:", value: parts[0] };
       const titlePart = parts.shift() ?? [];
       return {
         type: "info",
-        title: extractText(titlePart).trim(),
+        title: unescapeInline(extractText(titlePart)).trim(),
         value: parts.flat(),
       };
     },
@@ -140,22 +179,14 @@ const TAG_HANDLERS: Record<string, TagHandler> = {
       value: [{ type: "text", value: content }],
     }),
   },
-
   warning: {
     inline: (tokens) => {
       const parts = splitTokensByPipe(tokens);
-      if (parts.length === 1) {
-        return {
-          type: "warning",
-          title: "Warning:",
-          value: parts[0],
-        };
-      }
+      if (parts.length === 1) return { type: "warning", title: "Warning:", value: parts[0] };
       const titlePart = parts.shift() ?? [];
-
       return {
         type: "warning",
-        title: extractText(titlePart).trim(),
+        title: unescapeInline(extractText(titlePart)).trim(),
         value: parts.flat(),
       };
     },
@@ -168,21 +199,15 @@ const TAG_HANDLERS: Record<string, TagHandler> = {
   "raw-code": {
     raw: (arg, content) => {
       const parts = splitTokensByPipe([{ type: "text", value: arg ?? "" }]);
-      const codeLang = normalizeLang(extractText(parts[0] ?? []).trim());
-      const title = extractText(parts[1] ?? []).trim();
-      const label = extractText(parts[2] ?? []).trim();
-      return {
-        type: "raw-code",
-        codeLang,
-        title: title || "Code:",
-        label,
-        value: content.trim(),
-      };
+      const codeLang = normalizeLang(unescapeInline(extractText(parts[0] ?? [])).trim());
+      const title = unescapeInline(extractText(parts[1] ?? [])).trim();
+      const label = unescapeInline(extractText(parts[2] ?? [])).trim();
+      return { type: "raw-code", codeLang, title: title || "Code:", label, value: content.trim() };
     },
   },
 };
 
-export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
+export const parseRichText = (text: string, depthLimit = 50, silent = false): TextToken[] => {
   if (!text) return [];
 
   const root: TextToken[] = [];
@@ -196,10 +221,8 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
 
   const pushText = (str: string) => {
     if (!str) return;
-
     const tokens = current();
     const last = tokens[tokens.length - 1];
-
     if (last?.type === "text" && typeof last.value === "string") {
       last.value += str;
     } else {
@@ -208,29 +231,29 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
   };
 
   while (i < text.length) {
-    const c = text[i];
-
     if (text.startsWith(TAG_PREFIX, i)) {
       let j = i + TAG_PREFIX.length;
-
       while (j < text.length && isTagChar(text[j])) j++;
 
       if (text.startsWith(TAG_OPEN, j)) {
-        const tag = text.slice(i + TAG_PREFIX.length, j);
+        pushText(buffer);
+        buffer = "";
 
+        const tag = text.slice(i + TAG_PREFIX.length, j);
         if (stack.length >= depthLimit || ignoredDepth > 0) {
           if (stack.length === depthLimit && ignoredDepth === 0) {
             const depthEntry = commonI18n.richTextDepthLimit as I18nMap;
             const depthMsg = (depthEntry[lang.value] || depthEntry.en)
               .replace("{depthLimit}", String(depthLimit))
               .replace("{i}", String(i));
-            $message.error(depthMsg, true, 3000);
+            if (!silent) $message.error(depthMsg, true, 3000);
           }
           ignoredDepth++;
           buffer += text.slice(i, j + TAG_OPEN.length);
           i = j + TAG_OPEN.length;
           continue;
         }
+
         const handler = TAG_HANDLERS[tag];
         if (handler?.raw) {
           let k = j + 1;
@@ -256,7 +279,7 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
             if (end === -1) {
               const rawEntry = commonI18n.richTextRawNotClosed as I18nMap;
               const rawMsg = (rawEntry[lang.value] || rawEntry.en).replace("{i}", String(i));
-              $message.error(rawMsg, true, 3000);
+              if (!silent) $message.error(rawMsg, true, 3000);
               buffer += text.slice(i, k + RAW_OPEN.length);
               i = k + RAW_OPEN.length;
               continue;
@@ -270,26 +293,23 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
           }
         }
 
-        pushText(buffer);
-        buffer = "";
         stack.push({ tag, tokens: [] });
         i = j + TAG_OPEN.length;
         continue;
       }
     }
 
-    if (c === END_TAG[0] && text.startsWith(END_TAG, i)) {
+    if (text.startsWith(END_TAG, i)) {
       if (ignoredDepth > 0) {
         ignoredDepth--;
         buffer += END_TAG;
         i += END_TAG.length;
         continue;
       }
-
       if (stack.length === 0) {
         const closeEntry = commonI18n.richTextUnexpectedClose as I18nMap;
         const closeMsg = (closeEntry[lang.value] || closeEntry.en).replace("{i}", String(i));
-        $message.error(closeMsg, true, 3000);
+        if (!silent) $message.error(closeMsg, true, 3000);
 
         buffer += END_TAG;
         i += END_TAG.length;
@@ -299,45 +319,50 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
       pushText(buffer);
       buffer = "";
       const node = stack.pop()!;
+
       if (!isRichType(node.tag)) {
         const richTextUnknownTag = commonI18n.richTextUnknownTag as I18nMap;
         const richTextUnknownTagMsg = (richTextUnknownTag[lang.value] || richTextUnknownTag.en)
           .replace("{tag}", String(node.tag))
           .replace("{i}", String(i));
-        $message.error(richTextUnknownTagMsg, true, 3000);
-        current().push(...node.tokens);
-        i += END_TAG.length;
-        continue;
-      }
+        if (!silent) $message.error(richTextUnknownTagMsg, true, 3000);
 
-      const handler = TAG_HANDLERS[node.tag];
-      let token: TextToken;
-      if (handler?.inline) {
-        token = handler.inline(node.tokens);
+        node.tokens.forEach((t) => {
+          if (t.type === "text" && typeof t.value === "string") pushText(unescapeInline(t.value));
+          else current().push(t);
+        });
       } else {
-        token = {
-          type: node.tag,
-          value: node.tokens,
-        };
+        const handler = TAG_HANDLERS[node.tag];
+        current().push(
+          handler?.inline ? handler.inline(node.tokens) : { type: node.tag, value: node.tokens },
+        );
       }
-
-      current().push(token);
 
       i += END_TAG.length;
-
       if (BLOCK_TYPES_SET.has(node.tag as BlockType)) {
-        if (text[i] === "\r") {
-          if (text[i + 1] === "\n") i += 2;
-          else i += 1;
-        } else if (text[i] === "\n") {
-          i += 1;
-        }
+        if (text.startsWith("\r\n", i)) i += 2;
+        else if (text[i] === "\n") i++;
       }
-
       continue;
     }
 
-    buffer += c;
+    if (text[i] === ESCAPE_CHAR && i + 1 < text.length) {
+      const nextChar = text[i + 1];
+      if (stack.length > 0) {
+        const [char, next] = readEscaped(text, i);
+        buffer += char;
+        i = next;
+        continue;
+      } else {
+        if (nextChar === TAG_OPEN[0] || nextChar === TAG_CLOSE[0]) {
+          buffer += nextChar;
+          i += 2;
+          continue;
+        }
+      }
+    }
+
+    buffer += text[i];
     i++;
   }
 
@@ -345,75 +370,24 @@ export const parseRichText = (text: string, depthLimit = 50): TextToken[] => {
 
   while (stack.length) {
     const node = stack.pop()!;
-    const parent = stack.length ? stack[stack.length - 1].tokens : root;
-
     const fallback = TAG_PREFIX + node.tag + TAG_OPEN;
-
-    const last = parent[parent.length - 1];
+    const tokens = current();
+    const last = tokens[tokens.length - 1];
 
     if (last?.type === "text" && typeof last.value === "string") {
       last.value += fallback;
     } else {
-      parent.push({ type: "text", value: fallback });
+      tokens.push({ type: "text", value: fallback });
     }
-    parent.push(...node.tokens);
+
+    tokens.push(...node.tokens);
   }
+
   return root;
 };
 
 export const stripRichText = (text?: string): string => {
   if (!text) return "";
-  let result = "";
-  let i = 0;
-  while (i < text.length) {
-    let matched = false;
-    if (text.startsWith(TAG_PREFIX, i)) {
-      let j = i + TAG_PREFIX.length;
-      while (j < text.length && isTagChar(text[j])) j++;
-      if (text[j] === TAG_OPEN) {
-        const tagName = text.slice(i + TAG_PREFIX.length, j);
-        let k = j + 1;
-        let depth = 1;
-        while (k < text.length && depth > 0) {
-          if (text[k] === TAG_OPEN) depth++;
-          else if (text[k] === TAG_CLOSE) depth--;
-          k++;
-        }
-        if (depth === 0) {
-          const closePos = k - 1;
-          if (text.startsWith(RAW_OPEN, closePos)) {
-            const contentStart = closePos + RAW_OPEN.length;
-            const end = findRawClose(text, contentStart);
-            if (end !== -1) {
-              result += text.slice(contentStart, end);
-              i = end + RAW_CLOSE.length;
-              if (text.startsWith("\r\n", i)) i += 2;
-              else if (text[i] === "\n") i++;
-
-              matched = true;
-            }
-          } else if (text.startsWith(END_TAG, closePos)) {
-            const inner = text.slice(j + 1, closePos);
-            result += stripRichText(inner);
-            i = closePos + END_TAG.length;
-            if (BLOCK_TYPES_SET.has(tagName as BlockType)) {
-              if (text[i] === "\r") {
-                if (text[i + 1] === "\n") i += 2;
-                else i += 1;
-              } else if (text[i] === "\n") {
-                i += 1;
-              }
-            }
-            matched = true;
-          }
-        }
-      }
-    }
-
-    if (!matched) {
-      result += text[i];
-      i++;
-    }
-  }
-  return result.replace(/[\r\n\t]+/g, " ").trim();
+  const tokens = parseRichText(text, 50, true);
+  return extractText(tokens);
 };

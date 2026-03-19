@@ -225,7 +225,7 @@ const PostsRenderers: Record<string, PostsRenderer> = {
               h(
                 "span",
                 {
-                  lang: ctx.post.lang as string,
+                  lang: ctx.post.lang || lang.value,
                   class: "themeText",
                   style: { display: "block", textAlign: "center" },
                 },
@@ -243,7 +243,7 @@ const PostsRenderers: Record<string, PostsRenderer> = {
   text: (block, ctx, tokensFromSlot) =>
     h("div", { class: "postCardText" }, [
       h(RichTextRenderer, {
-        lang: ctx.post.lang as string,
+        lang: ctx.post.lang || lang.value,
         tokens: tokensFromSlot && tokensFromSlot.length > 0 ? tokensFromSlot : block.tokens || [],
       }),
     ]),
@@ -307,7 +307,9 @@ const renderDetailContent = (): VNodeChild => {
       <div class="postContent">
         <template v-if="isVisible(post, index)">
           <div class="post-header">
-            <h2 :lang="post?.lang as string" class="post-title commonText">{{ post.title }}</h2>
+            <h2 :lang="post?.lang || lang" class="post-title commonText">
+              {{ post.title }}
+            </h2>
             <div class="post-meta">
               <n-icon v-if="post.pin === true || (post.pin as unknown) === 'true'" size="15">
                 <PushPinSharp />
@@ -331,7 +333,7 @@ const renderDetailContent = (): VNodeChild => {
               />
             </div>
             <div :class="{ 'expanded-text': !post.imageBlocks.length }" class="post-description">
-              <p :lang="post?.lang as string" class="commonText">
+              <p :lang="post?.lang || lang" class="commonText">
                 {{ post.displayDescription }}
               </p>
             </div>
@@ -375,7 +377,7 @@ const renderDetailContent = (): VNodeChild => {
   </div>
 
   <article v-if="isSSR && selectedPost" class="sr-only-article">
-    <h1 :lang="selectedPost?.lang as string">{{ selectedPost.title }}</h1>
+    <h1 :lang="(selectedPost?.lang as string) || lang">{{ selectedPost.title }}</h1>
     <time :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')" :lang="lang">
       {{ selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") }}
     </time>
@@ -393,12 +395,12 @@ const renderDetailContent = (): VNodeChild => {
     <n-card
       v-if="selectedPost"
       v-a11y
-      :lang="selectedPost?.lang as string"
+      :lang="(selectedPost?.lang as string) || lang"
       class="postModel"
       size="huge"
     >
       <template #header>
-        <h2 :lang="selectedPost?.lang as string" class="postCardTitle">
+        <h2 :lang="(selectedPost?.lang as string) || lang" class="postCardTitle">
           {{ selectedPost.title }}
         </h2>
       </template>

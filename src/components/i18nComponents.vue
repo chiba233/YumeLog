@@ -32,7 +32,12 @@ import { lang } from "@/components/ts/setupLang.ts";
 import { themeColor, useTheme } from "@/components/ts/useTheme.ts";
 import { NButton, NIcon, NPopselect, type SelectOption } from "naive-ui";
 import LangIcon from "../icons/langIcon.svg";
+import { $message } from "@/components/ts/msgUtils.ts";
+import commonI18n from "@/data/I18N/commonI18n.json";
 
+type I18nMap = Record<string, string>;
+
+const configLoadFailed = commonI18n.configLoadFailed as I18nMap;
 useTheme();
 interface Props {
   btnWidth?: string;
@@ -44,11 +49,16 @@ const props = withDefaults(defineProps<Props>(), {
 const i18nLang = shallowRef<SelectOption[]>([]);
 
 onMounted(async () => {
-  await fetch("/data/config/i18nLang.json")
-    .then((res) => res.json())
-    .then((langData: SelectOption[]) => {
-      i18nLang.value = langData;
-    });
+  if (!import.meta.env.SSR) {
+    await fetch("/data/config/i18nLang.json")
+      .then((res) => res.json())
+      .then((langData: SelectOption[]) => {
+        i18nLang.value = langData;
+      })
+      .catch((err) => {
+        $message.error(`I18n - ${configLoadFailed[lang.value]}: ${err}`, true, 4000);
+      });
+  }
 });
 
 watchEffect(() => {

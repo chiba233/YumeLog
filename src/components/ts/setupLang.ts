@@ -8,29 +8,13 @@ import "dayjs/locale/th";
 import { ref, type Ref, watch } from "vue";
 import relativeTime from "dayjs/plugin/relativeTime";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import { $message } from "./msgUtils.ts";
 import { SelectOption } from "./d.ts";
-import commonI18n from "../../data/I18N/commonI18n.json";
 
 dayjs.extend(buddhistEra);
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
 
-type I18nMap = Record<string, string>;
-const configLoadFailed = commonI18n.configLoadFailed as I18nMap;
-
 export const langMap: Ref<SelectOption[]> = ref([]);
-export type TranslationEntry = Record<string, string>;
-if (!import.meta.env.SSR) {
-  fetch("/data/config/i18nLang.json")
-    .then((res) => res.json())
-    .then((langData: SelectOption[]) => {
-      langMap.value = langData;
-    })
-    .catch((err) => {
-      $message.error(`I18n - ${configLoadFailed[lang.value]}: ${err}`, true, 4000);
-    });
-}
 
 const rawLang = import.meta.env.SSR ? "zh" : navigator.language.slice(0, 2);
 export const lang: Ref<string> = useStorage("useLang", rawLang);

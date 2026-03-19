@@ -8,11 +8,12 @@ import vue from "shiki/langs/vue.mjs";
 import html from "shiki/langs/html.mjs";
 import theme from "shiki/themes/github-light-high-contrast.mjs";
 
-const getWasm = () => {
+const getWasm = async () => {
   if (typeof window !== "undefined") {
     return import("shiki/wasm");
   } else {
-    return import("shiki/wasm").then((m) => m.default);
+    const m = await import("shiki/wasm");
+    return m.default;
   }
 };
 

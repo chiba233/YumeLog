@@ -16,9 +16,9 @@ export const showWechatModel = ref<boolean>(false);
 export const showLineModel = ref<boolean>(false);
 export const currentPostTitle = ref<string | null>(null);
 export const selectedPost = ref<Post | null>(null);
-export const posts = ref<Post[]>([]);
+export const posts = shallowRef<Post[]>([]);
 export const showModal = ref(false);
-export const friends = ref<Friend[]>([]);
+export const friends = shallowRef<Friend[]>([]);
 export const blogDisplay = computed(() => {
   const currentLang = lang.value;
   const source = blogI18nData as Record<string, Record<string, string>>;
@@ -39,7 +39,7 @@ export const socialLinks = computed(() => {
   return socialRawData.value?.socialLinks ?? {};
 });
 
-export const nekoImg = ref<YamlNekoBlock[]>([]);
+export const nekoImg = shallowRef<YamlNekoBlock[]>([]);
 export const loadCat = async () => {
   if (nekoImg.value.length) return;
   const res = await loadSingleYaml<NekoYamlResponse>("main", "neko.yaml");

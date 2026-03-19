@@ -23,9 +23,7 @@ interface ImageContent {
   spareUrl?: string;
   desc?: string;
 }
-interface PostBlock extends BaseBlock<string | ImageContent[]> {
-  tokens?: TextToken[];
-}
+
 interface DSLNode {
   name: string;
   content: string;
@@ -37,7 +35,8 @@ interface SyntaxConfig {
 type BlockContent = PostBlock["content"];
 type DSLTree = DSLNode[];
 type BlockParser = (content: string) => BlockContent;
-const parseDashObjectList = (content: string): Record<string, string>[] => {
+
+export const parseDashObjectList = (content: string): Record<string, string>[] => {
   const lines = content.split(/\r?\n/);
   const result: Record<string, string>[] = [];
   let current: Record<string, string> | null = null;
@@ -45,25 +44,35 @@ const parseDashObjectList = (content: string): Record<string, string>[] => {
   let multiBuffer: string[] = [];
 
   const flushMulti = () => {
-    if (current && multiKey) {
-      current[multiKey] = multiBuffer.join("\n").trimEnd();
+    if (current && multiKey && multiBuffer.length > 0) {
+      const indents = multiBuffer
+        .filter((l) => l.trim() !== "")
+        .map((l) => l.match(/^(\s*)/)?.[1].length ?? 0);
+
+      const minIndent = indents.length ? Math.min(...indents) : 0;
+
+      current[multiKey] = multiBuffer
+        .map((l) => l.slice(minIndent))
+        .join("\n")
+        .trimEnd();
     }
+
     multiKey = null;
     multiBuffer = [];
   };
 
   const processValue = (raw: string): string => {
-    const trimmedRaw = raw.trim();
-    if (/^(['"]).*\1$/.test(trimmedRaw)) {
-      return stripQuotes(trimmedRaw);
-    }
-    return raw.trim();
+    return stripQuotes(raw.trim());
   };
-
   for (const raw of lines) {
     if (multiKey) {
-      if (raw.startsWith("    ") || raw.trim() === "") {
-        multiBuffer.push(raw.startsWith("    ") ? raw.slice(4) : "");
+      if (/^\s+/.test(raw) || raw.trim() === "") {
+        if (raw.trim() === "") {
+          multiBuffer.push("");
+          continue;
+        }
+
+        multiBuffer.push(raw);
         continue;
       } else {
         flushMulti();
@@ -74,23 +83,24 @@ const parseDashObjectList = (content: string): Record<string, string>[] => {
 
     if (raw.startsWith("- ") || raw.startsWith("  ")) {
       const isListItem = raw.startsWith("- ");
-      if (isListItem) flushMulti();
-
-      const contentPart = isListItem ? raw.slice(2) : raw.trimStart();
-      const i = contentPart.indexOf(": ");
-
-      if (i === -1) {
-        console.error(`[DSL Error] 格式错误，已忽略该行: "${raw}"`);
-        continue;
-      }
 
       if (isListItem) {
-        if (current) result.push(current);
+        flushMulti();
+        if (current && Object.keys(current).length > 0) {
+          result.push(current);
+        }
         current = {};
       }
 
       if (!current) {
-        console.error(`[DSL Error] 孤立属性行，已忽略: "${raw}"`);
+        console.error("孤立属性，已忽略");
+        continue;
+      }
+
+      const contentPart = isListItem ? raw.slice(2) : raw.trimStart();
+      const i = contentPart.indexOf(": ");
+      if (i === -1) {
+        console.error("[DSL Warning] 格式错误，已忽略行");
         continue;
       }
 
@@ -104,15 +114,17 @@ const parseDashObjectList = (content: string): Record<string, string>[] => {
 
       current[key] = processValue(valuePart);
     } else {
-      console.error(`[DSL Warning] 无法识别的行，已跳过: "${raw}"`);
+      console.error("无法识别的行，已跳过");
     }
   }
 
   flushMulti();
-  if (current) result.push(current);
-
+  if (current && Object.keys(current).length > 0) {
+    result.push(current);
+  }
   return result;
 };
+
 const blockParsers: Record<string, BlockParser> = {
   image(content: string) {
     return parseDashObjectList(content) as unknown as ImageContent[];
@@ -125,28 +137,25 @@ const syntax: SyntaxConfig = {
 };
 
 const stripQuotes = (value: string): string => {
-  if (/^(['"]).*\1$/.test(value)) {
-    const quote = value[0];
+  const len = value.length;
+  if (len < 2) return value;
+
+  const first = value[0];
+  if ((first === '"' || first === "'") && value[len - 1] === first) {
     const content = value.slice(1, -1);
-    return content.replace(/\\([\\'"])/g, (match: string, p1: string): string => {
-      if (p1 === "\\" || p1 === quote) {
-        return p1;
-      }
-      return match;
-    });
+
+    return content.includes("\\")
+      ? content.replace(/\\(["\\])/g, (_: string, p1: string) => p1)
+      : content;
   }
 
   return value;
 };
 
 const getBlockName = (line: string): string | null => {
-  if (!line.startsWith(syntax.blockPrefix)) {
-    return null;
-  }
-
-  const name = line.slice(syntax.blockPrefix.length).trim();
-
-  if (!name) {
+  if (!line.startsWith(syntax.blockPrefix)) return null;
+  const name = line.slice(syntax.blockPrefix.length);
+  if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
     return null;
   }
 
@@ -162,17 +171,21 @@ const parseDSL = (text: string): DSLTree => {
 
   const flush = (): void => {
     if (!currentName) return;
-    nodes.push({ name: currentName, content: buffer.join("\n").trim() });
+    nodes.push({ name: currentName, content: buffer.join("\n").replace(/\n+$/, "") });
     buffer = [];
     currentName = null;
   };
 
   for (const line of lines) {
-    if (line.startsWith("\\")) {
-      if (currentName) {
-        buffer.push(line.slice(1));
+    const escapeMatch = line.match(/^(\\+)/);
+    if (escapeMatch) {
+      const remainingContent = line.slice(escapeMatch[1].length);
+      if (getBlockName(remainingContent) !== null) {
+        const slashCount = escapeMatch[1].length;
+        const remainingSlashes = "\\".repeat(Math.max(0, slashCount - 1));
+        buffer.push(remainingSlashes + remainingContent);
+        continue;
       }
-      continue;
     }
 
     const name = getBlockName(line);
@@ -202,44 +215,73 @@ const parseDSL = (text: string): DSLTree => {
   return nodes;
 };
 
-const applyMeta = (content: string, target: Record<string, unknown>) => {
-  const lines = content.split(/\r\n|\n|\r/);
-  for (const line of lines) {
-    const i = line.indexOf(":");
-    if (i === -1) continue;
-    const key = line.slice(0, i).trim();
-    target[key] = line.slice(i + 1).trim();
+const applyMeta = (
+  content: string,
+  target: Record<string, unknown>,
+  reservedKeys: Set<string> = new Set(["blocks"]),
+) => {
+  const len = content.length;
+  let start = 0;
+  while (start < len) {
+    let nextNewline = -1;
+    for (let i = start; i < len; i++) {
+      const char = content[i];
+      if (char === "\n" || char === "\r") {
+        nextNewline = i;
+        break;
+      }
+    }
+    const end = nextNewline === -1 ? len : nextNewline;
+    if (end > start) {
+      const line = content.slice(start, end);
+      const colonIndex = line.indexOf(":");
+      if (colonIndex !== -1) {
+        const key = line.slice(0, colonIndex).trim();
+        const value = line.slice(colonIndex + 1).trim();
+
+        if (reservedKeys.has(key)) {
+          console.error(`[DSL Warning] Reserved key: ${key}`);
+          continue;
+        }
+
+        if (key in target) {
+          console.error(`[DSL Warning] Duplicate key: ${key}`);
+        }
+
+        target[key] = value;
+      }
+    }
+    if (nextNewline === -1) {
+      break;
+    } else {
+      if (
+        content[nextNewline] === "\r" &&
+        nextNewline + 1 < len &&
+        content[nextNewline + 1] === "\n"
+      ) {
+        start = nextNewline + 2;
+      } else {
+        start = nextNewline + 1;
+      }
+    }
   }
 };
-const astToPost = (ast: DSLTree): Record<string, unknown> & { blocks: PostBlock[] } => {
-  const meta: Record<string, unknown> = {};
-  const blocks: PostBlock[] = [];
-
+type FinalPost = Record<string, unknown> & { blocks: PostBlock[] };
+export const astToPost = (ast: DSLTree): FinalPost => {
+  const result = { blocks: [] } as FinalPost;
   for (const node of ast) {
     if (node.name === "meta") {
-      applyMeta(node.content, meta);
+      applyMeta(node.content, result);
       continue;
     }
-
-    const block: PostBlock = {
-      type: node.name,
-    };
-
     const parser = blockParsers[node.name];
-
-    if (parser) {
-      block.content = parser(node.content);
-    } else {
-      block.content = node.content;
-    }
-
-    blocks.push(block);
+    result.blocks.push({
+      type: node.name,
+      content: parser ? parser(node.content) : node.content,
+    });
   }
 
-  return {
-    ...meta,
-    blocks,
-  };
+  return result;
 };
 
 interface BaseContent {

@@ -6,4 +6,5 @@
 *.webp binary
 *.gif binary
 *.ico binary
-*.svg text
+
+*.svg binary

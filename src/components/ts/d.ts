@@ -86,6 +86,7 @@ export interface Post extends BaseMetadata {
   title: string;
   layout?: string;
   blocks: PostBlock[];
+  lang?: string;
 }
 // 处理后的文章（用于 UI 展示）
 export interface ProcessedPost extends Post {

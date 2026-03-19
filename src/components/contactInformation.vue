@@ -398,7 +398,6 @@ useHead({
 .maiCard {
   display: flex;
   width: 42em;
-
   .n-collapse .n-collapse-item:not(:first-child) {
     border-top: 1.5px solid var(--direct-font-color);
   }

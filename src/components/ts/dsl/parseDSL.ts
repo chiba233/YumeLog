@@ -3,6 +3,7 @@
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/setupLang.ts";
 import { $message } from "@/components/ts/msgUtils.ts";
+
 type I18nMap = Record<string, string>;
 
 export interface DSLNode {
@@ -23,13 +24,9 @@ export const syntax: SyntaxConfig = {
 };
 
 const getBlockName = (line: string): string | null => {
-  if (!line.startsWith(syntax.blockPrefix)) {
-    return null;
-  }
-
-  const name = line.slice(syntax.blockPrefix.length).trim();
-
-  if (!name) {
+  if (!line.startsWith(syntax.blockPrefix)) return null;
+  const name = line.slice(syntax.blockPrefix.length);
+  if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
     return null;
   }
 
@@ -46,17 +43,21 @@ export const parseDSL = (text: string): DSLTree => {
 
   const flush = (): void => {
     if (!currentName) return;
-    nodes.push({ name: currentName, content: buffer.join("\n").trim() });
+    nodes.push({ name: currentName, content: buffer.join("\n").replace(/\n+$/, "") });
     buffer = [];
     currentName = null;
   };
 
   for (const line of lines) {
-    if (line.startsWith("\\")) {
-      if (currentName) {
-        buffer.push(line.slice(1));
+    const escapeMatch = line.match(/^(\\+)/);
+    if (escapeMatch) {
+      const remainingContent = line.slice(escapeMatch[1].length);
+      if (getBlockName(remainingContent) !== null) {
+        const slashCount = escapeMatch[1].length;
+        const remainingSlashes = "\\".repeat(Math.max(0, slashCount - 1));
+        buffer.push(remainingSlashes + remainingContent);
+        continue;
       }
-      continue;
     }
 
     const name = getBlockName(line);
@@ -82,7 +83,6 @@ export const parseDSL = (text: string): DSLTree => {
       buffer.push(line);
     }
   }
-
   flush();
   if (currentName) {
     const dslBlockNotClosed = commonI18n.dslBlockNotClosed as I18nMap;

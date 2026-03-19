@@ -52,10 +52,6 @@ const readEscaped = (text: string, i: number): [string, number] => {
   if (text[i] === ESCAPE_CHAR && i + 1 < text.length) {
     const nextChar = text[i + 1];
     if (ESCAPABLE_CHARS.has(nextChar)) {
-      // 只有遇到 | 和 \ 时保留转义符面具，其他全部直接脱壳
-      if (nextChar === TAG_DIVIDER[0] || nextChar === ESCAPE_CHAR) {
-        return [ESCAPE_CHAR + nextChar, i + 2];
-      }
       return [nextChar, i + 2];
     }
   }
@@ -107,11 +103,6 @@ const normalizeLang = (codeLang?: string): SupportedLang => {
 const splitTokensByPipe = (tokens: TextToken[]): TextToken[][] => {
   const parts: TextToken[][] = [[]];
 
-  const pushText = (text: string) => {
-    if (!text) return;
-    parts[parts.length - 1].push({ type: "text", value: text });
-  };
-
   for (const token of tokens) {
     if (token.type !== "text" || typeof token.value !== "string") {
       parts[parts.length - 1].push(token);
@@ -122,32 +113,55 @@ const splitTokensByPipe = (tokens: TextToken[]): TextToken[][] => {
     let i = 0;
     const val = token.value;
 
-    const flush = () => {
+    const flushText = () => {
       if (buffer) {
-        pushText(buffer);
+        parts[parts.length - 1].push({ type: "text", value: buffer });
         buffer = "";
       }
     };
 
     while (i < val.length) {
-      if (val[i] === ESCAPE_CHAR && i + 1 < val.length && ESCAPABLE_CHARS.has(val[i + 1])) {
-        buffer += val[i + 1];
+      if (val[i] === ESCAPE_CHAR && i + 1 < val.length) {
+        buffer += ESCAPE_CHAR + val[i + 1];
         i += 2;
         continue;
       }
 
       if (val[i] === TAG_DIVIDER) {
-        flush();
+        flushText();
+
         parts.push([]);
         i++;
         while (i < val.length && val[i] === " ") i++;
         continue;
       }
-      buffer += val[i++];
+
+      buffer += val[i];
+      i++;
     }
-    flush();
+
+    flushText();
   }
   return parts;
+};
+
+type CommonI18nKeys = keyof typeof commonI18n;
+
+const buildRichBlock = (
+  type: RichType,
+  titleToken: TextToken[] | string | undefined,
+  content: TextToken[],
+  defaultTitleI18nKey: CommonI18nKeys,
+): TextToken => {
+  const titleStr =
+    typeof titleToken === "string" ? titleToken : titleToken ? extractText(titleToken) : "";
+  const i18nEntry = commonI18n[defaultTitleI18nKey] as unknown as I18nMap;
+
+  return {
+    type,
+    title: unescapeInline(titleStr).trim() || i18nEntry[lang.value] || i18nEntry.en,
+    value: content,
+  };
 };
 
 const TAG_HANDLERS: Record<string, TagHandler> = {
@@ -165,36 +179,35 @@ const TAG_HANDLERS: Record<string, TagHandler> = {
   info: {
     inline: (tokens) => {
       const parts = splitTokensByPipe(tokens);
-      if (parts.length === 1) return { type: "info", title: "Info:", value: parts[0] };
-      const titlePart = parts.shift() ?? [];
-      return {
-        type: "info",
-        title: unescapeInline(extractText(titlePart)).trim(),
-        value: parts.flat(),
-      };
+      if (parts.length === 1) return buildRichBlock("info", undefined, parts[0], "labelInfo");
+      return buildRichBlock("info", parts[0], parts.slice(1).flat(), "labelInfo");
     },
-    raw: (title, content) => ({
-      type: "info",
-      title: title || "Info:",
-      value: [{ type: "text", value: content }],
-    }),
+    raw: (arg, content) =>
+      buildRichBlock("info", arg, [{ type: "text", value: content }], "labelInfo"),
   },
+
   warning: {
     inline: (tokens) => {
       const parts = splitTokensByPipe(tokens);
-      if (parts.length === 1) return { type: "warning", title: "Warning:", value: parts[0] };
-      const titlePart = parts.shift() ?? [];
-      return {
-        type: "warning",
-        title: unescapeInline(extractText(titlePart)).trim(),
-        value: parts.flat(),
-      };
+      if (parts.length === 1)
+        return buildRichBlock("warning", undefined, parts[0], "labelWarning");
+      return buildRichBlock("warning", parts[0], parts.slice(1).flat(), "labelWarning");
     },
-    raw: (title, content) => ({
-      type: "warning",
-      title: title || "Warning:",
-      value: [{ type: "text", value: content }],
-    }),
+    raw: (arg, content) =>
+      buildRichBlock("warning", arg, [{ type: "text", value: content }], "labelWarning"),
+  },
+
+  collapse: {
+    inline: (tokens) => {
+      const parts = splitTokensByPipe(tokens);
+      if (parts.length === 1)
+        return buildRichBlock("collapse", undefined, parts[0], "collapseClickToExpand");
+      return buildRichBlock("collapse", parts[0], parts.slice(1).flat(), "collapseClickToExpand");
+    },
+    raw: (arg, content) =>
+      buildRichBlock("collapse", arg, parseRichText(content), "collapseClickToExpand"),
+    block: (arg, content) =>
+      buildRichBlock("collapse", arg, parseRichText(content), "collapseClickToExpand"),
   },
   "raw-code": {
     raw: (arg, content) => {
@@ -255,7 +268,7 @@ export const parseRichText = (text: string, depthLimit = 50, silent = false): Te
         }
 
         const handler = TAG_HANDLERS[tag];
-        if (handler?.raw) {
+        if (handler?.raw || handler?.block) {
           let k = j + 1;
           let depth = 1;
           while (k < text.length && depth > 0) {
@@ -284,8 +297,18 @@ export const parseRichText = (text: string, depthLimit = 50, silent = false): Te
               i = k + RAW_OPEN.length;
               continue;
             }
-            const content = text.slice(contentStart, end);
-            current().push(handler.raw(arg, content));
+
+            const rawContent = text.slice(contentStart, end);
+            if (handler.block) {
+              current().push(handler.block(arg, rawContent));
+            } else if (handler.raw) {
+              const content = text
+                .slice(contentStart, end)
+                .split(ESCAPE_CHAR + RAW_CLOSE)
+                .join(RAW_CLOSE);
+              current().push(handler.raw(arg, content));
+            }
+
             i = end + RAW_CLOSE.length;
             if (text.startsWith("\r\n", i)) i += 2;
             else if (text[i] === "\n") i++;
@@ -347,19 +370,10 @@ export const parseRichText = (text: string, depthLimit = 50, silent = false): Te
     }
 
     if (text[i] === ESCAPE_CHAR && i + 1 < text.length) {
-      const nextChar = text[i + 1];
-      if (stack.length > 0) {
-        const [char, next] = readEscaped(text, i);
-        buffer += char;
-        i = next;
-        continue;
-      } else {
-        if (nextChar === TAG_OPEN[0] || nextChar === TAG_CLOSE[0]) {
-          buffer += nextChar;
-          i += 2;
-          continue;
-        }
-      }
+      const [char, next] = readEscaped(text, i);
+      buffer += char;
+      i = next;
+      continue;
     }
 
     buffer += text[i];

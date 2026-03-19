@@ -1,19 +1,122 @@
 <script lang="ts" setup>
 import type { RichType, TextToken } from "./ts/d";
-import { type Component, defineAsyncComponent } from "vue";
-import { NAlert } from "naive-ui";
+import {
+  type Component,
+  defineAsyncComponent,
+  ExtractPropTypes,
+  FunctionalComponent,
+  h,
+  VNode,
+  VNodeChild,
+} from "vue";
+import { NAlert, NCollapse, NCollapseItem } from "naive-ui";
 
 const ShikiCodeBlock = defineAsyncComponent(() => import("@/components/ShikiCodeBlock.vue"));
 
 defineOptions({ name: "RichTextRenderer" });
 
-defineProps<{
+const props = defineProps<{
   tokens: TextToken[];
   lang?: string;
 }>();
 
 type RenderTarget = string | Component | ReturnType<typeof defineAsyncComponent>;
 
+interface CollapseWrapperProps extends ExtractPropTypes<typeof NCollapse> {
+  title?: string;
+}
+
+const CollapseWrapper: FunctionalComponent<CollapseWrapperProps> = (props, { slots }): VNode => {
+  return h(
+    NCollapse,
+    {
+      arrowPlacement: "left",
+      displayDirective: "if",
+      class: "rich-collapse-wrapper",
+    },
+    {
+      default: (): VNodeChild =>
+        h(
+          NCollapseItem,
+          {
+            title: props.title,
+            name: props.title,
+          },
+          {
+            default: (): VNodeChild =>
+              h(
+                "div",
+                {
+                  class: "rich-collapse-body",
+                },
+                {
+                  default: (): VNodeChild => slots.default?.() ?? [],
+                },
+              ),
+          },
+        ),
+    },
+  );
+};
+
+const getComponentProps = (token: TextToken) => {
+  const base: Record<string, unknown> = { lang: props.lang };
+
+  switch (token.type) {
+    case "link":
+      return {
+        ...base,
+        href: getUrl(token),
+        rel: "noopener noreferrer",
+        target: "_blank",
+      };
+
+    case "info":
+    case "warning":
+      return {
+        ...base,
+        title: token.title,
+        showIcon: true,
+        bordered: true,
+        type: token.type,
+      };
+
+    case "collapse":
+      return {
+        ...base,
+        title: token.title ?? "",
+      };
+
+    case "raw-code":
+      return {
+        ...base,
+        code: token.value as string,
+        codeLang: token.codeLang,
+        title: token.title,
+        label: token.label,
+      };
+
+    default:
+      return base;
+  }
+};
+
+const getComponentClass = (token: TextToken) => {
+  if (token.type === "raw-code") return "";
+
+  return [
+    `fw-${token.type}`,
+    {
+      "fw-link": token.type === "link",
+      "rich-underline": token.type === "underline",
+      "rich-strike": token.type === "strike",
+      "center-text": token.type === "center",
+      "code-text": token.type === "code",
+      "rich-alert-block": token.type === "info",
+      "rich-warning-block": token.type === "warning",
+    },
+  ];
+};
 const tagMap: Record<RichType, RenderTarget> = {
   bold: "strong",
   thin: "span",
@@ -24,6 +127,7 @@ const tagMap: Record<RichType, RenderTarget> = {
   link: "a",
   info: NAlert,
   warning: NAlert,
+  collapse: CollapseWrapper,
   "raw-code": ShikiCodeBlock,
 };
 
@@ -53,44 +157,16 @@ const normalizeUrl = (raw: string): string | undefined => {
     <component
       :is="tagMap[token.type] || 'span'"
       v-else
-      :lang="lang"
-      :bordered="true"
-      :href="token.type === 'link' ? getUrl(token) : undefined"
-      :rel="token.type === 'link' ? 'noopener noreferrer' : undefined"
-      :target="token.type === 'link' ? '_blank' : undefined"
-      v-bind="
-        token.type === 'raw-code'
-          ? {
-              code: token.value as string,
-              codeLang: token.codeLang,
-              title: token.title,
-              label: token.label,
-            }
-          : {}
-      "
-      :class="[
-        token.type !== 'raw-code' ? `fw-${token.type}` : '',
-        {
-          'fw-link': token.type === 'link',
-          'rich-underline': token.type === 'underline',
-          'rich-strike': token.type === 'strike',
-          'center-text': token.type === 'center',
-          'code-text': token.type === 'code',
-          'rich-alert-block': token.type === 'info',
-          'rich-warning-block': token.type === 'warning',
-        },
-      ]"
-      :show-icon="token.type === 'info' || token.type === 'warning'"
-      :title="token.title"
-      :type="token.type === 'info' || token.type === 'warning' ? token.type : undefined"
+      :class="getComponentClass(token)"
+      v-bind="getComponentProps(token)"
     >
       <RichTextRenderer
         v-if="Array.isArray(token.value) && token.value.length"
         :tokens="token.value"
         :lang="lang"
       />
-      <template v-else-if="typeof token.value === 'string' && token.type !== 'raw-code'"
-        >{{ token.value }}
+      <template v-else-if="typeof token.value === 'string' && token.type !== 'raw-code'">
+        {{ token.value }}
       </template>
     </component>
   </template>

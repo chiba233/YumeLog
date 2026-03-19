@@ -120,11 +120,15 @@ export const blogUseHead = () => {
     meta: computed(() => {
       if (!postContext.value) {
         const baseDesc = titleI18N[lang.value] || titleI18N.en;
-        const postsTitles = posts.value
-          ?.map((p) => p.title)
-          .filter(Boolean)
-          .join(", ");
-        const desc = `${baseDesc}: ${postsTitles}`.slice(0, 200);
+        const formattedPosts =
+          posts.value
+            ?.map((p) => {
+              const date = p.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") || "";
+              return date && p.title ? `${date} ${p.title}` : p.title || "";
+            })
+            .filter(Boolean)
+            .join(", ") || "";
+        const desc = ` ${baseDesc}: ${formattedPosts}`.slice(0, 200);
 
         return [
           { name: "description", content: desc },

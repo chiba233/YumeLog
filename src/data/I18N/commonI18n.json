@@ -147,11 +147,11 @@
     "other": "[Config Error]: Type '{type}' not found in YamlUrlConfig."
   },
   "richTextRawNotClosed": {
-    "zh": "原始块未正确关闭。",
-    "en": "Raw block not closed!",
-    "ja": "rawブロックが閉じられていません!",
-    "th": "บล็อก raw ยังไม่ได้ปิด!",
-    "other": "Raw block not closed!"
+    "zh": "原始块未正确关闭。{i}'",
+    "en": "Raw block not closed! {i}'",
+    "ja": "rawブロックが閉じられていません! {i}'",
+    "th": "บล็อก raw ยังไม่ได้ปิด! {i}'",
+    "other": "Raw block not closed! {i}'"
   },
   "unsupportedCodeLanguage": {
     "zh": "不支持的代码语言：'{language}'。",
@@ -201,5 +201,26 @@
     "ja": "[DSL Error] DSL ブロックが閉じられていません: \"{name}\"",
     "th": "[DSL Error] บล็อก DSL ยังไม่ได้ปิด: \"{name}\"",
     "other": "[DSL Error] DSL block not closed: \"{name}\""
+  },
+  "collapseClickToExpand": {
+    "zh": "点击展开内容",
+    "en": "Click to expand content",
+    "ja": "クリックして展開",
+    "th": "คลิกเพื่อขยายเนื้อหา",
+    "other": "Click to expand content"
+  },
+  "labelWarning": {
+    "zh": "警告",
+    "en": "Warning",
+    "ja": "警告",
+    "th": "คำเตือน",
+    "other": "Warning"
+  },
+  "labelInfo": {
+    "zh": "信息",
+    "en": "Info",
+    "ja": "情報",
+    "th": "ข้อมูล",
+    "other": "Info"
   }
 }

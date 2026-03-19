@@ -47,18 +47,20 @@ export const RICH_TYPES = [
   "info",
   "warning",
   "raw-code",
+  "collapse",
 ] as const;
-export const BLOCK_TYPES = ["info", "warning", "center", "raw-code"] as const;
+export const BLOCK_TYPES = ["info", "warning", "center", "raw-code", "collapse"] as const;
 export type RichType = (typeof RICH_TYPES)[number];
 export type BlockType = (typeof BLOCK_TYPES)[number];
 
 export type InlineParser = (tokens: TextToken[]) => TextToken;
-
-type BlockParser = (arg: string | undefined, content: string) => TextToken;
+export type BlockParser = (arg: string | undefined, content: string) => TextToken;
+type RawParser = (arg: string | undefined, content: string) => TextToken;
 
 export type TagHandler = {
   inline?: InlineParser;
-  raw?: BlockParser;
+  raw?: RawParser;
+  block?: BlockParser;
 };
 
 // 递归定义的文本 Token

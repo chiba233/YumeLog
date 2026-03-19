@@ -3,7 +3,6 @@
 import commonI18n from "../../../../data/I18N/commonI18n.json";
 import { lang } from "../../setupLang.ts";
 import { $message } from "../../msgUtils.ts";
-
 type I18nMap = Record<string, string>;
 
 export const parseDashObjectList = (content: string): Record<string, string>[] => {

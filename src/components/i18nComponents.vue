@@ -33,10 +33,8 @@ import { themeColor, useTheme } from "@/components/ts/useTheme.ts";
 import { NButton, NIcon, NPopselect, type SelectOption } from "naive-ui";
 import LangIcon from "../icons/langIcon.svg";
 import { $message } from "@/components/ts/msgUtils.ts";
-import commonI18n from "@/data/I18N/commonI18n.json";
-
 type I18nMap = Record<string, string>;
-
+import commonI18n from "@/data/I18N/commonI18n.json";
 const configLoadFailed = commonI18n.configLoadFailed as I18nMap;
 useTheme();
 interface Props {

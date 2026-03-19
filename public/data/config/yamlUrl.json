@@ -1,7 +1,7 @@
 {
   "blog": {
     "listUrl": "https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/public/data/blog/list.json",
-    "url": "/data/blog/",
+    "url": "https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/public/data/blog/",
     "spareUrl": "/data/blog/",
     "spareListUrl": "/data/blog/list.json"
   },

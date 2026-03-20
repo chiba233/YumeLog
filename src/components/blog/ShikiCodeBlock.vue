@@ -119,7 +119,6 @@ watch(
   border-radius: 10px;
   overflow: hidden;
   background-color: rgba(var(--global-theme-color-rgb), 0.3) !important;
-  border: 1px solid var(--global-theme-color-rgb);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   max-width: 95%;
   z-index: 3;
@@ -129,8 +128,13 @@ watch(
     padding: 4px 12px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    min-width: 0;
     border-bottom: 1px solid var(--global-theme-color-rgb);
+
     .code-title {
+      flex: 1 1 auto;
+      min-width: 0;
       font-size: 12px;
       font-weight: 600;
       opacity: 0.85;
@@ -141,7 +145,10 @@ watch(
         Roboto,
         sans-serif;
     }
+
     .code-lang-label {
+      flex: 0 0 auto;
+      white-space: nowrap;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 11px;
       font-weight: 600;
@@ -158,11 +165,13 @@ watch(
     background-color: rgba(255, 255, 255, 0.3);
     font-weight: 500;
     max-height: 35em;
+
     &::-webkit-scrollbar {
       width: 6px !important;
       height: 6px !important;
       display: block !important;
     }
+
     &::-webkit-scrollbar-thumb {
       background-color: rgba(var(--global-theme-rgb-deep), 0.3);
       border-radius: 4px;
@@ -171,6 +180,7 @@ watch(
     &::-webkit-scrollbar-track {
       background: rgba(var(--global-theme-rgb-deep), 0.1);
     }
+
     code {
       font-family:
         "Fira Code", "Cascadia Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,

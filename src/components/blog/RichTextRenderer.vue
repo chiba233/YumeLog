@@ -1,17 +1,10 @@
 <script lang="ts" setup>
-import type { RichType, TextToken } from "./ts/d";
-import {
-  type Component,
-  defineAsyncComponent,
-  ExtractPropTypes,
-  FunctionalComponent,
-  h,
-  VNode,
-  VNodeChild,
-} from "vue";
+import type { RichType, TextToken } from "../ts/d.ts";
+import { type Component, defineAsyncComponent, FunctionalComponent, h, VNode } from "vue";
 import { NAlert, NCollapse, NCollapseItem } from "naive-ui";
+import { isSSR } from "@/components/ts/useHead.ts";
 
-const ShikiCodeBlock = defineAsyncComponent(() => import("@/components/ShikiCodeBlock.vue"));
+const ShikiCodeBlock = defineAsyncComponent(() => import("@/components/blog/ShikiCodeBlock.vue"));
 
 defineOptions({ name: "RichTextRenderer" });
 
@@ -22,8 +15,9 @@ const props = defineProps<{
 
 type RenderTarget = string | Component | ReturnType<typeof defineAsyncComponent>;
 
-interface CollapseWrapperProps extends ExtractPropTypes<typeof NCollapse> {
-  title?: string;
+interface CollapseWrapperProps {
+  temp_id: string;
+  title: string;
 }
 
 const CollapseWrapper: FunctionalComponent<CollapseWrapperProps> = (props, { slots }): VNode => {
@@ -33,26 +27,22 @@ const CollapseWrapper: FunctionalComponent<CollapseWrapperProps> = (props, { slo
       arrowPlacement: "left",
       displayDirective: "if",
       class: "rich-collapse-wrapper",
+      defaultExpandedNames: isSSR ? [props.temp_id] : undefined,
     },
     {
-      default: (): VNodeChild =>
+      default: () =>
         h(
           NCollapseItem,
           {
-            title: props.title,
-            name: props.title,
+            name: props.temp_id,
           },
           {
-            default: (): VNodeChild =>
-              h(
-                "div",
-                {
-                  class: "rich-collapse-body",
-                },
-                {
-                  default: (): VNodeChild => slots.default?.() ?? [],
-                },
-              ),
+            header: () =>
+              h("div", { class: "rich-collapse-header" }, [
+                h("div", { class: "rich-collapse-title" }, props.title),
+              ]),
+
+            default: () => h("div", { class: "rich-collapse-body" }, slots.default?.() ?? []),
           },
         ),
     },
@@ -85,6 +75,7 @@ const getComponentProps = (token: TextToken) => {
       return {
         ...base,
         title: token.title ?? "",
+        temp_id: token.temp_id,
       };
 
     case "raw-code":
@@ -146,7 +137,7 @@ const normalizeUrl = (raw: string): string | undefined => {
 </script>
 
 <template>
-  <template v-for="(token, index) in tokens" :key="index">
+  <template v-for="token in tokens" :key="token.temp_id">
     <span
       v-if="token.type === 'text'"
       :lang="lang"
@@ -162,8 +153,8 @@ const normalizeUrl = (raw: string): string | undefined => {
     >
       <RichTextRenderer
         v-if="Array.isArray(token.value) && token.value.length"
-        :tokens="token.value"
         :lang="lang"
+        :tokens="token.value"
       />
       <template v-else-if="typeof token.value === 'string' && token.type !== 'raw-code'">
         {{ token.value }}
@@ -183,10 +174,73 @@ const normalizeUrl = (raw: string): string | undefined => {
   line-height: 1.6;
 }
 
-.rich-text-content:not(.fw-link):not(.code-text),
-[class^="fw-"]:not(.fw-link):not(.code-text),
-[class^="rich-"]:not(.fw-link):not(.code-text) {
+.rich-text-content,
+.fw-bold,
+.fw-thin,
+.center-text,
+.rich-underline,
+.rich-strike {
   @extend %common-style;
+}
+
+.rich-collapse-wrapper {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  .n-collapse-item__header {
+    align-items: center;
+  }
+
+  .n-collapse-item__header-extra {
+    display: none !important;
+  }
+
+  .n-collapse-item__content-inner {
+    padding: 0 !important;
+  }
+
+  .n-collapse-item__header-main {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .n-collapse-item-arrow {
+    flex: 0 0 auto;
+    margin-right: 0.4rem;
+    align-self: center;
+  }
+
+  .n-collapse-item-arrow .n-base-icon,
+  .n-collapse-item-arrow svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: block;
+    stroke-width: 1px;
+  }
+}
+
+.rich-collapse-header {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.rich-collapse-title {
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+  font-size: 1.15rem;
+  font-weight: bold;
+  line-height: 1.25;
+  color: rgb(var(--global-theme-rgb-deep)) !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.rich-collapse-body {
+  min-width: 0;
 }
 
 .fw-bold {
@@ -198,7 +252,7 @@ const normalizeUrl = (raw: string): string | undefined => {
 }
 
 .center-text {
-  margin: 0.5rem;
+  margin: 0.5rem 0;
   display: block;
   text-align: center;
 }
@@ -212,6 +266,8 @@ const normalizeUrl = (raw: string): string | undefined => {
   border-bottom: none !important;
   box-shadow: none !important;
   background-image: none !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 
   &,
   & * {
@@ -266,13 +322,16 @@ a.fw-link {
   text-decoration: none !important;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
-  z-index: 3;
+
   .rich-text-content,
   .center-text,
   .fw-link,
   .rich-underline,
-  .fw-bold {
+  .fw-bold,
+  .fw-thin,
+  .rich-strike {
     font-size: 1em !important;
+    line-height: inherit !important;
   }
 
   &,
@@ -283,16 +342,11 @@ a.fw-link {
 
 .rich-warning-block,
 .rich-alert-block {
-  .code-text {
-    font-size: 0.75em;
-  }
-  max-width: 98%;
-  min-width: 45%;
   width: fit-content;
+  max-width: 98%;
   display: block;
   margin: 0.5rem auto;
   clear: both;
-  z-index: 3;
 
   --n-border: none !important;
   border-radius: 12px;
@@ -300,31 +354,18 @@ a.fw-link {
   --n-content-text-color: #333 !important;
   --n-padding: 13px !important;
 
-  .fw-link {
-    &,
-    & * {
-      color: #0060bb !important;
-    }
-  }
-
   .n-alert-body {
     padding-left: 13px !important;
+    min-width: 0;
   }
 
   .n-alert__icon {
+    flex: 0 0 auto;
+
     svg {
       min-width: 1.35rem;
       min-height: 1.35rem;
     }
-  }
-
-  .rich-text-content:not(.fw-link):not(.code-text),
-  .rich-warning-block,
-  .rich-alert-block,
-  [class^="fw-"]:not(.fw-link):not(.code-text),
-  [class^="rich-"]:not(.fw-link):not(.code-text) {
-    font-size: 1.15rem;
-    line-height: 1.5rem;
   }
 
   .n-alert-body__title {
@@ -332,55 +373,124 @@ a.fw-link {
     padding-right: 2rem !important;
     text-align: center;
     word-break: break-word;
+    overflow-wrap: anywhere;
     font-size: 1.4rem;
     white-space: pre-wrap;
-    color: inherit;
     letter-spacing: 0.02em;
+    line-height: 1.35;
   }
 
   .n-alert-body__content {
+    min-width: 0;
+
     span {
       font-size: 1.1rem;
-      color: inherit;
     }
   }
-}
 
-.rich-warning-block {
   .center-text {
     margin: 0 !important;
     padding: 0.2rem 0;
   }
 
+  .fw-link,
+  .fw-link * {
+    color: #0060bb !important;
+  }
+
+  .code-text,
+  .code-text * {
+    color: var(--global-theme-color-deep) !important;
+  }
+}
+
+.rich-warning-block {
   --n-color: rgba(250, 224, 181, 0.5) !important;
 
   .n-alert-body__title {
     color: #6b4e16 !important;
   }
 
-  .rich-text-content:not(.fw-link):not(.code-text),
-  [class^="fw-"]:not(.fw-link):not(.code-text),
-  [class^="rich-"]:not(.fw-link):not(.code-text) {
-    color: #6b4e16;
+  .rich-text-content,
+  .fw-bold,
+  .fw-thin,
+  .center-text,
+  .rich-underline,
+  .rich-strike,
+  .n-alert-body__content,
+  .n-alert-body__content span,
+  .n-alert-body__content div,
+  .n-alert-body__content p,
+  .n-alert-body__content strong,
+  .n-alert-body__content em,
+  .n-alert-body__content b,
+  .n-alert-body__content i,
+  .n-alert-body__content a:not(.fw-link) {
+    color: #6b4e16 !important;
   }
 }
 
 .rich-alert-block {
-  .center-text {
-    margin: 0 !important;
-    padding: 0.2rem 0;
-  }
-
-  --n-color: rgb(199, 223, 251, 0.5) !important;
+  --n-color: rgba(199, 223, 251, 0.5) !important;
 
   .n-alert-body__title {
     color: #163d6b !important;
   }
 
-  .rich-text-content:not(.fw-link):not(.code-text),
-  [class^="fw-"]:not(.fw-link):not(.code-text),
-  [class^="rich-"]:not(.fw-link):not(.code-text) {
-    color: #163d6b;
+  .rich-text-content,
+  .fw-bold,
+  .fw-thin,
+  .center-text,
+  .rich-underline,
+  .rich-strike,
+  .n-alert-body__content,
+  .n-alert-body__content span,
+  .n-alert-body__content div,
+  .n-alert-body__content p,
+  .n-alert-body__content strong,
+  .n-alert-body__content em,
+  .n-alert-body__content b,
+  .n-alert-body__content i,
+  .n-alert-body__content a:not(.fw-link) {
+    color: #163d6b !important;
+  }
+}
+
+@media (max-width: 768px) {
+  %common-style {
+    font-size: 1.08rem;
+    line-height: 1.55;
+  }
+
+  .rich-collapse-title {
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+
+  .rich-warning-block,
+  .rich-alert-block {
+    max-width: 100%;
+    min-width: 0;
+
+    .n-alert-body__title {
+      font-size: 1.2rem;
+      padding-left: 1.25rem !important;
+      padding-right: 1.25rem !important;
+    }
+
+    .rich-text-content,
+    .fw-bold,
+    .fw-thin,
+    .center-text,
+    .rich-underline,
+    .rich-strike,
+    .n-alert-body__content,
+    .n-alert-body__content span,
+    .n-alert-body__content div,
+    .n-alert-body__content p {
+      font-size: 1.02rem !important;
+      line-height: 1.45rem !important;
+    }
   }
 }
 </style>

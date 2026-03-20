@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef } from "vue";
-import { parseRichText } from "@/components/ts/dsl/semantic/blogFormat.ts";
-import type { PostBlock, TextToken } from "./ts/d";
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import { parseRichText } from "@/components/ts/dsl/BlogRichText/blogFormat.ts";
+import type { PostBlock, TextToken } from "../ts/d.ts";
 
 interface Props {
   block?: PostBlock;
@@ -13,7 +13,15 @@ const props = defineProps<Props>();
 const isVisible = ref(false);
 const container = ref<HTMLElement | null>(null);
 const isParsed = ref(false);
+const localTokens = shallowRef<TextToken[]>([]);
 let observer: IntersectionObserver | null = null;
+
+const stopObserving = () => {
+  if (observer) {
+    observer.disconnect();
+    observer = null;
+  }
+};
 
 const getInitialTokens = (): TextToken[] => {
   if (Array.isArray(props.block?.tokens) && props.block.tokens.length > 0) {
@@ -26,14 +34,16 @@ const getInitialTokens = (): TextToken[] => {
       const tokens = parseRichText(props.block.content);
       isParsed.value = true;
       return tokens;
-    } catch {
+    } catch (e) {
+      console.error("SSR Parse Error:", e);
+      isParsed.value = false;
       return [];
     }
   }
+
+  isParsed.value = false;
   return [];
 };
-
-const localTokens = shallowRef<TextToken[]>(getInitialTokens());
 
 const shouldLazy = computed(() => {
   if (props.ssr) return false;
@@ -44,51 +54,87 @@ const shouldRenderContent = computed(() => {
   return !shouldLazy.value || isVisible.value;
 });
 
-onMounted(async () => {
-  await nextTick();
+const parseBlock = () => {
+  if (!props.block || props.block.type !== "text" || typeof props.block.content !== "string") {
+    return;
+  }
+
+  try {
+    localTokens.value = parseRichText(props.block.content);
+    isParsed.value = true;
+  } catch (e) {
+    console.error("Lazy Parse Error:", e);
+    localTokens.value = [];
+    isParsed.value = false;
+  }
+};
+
+const setupObserver = () => {
+  stopObserving();
+
   if (!props.block || !container.value) return;
+
   if (!shouldLazy.value) {
     isVisible.value = true;
     return;
   }
 
   const scrollRoot =
-    container.value.closest(".n-card__content") ||
-    container.value.closest(".n-scrollbar-container");
+    container.value.closest(".n-scrollbar-container") ||
+    container.value.closest(".n-card__content");
 
   observer = new IntersectionObserver(
     ([entry]) => {
-      if (entry.isIntersecting) {
-        if (
-          !isParsed.value &&
-          props.block?.type === "text" &&
-          typeof props.block.content === "string"
-        ) {
-          try {
-            localTokens.value = parseRichText(props.block.content);
-            isParsed.value = true;
-          } catch (e) {
-            console.error("Lazy Parse Error:", e);
-          }
-        }
-        isVisible.value = true;
-        stopObserving();
+      if (!entry.isIntersecting) return;
+
+      if (!isParsed.value) {
+        parseBlock();
       }
+
+      isVisible.value = true;
+      stopObserving();
     },
     {
       root: scrollRoot as HTMLElement | null,
       rootMargin: "300px",
     },
   );
+
   observer.observe(container.value);
+};
+
+const resetState = () => {
+  stopObserving();
+  isVisible.value = false;
+  isParsed.value = false;
+  localTokens.value = getInitialTokens();
+};
+
+onMounted(async () => {
+  resetState();
+  await nextTick();
+  setupObserver();
 });
 
-const stopObserving = () => {
-  if (observer) {
-    observer.disconnect();
-    observer = null;
-  }
-};
+watch(
+  () => props.block,
+  async () => {
+    resetState();
+    await nextTick();
+    setupObserver();
+  },
+  { deep: false },
+);
+
+watch(
+  () => props.ssr,
+  async () => {
+    resetState();
+    await nextTick();
+    setupObserver();
+  },
+);
+
 onUnmounted(() => {
   stopObserving();
   localTokens.value = [];
@@ -107,10 +153,8 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .lazy-block-wrapper {
-  content-visibility: auto;
   contain-intrinsic-size: 1px 300px;
   width: 100%;
-  margin-bottom: 1.2rem;
   min-height: 20px;
   transition: opacity 0.5s ease;
 }

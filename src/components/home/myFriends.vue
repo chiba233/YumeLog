@@ -3,33 +3,41 @@
     {{ friendsTitle.title }}
   </h2>
   <div class="allFriends">
-    <div
-      v-for="friend in friends"
-      :key="friend.name"
-      class="friendBox glass"
-      @click="openURL(friend.url)"
-      @mouseenter="onEnter"
-      @mouseleave="onLeave"
-      @mousemove="onMove"
-    >
-      <div class="friendsContent">
-        <n-avatar
-          :alt="lang === 'zh' ? friend.name : friend.alias"
-          :fallback-src="friend.spare"
-          :img-props="{
-            alt: lang === 'zh' ? friend.name : friend.alias,
-          }"
-          :size="100"
-          :src="friend.icon || friend.spare"
-          lazy
-          bordered
-          round
-        />
-        <span :lang="lang" class="friendName commonText">
+    <template v-for="friend in friends" :key="friend.name">
+      <div
+        class="friendBox glass"
+        style="position: relative"
+        @mouseenter="onEnter"
+        @mouseleave="onLeave"
+        @mousemove="onMove"
+      >
+        <a
+          :aria-label="lang === 'zh' ? friend.name : friend.alias"
+          :href="friend.url"
+          class="friend-link-overlay"
+          rel="noopener noreferrer"
+          target="_blank"
+          @click.prevent="openURL(friend.url)"
+        >
           {{ lang === "zh" ? friend.name : friend.alias }}
-        </span>
+        </a>
+
+        <div class="friendsContent">
+          <n-avatar
+            :alt="lang === 'zh' ? friend.name : friend.alias"
+            :fallback-src="friend.spare"
+            :size="100"
+            :src="friend.icon || friend.spare"
+            bordered
+            lazy
+            round
+          />
+          <span :lang="lang" class="friendName commonText">
+            {{ lang === "zh" ? friend.name : friend.alias }}
+          </span>
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -41,8 +49,8 @@ import { useCardGlow } from "@/components/ts/animationCalculate.ts";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 import { $message } from "@/components/ts/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
-import { FriendsYamlResponse } from "./ts/d";
-import { friends, friendsTitle } from "./ts/useGlobalState";
+import { FriendsYamlResponse } from "../ts/d.ts";
+import { friends, friendsTitle } from "../ts/useGlobalState.ts";
 import { friendsUseHead } from "@/components/ts/useHead.ts";
 
 type I18nMap = Record<string, string>;
@@ -80,6 +88,18 @@ friendsUseHead();
 
 <style lang="scss">
 $transition-speed: 0.3s;
+.friend-link-overlay {
+  position: absolute;
+  inset: 0;
+  display: block;
+  z-index: 5;
+  opacity: 0;
+  border-radius: inherit;
+  background: transparent;
+  text-decoration: none;
+  color: transparent;
+  -webkit-tap-highlight-color: transparent;
+}
 
 .friendTitle {
   left: 0;

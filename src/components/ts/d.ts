@@ -27,7 +27,7 @@ export interface BaseBlock<T = string> {
 // 基础元数据
 export interface BaseMetadata {
   time: string;
-  pin?: boolean;
+  pin?: string;
   [key: string]: unknown;
 }
 
@@ -36,6 +36,46 @@ export interface BaseMetadata {
  * 博客与富文本系统
  * ----------------------------------------------------------------
  */
+
+export interface ParseStackNode {
+  tag: RichType;
+  tokens: TextToken[];
+}
+
+export interface ParseContext {
+  text: string;
+  depthLimit: number;
+  silent: boolean;
+  root: TextToken[];
+  stack: ParseStackNode[];
+  buffer: string;
+  i: number;
+}
+
+export interface TagStartInfo {
+  tag: string;
+  tagOpenPos: number;
+  tagNameEnd: number;
+  inlineContentStart: number;
+}
+
+export interface ComplexTagParseResult {
+  handled: boolean;
+  nextIndex: number;
+  token?: TextToken;
+  fallbackText?: string;
+  error?: {
+    key: "richTextBlockNotClosed" | "richTextRawNotClosed";
+    index: number;
+  };
+}
+
+export interface TagHead {
+  tag: string;
+  tagStart: number;
+  tagNameEnd: number;
+  argStart: number;
+}
 export const RICH_TYPES = [
   "bold",
   "thin",
@@ -49,19 +89,23 @@ export const RICH_TYPES = [
   "raw-code",
   "collapse",
 ] as const;
+
 export const BLOCK_TYPES = ["info", "warning", "center", "raw-code", "collapse"] as const;
 export type RichType = (typeof RICH_TYPES)[number];
 export type BlockType = (typeof BLOCK_TYPES)[number];
-
+export const TITLED_BLOCK_TYPES = ["info", "warning", "collapse"] as const;
+export type TitledBlockType = (typeof TITLED_BLOCK_TYPES)[number];
 export type InlineParser = (tokens: TextToken[]) => TextToken;
-export type BlockParser = (arg: string | undefined, content: string) => TextToken;
-type RawParser = (arg: string | undefined, content: string) => TextToken;
+export type RawParser = (arg: string | undefined, content: string) => TextToken;
+export type BlockParser = (arg: string | undefined, content: TextToken[]) => TextToken;
 
-export type TagHandler = {
+export interface TagHandler {
   inline?: InlineParser;
   raw?: RawParser;
   block?: BlockParser;
-};
+}
+
+export type TagHandlerMap = Partial<Record<RichType, TagHandler>>;
 
 // 递归定义的文本 Token
 export interface TextToken {
@@ -71,6 +115,7 @@ export interface TextToken {
   label?: string;
   title?: string;
   url?: string;
+  temp_id: string;
 }
 // 图片的结构
 export interface ImageContent {

@@ -1,9 +1,9 @@
 import { computed, ref, shallowRef, watch } from "vue";
 import { lang } from "@/components/ts/setupLang.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
-import { loadSingleYaml } from "@/components/ts/getYaml.ts";
+import { loadSingleYaml } from "@/components/ts/getYaml";
 import { Friend, NekoYamlResponse, Post, PostBlock, ProcessedPost, YamlNekoBlock } from "./d";
-import { parseRichText, stripRichText } from "./dsl/semantic/blogFormat.ts";
+import { parseRichText, stripRichText } from "./dsl/BlogRichText/blogFormat.ts";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
 import { socialRawData } from "@/components/ts/setupJson.ts";
 

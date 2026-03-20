@@ -21,11 +21,11 @@ useHead({
   meta: [
     {
       name: "description",
-      content: computed(() => displayContent.value.slice(0, 160) || ""),
+      content: computed(() => (displayContent.value || "").slice(0, 160)),
     },
     {
       property: "og:description",
-      content: computed(() => displayContent.value.slice(0, 160) || ""),
+      content: computed(() => (displayContent.value || "").slice(0, 160)),
     },
     {
       property: "og:type",
@@ -33,7 +33,7 @@ useHead({
     },
     {
       property: "twitter:description",
-      content: computed(() => displayContent.value.slice(0, 160) || ""),
+      content: computed(() => (displayContent.value || "").slice(0, 160)),
     },
   ],
 });

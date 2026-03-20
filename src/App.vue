@@ -11,7 +11,7 @@ import commonI18n from "@/data/I18N/commonI18n.json";
 import { personRawData, socialRawData } from "@/components/ts/setupJson.ts";
 import ClientOnly from "@/components/ClientOnly.vue";
 import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import { changeSpareUrl, listPrimaryError } from "./components/ts/getYaml";
+import { changeSpareUrl, listPrimaryError } from "@/components/ts/getYaml";
 import { $message } from "./components/ts/msgUtils";
 import {
   blogDisplay,
@@ -187,28 +187,33 @@ watch(
           </router-view>
         </div>
       </div>
-      <ClientOnly>
-        <div class="copyright" @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
+      <div class="copyright" @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
+        <div class="cardButton">
           <div class="cardButton">
-            <n-button :color="themeColor" class="bottomButton" round @click="goTo('home')">
-              <template #icon>
-                <n-icon size="23">
-                  <Home12Regular />
-                </n-icon>
-              </template>
-              <a :lang="lang" class="commonText">{{ homeLabel[lang] || homeLabel.en }}</a>
-            </n-button>
-            <n-button :color="themeColor" class="bottomButton" round @click="goTo('blog')">
-              <template #icon>
-                <n-icon size="23">
-                  <Document28Regular />
-                </n-icon>
-              </template>
-              <a :lang="lang" class="commonText">{{ blogLabel[lang] || blogLabel.en }}</a>
-            </n-button>
+            <a class="seo-link-wrapper" href="/" @click.prevent="goTo('home')">
+              <n-button :color="themeColor" class="bottomButton" round>
+                <template #icon>
+                  <n-icon size="23">
+                    <Home12Regular />
+                  </n-icon>
+                </template>
+                <span :lang="lang" class="commonText">{{ homeLabel[lang] || homeLabel.en }}</span>
+              </n-button>
+            </a>
+
+            <a class="seo-link-wrapper" href="/blog" @click.prevent="goTo('blog')">
+              <n-button :color="themeColor" class="bottomButton" round>
+                <template #icon>
+                  <n-icon size="23">
+                    <Document28Regular />
+                  </n-icon>
+                </template>
+                <span :lang="lang" class="commonText">{{ blogLabel[lang] || blogLabel.en }}</span>
+              </n-button>
+            </a>
           </div>
         </div>
-      </ClientOnly>
+      </div>
     </MessageProvider>
   </n-message-provider>
 </template>
@@ -217,6 +222,12 @@ watch(
 figure {
   margin: 0;
   padding: 0;
+}
+
+.seo-link-wrapper {
+  text-decoration: none;
+  display: contents;
+  color: inherit;
 }
 
 .n-modal-mask {
@@ -239,11 +250,11 @@ figure {
 }
 
 .n-modal-container .n-card {
-  background-color: rgba(251, 238, 241, 0.6);
+  background-color: rgba(251, 238, 241, 0.65);
   border-radius: 20px !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
-  backdrop-filter: saturate(110%) blur(25px);
+  backdrop-filter: saturate(150%) blur(25px);
   max-height: 99dvh;
   max-width: 99%;
   .n-card-header {

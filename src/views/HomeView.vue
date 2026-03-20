@@ -15,10 +15,10 @@
 </template>
 
 <script lang="ts" setup>
-import HomeTitle from "@/components/homeTitle.vue";
-import PersonalIntroductions from "@/components/personalIntroduction.vue";
-import ContactInformation from "@/components/contactInformation.vue";
-import MyFriends from "@/components/myFriends.vue";
+import HomeTitle from "@/components/home/homeTitle.vue";
+import PersonalIntroductions from "@/components/home/personalIntroduction.vue";
+import ContactInformation from "@/components/home/contactInformation.vue";
+import MyFriends from "@/components/home/myFriends.vue";
 import { globalWebTitleMap } from "@/components/ts/useGlobalState.ts";
 import { lang } from "@/components/ts/setupLang.ts";
 </script>

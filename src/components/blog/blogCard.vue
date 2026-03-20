@@ -15,11 +15,11 @@ import {
   changeSpareUrl,
   faultTimes,
   listSpareError,
-  loadError,
+  notFoundError,
   serverError,
   yamlLoading,
   yamlRetrying,
-} from "@/components/ts/getYaml.ts";
+} from "@/components/ts/getYaml";
 import { formatDate, formatTime, lang } from "@/components/ts/setupLang.ts";
 import Cancel from "@/icons/cancel.svg";
 import { NAlert, NButton, NCard, NIcon, NImage, NModal } from "naive-ui";
@@ -36,10 +36,10 @@ import {
   showModal,
 } from "@/components/ts/useGlobalState.ts";
 import { getSlug, useRouteModal } from "@/components/ts/useRouteModal.ts";
-import RichTextRenderer from "@/components/RichTextRenderer.vue";
-import { ImageContent, Post, PostBlock, ProcessedPost, TextToken } from "./ts/d";
-import { isSSR } from "./ts/useHead";
-import LazyBlock from "@/components/LazyBlock.vue";
+import RichTextRenderer from "@/components/blog/RichTextRenderer.vue";
+import { ImageContent, Post, PostBlock, ProcessedPost, TextToken } from "../ts/d.ts";
+import { isSSR } from "../ts/useHead.ts";
+import LazyBlock from "@/components/blog/LazyBlock.vue";
 
 const hydrated = ref(false);
 const visibleIds = ref(new Set<string>());
@@ -296,14 +296,19 @@ const renderDetailContent = (): VNodeChild => {
   <div v-if="ssrHidePosts" class="post-container">
     <article
       v-for="(post, index) in processedPosts"
-      :key="getPostId(post) + index"
-      :data-id="getPostId(post)"
+      :key="getPostId(post)"
       class="post-card glass"
-      @click="cardClick(post)"
       @mouseenter="onEnter"
       @mouseleave="onLeave"
       @mousemove="onMove"
     >
+      <router-link
+        :aria-label="post.title"
+        :to="{ name: 'blog', params: { id: getSlug(post) || 'error' } }"
+        class="post-card-click-overlay"
+        @click.prevent.stop="cardClick(post)"
+      >
+      </router-link>
       <div class="postContent">
         <template v-if="isVisible(post, index)">
           <div class="post-header">
@@ -311,7 +316,7 @@ const renderDetailContent = (): VNodeChild => {
               {{ post.title }}
             </h2>
             <div class="post-meta">
-              <n-icon v-if="post.pin === true || (post.pin as unknown) === 'true'" size="15">
+              <n-icon v-if="String(post.pin).toLowerCase() === 'true'" size="15">
                 <PushPinSharp />
               </n-icon>
               <span v-if="post.pin" class="time-divider">|</span>
@@ -363,7 +368,12 @@ const renderDetailContent = (): VNodeChild => {
       <n-alert v-if="serverError" :title="blogDisplay.listFetchError" class="alert" type="error">
         {{ blogDisplay.serverFault }}
       </n-alert>
-      <n-alert v-else-if="loadError" :title="blogDisplay.notFoundError" class="alert" type="error">
+      <n-alert
+        v-else-if="notFoundError"
+        :title="blogDisplay.notFoundError"
+        class="alert"
+        type="error"
+      >
         {{ blogDisplay.notFoundError }}
       </n-alert>
       <n-alert v-else-if="yamlRetrying" class="alert" title="Warning" type="warning">
@@ -423,6 +433,19 @@ const renderDetailContent = (): VNodeChild => {
 $text-color: #2b2628;
 $border-radius: 16px;
 @use "sass:color";
+.post-card-click-overlay {
+  position: absolute;
+  inset: 0;
+  display: block;
+  opacity: 0;
+  z-index: 5;
+  background: transparent;
+  text-decoration: none;
+  color: transparent;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: $border-radius;
+  overflow: hidden;
+}
 
 .sr-only-article {
   position: absolute;
@@ -435,6 +458,7 @@ $border-radius: 16px;
   white-space: nowrap;
   border-width: 0;
 }
+
 @keyframes skeleton-shimmer {
   0% {
     background-position: -200% 0;
@@ -443,6 +467,7 @@ $border-radius: 16px;
     background-position: 200% 0;
   }
 }
+
 .post-skeleton {
   display: flex;
   flex-direction: column;
@@ -457,6 +482,7 @@ $border-radius: 16px;
     width: 25rem;
     height: 210px;
   }
+
   .skeleton-title,
   .skeleton-meta,
   .skeleton-image,
@@ -471,21 +497,25 @@ $border-radius: 16px;
     animation: skeleton-shimmer 1.5s infinite linear;
     border-radius: 8px;
   }
+
   .skeleton-header {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 0.4rem;
     gap: 0.4rem;
+
     .skeleton-title {
       width: 70%;
       height: 1.25rem;
     }
+
     .skeleton-meta {
       width: 40%;
       height: 1rem;
     }
   }
+
   .skeleton-body {
     display: flex;
     gap: 0.5rem;
@@ -494,12 +524,14 @@ $border-radius: 16px;
       flex-direction: column;
       align-items: center;
     }
+
     .skeleton-image {
       width: 120px;
       height: 120px;
       flex-shrink: 0;
       border-radius: 12px;
     }
+
     .skeleton-description {
       display: flex;
       flex-direction: column;
@@ -507,17 +539,22 @@ $border-radius: 16px;
       width: 100%;
       gap: 0.5rem;
       justify-content: center;
+
       .skeleton-text-line {
         height: 0.8rem;
+
         &.line-1 {
           width: 100%;
         }
+
         &.line-2 {
           width: 95%;
         }
+
         &.line-3 {
           width: 90%;
         }
+
         &.line-4 {
           width: 40%;
         }
@@ -532,6 +569,7 @@ $border-radius: 16px;
   margin: 0;
   font-weight: bold;
 }
+
 .separator-icon {
   display: flex;
   align-items: center;
@@ -540,18 +578,22 @@ $border-radius: 16px;
   margin: 0.5rem 0;
   font-weight: bold;
 }
+
 .separator-icon::before,
 .separator-icon::after {
   content: "";
   flex: 1;
   height: 2px;
 }
+
 .separator-icon::before {
   background: linear-gradient(to right, transparent, rgba(var(--global-theme-rgb-deep), 0.6));
 }
+
 .separator-icon::after {
   background: linear-gradient(to right, rgba(var(--global-theme-rgb-deep), 0.6), transparent);
 }
+
 .separator-icon span {
   padding: 0 20px;
   font-size: 14px;
@@ -609,9 +651,11 @@ $border-radius: 16px;
   flex-direction: column;
   overflow: hidden;
   max-height: 99dvh !important;
+
   :deep(.n-card-header) {
     flex-shrink: 0;
   }
+
   max-width: 99%;
   @media (min-width: 1050px) {
     max-width: 75em !important;
@@ -851,6 +895,7 @@ $border-radius: 16px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         margin: 0 0.25rem;
       }
+
       .thirdImg,
       .secondImg,
       .fourthImg {
@@ -859,16 +904,19 @@ $border-radius: 16px;
           display: none;
         }
       }
+
       .thirdImg {
         @media (max-width: 450px) {
           display: none;
         }
       }
+
       .secondImg {
         @media (max-width: 300px) {
           display: none;
         }
       }
+
       .fourthImg {
         @media (max-width: 600px) {
           display: none;

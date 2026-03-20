@@ -94,7 +94,7 @@ pnpm run host
 
 ```bash
 # 方案 A：完整构建（严格类型检查 + SSG SEO 优化）—— 推荐
-vue-tsc --noEmit && vite build && pnpm run ssg
+vue-tsc --noEmit && vite-ssg build
 
 # 方案 B：仅基础构建（不执行 SSG）
 vite build
@@ -566,18 +566,18 @@ Block DSL 更适合：
 
 ## 支持的 Type 清单
 
-| Type | Description | 是否支持 Raw 语法 | 是否支持 Block 语法 | 是否支持嵌套语法 | 可以传入的参数 |
-|:--|:--|:--:|:--:|:--:|:--|
-| **bold** | 粗体 | no | no | yes | `(text)` |
-| **thin** | 细体 | no | no | yes | `(text)` |
-| **underline** | 下划线 | no | no | yes | `(text)` |
-| **strike** | 删除线 | no | no | yes | `(text)` |
-| **center** | 居中对齐 | no | no | yes | `(text)` |
-| **code** | 行内代码 | no | no | yes | `(text)` |
-| **link** | 超链接 | no | no | yes | `(URL \| text)` |
-| **info** | 基础信息提示框 | yes | 可扩展 | yes | `(title \| text)` 或 `(title)%正文` |
-| **warning** | 警告提示框 | yes | 可扩展 | yes | `(title \| text)` 或 `(title)%正文` |
-| **raw-code** | 原始代码块 | yes | no | no | `(code-lang \| code-title)%正文` |
+| Type          | Description | 是否支持 Raw 语法 | 是否支持 Block 语法 | 是否支持嵌套语法 | 可以传入的参数                          |
+|:--------------|:------------|:-----------:|:-------------:|:--------:|:---------------------------------|
+| **bold**      | 粗体          |     no      |      no       |   yes    | `(text)`                         |
+| **thin**      | 细体          |     no      |      no       |   yes    | `(text)`                         |
+| **underline** | 下划线         |     no      |      no       |   yes    | `(text)`                         |
+| **strike**    | 删除线         |     no      |      no       |   yes    | `(text)`                         |
+| **center**    | 居中对齐        |     no      |      no       |   yes    | `(text)`                         |
+| **code**      | 行内代码        |     no      |      no       |   yes    | `(text)`                         |
+| **link**      | 超链接         |     no      |      no       |   yes    | `(URL \| text)`                  |
+| **info**      | 基础信息提示框     |     yes     |      yes      |   yes    | `(title \| text)` 或 `(title)%正文` |
+| **warning**   | 警告提示框       |     yes     |      yes      |   yes    | `(title \| text)` 或 `(title)%正文` |
+| **raw-code**  | 原始代码块       |     yes     |      no       |    no    | `(code-lang \| code-title)%正文`   |
 
 > 说明：  
 > 当前项目中最稳定、最常用的是 **inline** 与 **raw**。  

@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "vite",
     "host": "pnpm run dev --host",
-    "build": "vue-tsc --noEmit && vite build && pnpm run ssg",
-    "ssg": "concurrently -k --success first \"npx serve dist -s -l 14514\" \"wait-on http://localhost:14514 && vite-ssg build\"",
+    "build": "vue-tsc --noEmit && vite-ssg build",
     "build:client": "vite build",
     "preview": "vite preview",
     "build-only": "vite-ssg build",

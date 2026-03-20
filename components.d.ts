@@ -11,20 +11,20 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    BlogCard: typeof import('./src/components/blogCard.vue')['default']
+    BlogCard: typeof import("./src/components/blog/blogCard.vue")["default"];
     ClientOnly: typeof import('./src/components/ClientOnly.vue')['default']
-    ContactInformation: typeof import('./src/components/contactInformation.vue')['default']
+    ContactInformation: typeof import("./src/components/home/contactInformation.vue")["default"];
     FromNowTime: typeof import('./src/components/fromNowTime.vue')['default']
-    HomeTitle: typeof import('./src/components/homeTitle.vue')['default']
+    HomeTitle: typeof import("./src/components/home/homeTitle.vue")["default"];
     I18nComponents: typeof import('./src/components/i18nComponents.vue')['default']
-    LazyBlock: typeof import('./src/components/LazyBlock.vue')['default']
+    LazyBlock: typeof import("./src/components/blog/LazyBlock.vue")["default"];
     MessageProvider: typeof import('./src/components/MessageProvider.vue')['default']
-    MyFriends: typeof import('./src/components/myFriends.vue')['default']
-    PersonalIntroduction: typeof import('./src/components/personalIntroduction.vue')['default']
-    RichTextRenderer: typeof import('./src/components/RichTextRenderer.vue')['default']
+    MyFriends: typeof import("./src/components/home/myFriends.vue")["default"];
+    PersonalIntroduction: typeof import("./src/components/home/personalIntroduction.vue")["default"];
+    RichTextRenderer: typeof import("./src/components/blog/RichTextRenderer.vue")["default"];
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    ShikiCodeBlock: typeof import('./src/components/ShikiCodeBlock.vue')['default']
+    ShikiCodeBlock: typeof import("./src/components/blog/ShikiCodeBlock.vue")["default"];
     TopBar: typeof import('./src/components/topBar.vue')['default']
   }
 }

@@ -1,60 +1,44 @@
+// noinspection ES6PreferShortImport
+
 import type { PluginOption } from "vite";
 import { CSSOptions, defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
 import svgLoader from "vite-svg-loader";
 import { fileURLToPath, URL } from "node:url";
-import { loadAllPostsForSSG } from "./ssgGetPost";
+import { loadAllPosts } from "./src/components/ts/getYaml/getYaml.server";
 import * as sass from "sass";
 import fs from "node:fs";
 import Components from "unplugin-vue-components/vite";
 import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
-
-interface BaseContent {
-  time?: string;
-  pin?: boolean;
-
-  [key: string]: unknown;
-}
-
-interface ImageContent {
-  src: string;
-  spareUrl?: string;
-  desc?: string;
-}
-
-interface PostBlock {
-  type: string;
-  content: string | ImageContent[];
-}
-
-interface Post extends BaseContent {
-  id?: string;
-  title: string;
-  layout?: string;
-  blocks: PostBlock[];
-}
+import { Post } from "./src/components/ts/d";
 
 let cachedPosts: Post[] | null = null;
+
 const getSlug = (post: Post): string | null => {
   if (post.id) return post.id;
-  if (post.title)
+  if (post.title) {
     return post.title
       .trim()
       .replace(/[\/\\?#]/g, "")
       .replace(/\s+/g, "-");
+  }
   return null;
 };
 
 const getPosts = async (): Promise<Post[]> => {
   if (!cachedPosts) {
-    cachedPosts = (await loadAllPostsForSSG("blog")) as Post[];
+    cachedPosts = await loadAllPosts<Post>("blog");
   }
   return cachedPosts;
 };
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, isSsrBuild }) => {
   const env = loadEnv(mode, process.cwd());
   const siteOrigin = env.VITE_SSR_SITE_URL?.replace(/\/$/, "") || "https://example.com";
+
+  const srcRoot = fileURLToPath(new URL("./src", import.meta.url));
+  const resolveFromRoot = (relativePath: string): string =>
+    fileURLToPath(new URL(relativePath, import.meta.url));
 
   return {
     plugins: [
@@ -66,14 +50,26 @@ export default defineConfig(({ mode }) => {
     ],
 
     resolve: {
-      alias: {
-        "@": fileURLToPath(new URL("./src", import.meta.url)),
-      },
+      alias: [
+        {
+          find: "@/components/ts/getYaml",
+          replacement: resolveFromRoot(
+            isSsrBuild === true
+              ? "./src/components/ts/getYaml/getYaml.server.ts"
+              : "./src/components/ts/getYaml/getYaml.client.ts",
+          ),
+        },
+        {
+          find: "@",
+          replacement: srcRoot,
+        },
+      ],
     },
 
     ssgOptions: {
       script: "async",
       formatting: "minify",
+
       async includedRoutes(paths) {
         const staticPaths = paths.filter((p) => !p.includes(":"));
         const posts = await getPosts();
@@ -81,6 +77,7 @@ export default defineConfig(({ mode }) => {
           .map((p) => getSlug(p))
           .filter(Boolean)
           .map((slug) => `/blog/${slug}/`);
+
         return [...new Set([...staticPaths, "/blog/", ...postRoutes])];
       },
 
@@ -90,11 +87,13 @@ export default defineConfig(({ mode }) => {
 
       async onFinished() {
         console.log("SSG finished, generating sitemap and robots.txt...");
+
         const viteDir = "dist/.vite";
         if (fs.existsSync(viteDir)) {
           fs.rmSync(viteDir, { recursive: true, force: true });
           console.log("Removed dist/.vite");
         }
+
         const formatDate = (t?: string) => {
           if (!t) return "";
           if (/^\d{8}$/.test(t)) {
@@ -162,20 +161,13 @@ Sitemap: ${siteOrigin}/sitemap.xml
 
     build: {
       chunkSizeWarningLimit: 1000,
-
       rollupOptions: {
         output: {
           manualChunks(id) {
             if (!id.includes("node_modules")) return;
-            if (id.includes("naive-ui")) {
-              return "naive-ui";
-            }
-            if (id.includes("dayjs")) {
-              return "date";
-            }
-            if (id.includes("shiki")) {
-              return "shiki";
-            }
+            if (id.includes("naive-ui")) return "naive-ui";
+            if (id.includes("dayjs")) return "date";
+            if (id.includes("shiki")) return "shiki";
             return "vendor";
           },
         },

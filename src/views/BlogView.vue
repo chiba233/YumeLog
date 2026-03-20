@@ -10,7 +10,7 @@
 
 <script lang="ts" setup>
 import { lang } from "@/components/ts/setupLang.ts";
-import BlogCard from "@/components/blogCard.vue";
+import BlogCard from "@/components/blog/blogCard.vue";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import {
   blogDisplay,
@@ -26,7 +26,7 @@ import { useRoute } from "vue-router";
 import { useContentStore } from "@/components/ts/contentStore.ts";
 import { Post } from "@/components/ts/d";
 import router from "@/router";
-import { listPrimaryError, listSpareError, yamlLoadingFault } from "@/components/ts/getYaml.ts";
+import { listPrimaryError, listSpareError, yamlLoadingFault } from "@/components/ts/getYaml";
 import { $message } from "@/components/ts/msgUtils.ts";
 import { blogUseHead, isSSR } from "@/components/ts/useHead.ts";
 

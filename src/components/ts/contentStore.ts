@@ -1,5 +1,5 @@
 import { reactive } from "vue";
-import { loadAllPosts, loadSingleYaml } from "./getYaml.ts";
+import { loadAllPosts, loadSingleYaml } from "@/components/ts/getYaml";
 import { BaseMetadata, CacheEntry } from "@/components/ts/d.ts";
 
 const postsCache = reactive<Record<string, CacheEntry<BaseMetadata[]>>>({});

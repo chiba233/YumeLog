@@ -1,11 +1,11 @@
 <template>
   <div class="dashboardTitle">
     <n-avatar
-      :src="icon"
       :alt="personRawData?.author[lang] ?? personRawData?.author?.en"
       :img-props="{
         alt: personRawData?.author[lang] ?? personRawData?.author?.en,
       }"
+      :src="icon"
       bordered
       class="titleIcon"
       round
@@ -18,7 +18,7 @@
 
 <script lang="ts" setup>
 import { NAvatar } from "naive-ui";
-import icon from "../icons/icon.webp";
+import icon from "../../icons/icon.webp";
 import { useYamlText } from "@/components/ts/useYamlI18n.ts";
 import { useHead } from "@unhead/vue";
 import { lang } from "@/components/ts/setupLang.ts";

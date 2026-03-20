@@ -126,11 +126,11 @@
     "other": "Initialization failed: {err}"
   },
   "configLoadFailed": {
-    "zh": "无法加载配置！",
-    "en": "Failed to load configuration!",
-    "ja": "設定を読み込めません！",
-    "th": "ไม่สามารถโหลดการตั้งค่าได้!",
-    "other": "Failed to load configuration!"
+    "zh": "[Config Load Failed]: 无法加载配置文件。{err}",
+    "en": "[Config Load Failed]: Failed to load configuration file. {err}",
+    "ja": "[Config Load Failed]: 設定ファイルを読み込めませんでした。{err}",
+    "th": "[Config Load Failed]: ไม่สามารถโหลดไฟล์การตั้งค่าได้ {err}",
+    "other": "[Config Load Failed]: Failed to load configuration file. {err}"
   },
   "configPathFetchFailed": {
     "zh": "[Config Load Failed]: 无法获取路径配置文件。{err}",
@@ -201,6 +201,13 @@
     "ja": "[DSL Error] DSL ブロックが閉じられていません: \"{name}\"",
     "th": "[DSL Error] บล็อก DSL ยังไม่ได้ปิด: \"{name}\"",
     "other": "[DSL Error] DSL block not closed: \"{name}\""
+  },
+  "richTextBlockNotClosed": {
+    "zh": "[RichText Error] 富文本 Block 标签未闭合（位置 {i}）",
+    "en": "[RichText Error] Block tag not closed at position {i}",
+    "ja": "[RichText Error] ブロックタグが閉じられていません（位置 {i}）",
+    "th": "[RichText Error] แท็กบล็อกยังไม่ได้ปิด (ตำแหน่ง {i})",
+    "other": "[RichText Error] Block tag not closed at position {i}"
   },
   "collapseClickToExpand": {
     "zh": "点击展开内容",

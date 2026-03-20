@@ -42,10 +42,10 @@ export const themeMetrics = computed(() => {
     rgbStr: `${r}, ${g}, ${b}`,
     deepRgbStr: deepRgbStr,
     colorDeep: `rgb(${deepRgbStr})`,
-    glassColor: `rgba(${mR}, ${mG}, ${mB}, 0.4)`,
+    glassColor: `rgba(${mR}, ${mG}, ${mB}, 0.45)`,
     glassFont: `rgba(${Math.round(mR * 0.12)}, ${Math.round(mG * 0.12)}, ${Math.round(mB * 0.12)}, 0.92)`,
     glassShadow:
-      luma > 0.5 ? `0 1px 3px rgba(${deepRgbStr}, 0.08)` : `0 1px 4px rgba(0, 0, 0, 0.18)`,
+      luma > 0.5 ? `0 1px 3px rgba(${deepRgbStr}, 0.08)` : `0 1px 3px rgba(0, 0, 0, 0.12)`,
     directFont: `rgba(${fR}, ${fG}, ${fB}, 0.98)`,
     luma,
   };

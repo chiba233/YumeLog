@@ -43,8 +43,8 @@ $$bold(
 )$$
 3. 夹缝生存：
 文本$$$$$$文字$$$$$$$更多文本
-@end
-@text
+@1234
+@test
 $$bold(维度 7：递归陷阱与伪闭合的“大逃杀”)$$
 1. 嵌套的伪装：$$info( title | $$bold( 这里的闭合 \\)$$ 到底关了谁？ )% 嘿嘿，我是 raw-code 的开启符吗？ )$$
 2. 极限转义序列：\\\\\\\\\\)$$ (这是一串 10 个反斜杠，最后应该剩 5 个反斜杠并闭合吗？不，它后面跟着的是 )$$)
@@ -70,110 +70,120 @@ $$bold(维度 10：字符集与编码的“降维打击”)$$
 2. 零宽空格背刺：$$bold(我中间隐含了​零宽空格)$$
 3. 泰文/Emoji 混淆：$$info( 🇹🇭 | 曼谷的 $$bold(热)$ ☀️ )$$
 
-$$bold(维度 11：终极未闭合压测 (Stack Overflow Prevention))$$
-$$bold($$thin($$bold($$thin($$bold($$thin($$bold($$thin($$bold($$thin($$bold($$thin($$bold($$thin($$bold($$thin(
-  这是一段没有结尾的深渊...
-  如果解析器在这里卡死或者报错，
-  说明你的 fallback 机制还不够鲁棒！
-$$bold(第1层:
-  $$thin(第2层:
-    $$bold(第3层:
-      $$thin(第4层:
-        $$bold(第5层:
-          $$thin(第6层:
-            $$bold(第7层:
-              $$thin(第8层:
-                $$bold(第9层:
-                  $$thin(第10层:
-                    $$bold(第11层:
-                      $$thin(第12层:
-                        $$bold(第13层:
-                          $$thin(第14层:
-                            $$bold(第15层:
-                              $$thin(第16层:
-                                $$bold(第17层:
-                                  $$thin(第18层:
-                                    $$bold(第19层:
-                                      $$thin(第20层:
-                                        $$bold(第21层:
-                                          $$thin(第22层:
-                                            $$bold(第23层:
-                                              $$thin(第24层:
-                                                $$bold(第25层:
-                                                  $$thin(第26层:
-                                                    $$bold(第27层:
-                                                      $$thin(第28层:
-                                                        $$bold(第29层:
-                                                          $$thin(第30层:
-                                                            $$bold(第31层:
-                                                              $$thin(第32层:
-                                                                $$bold(第33层:
-                                                                  $$thin(第34层:
-                                                                    $$bold(第35层:
-                                                                      $$thin(第36层:
-                                                                        $$bold(第37层:
-                                                                          $$thin(第38层:
-                                                                            $$bold(第39层:
-                                                                              $$thin(第40层:
-                                                                                $$bold(第41层:
-                                                                                  $$thin(第42层:
-                                                                                    $$bold(第43层:
-                                                                                      $$thin(第44层:
-                                                                                        $$bold(第45层:
-                                                                                          $$thin(第46层:
-                                                                                            $$bold(第47层:
-                                                                                              $$thin(第48层:
-                                                                                                $$bold(第49层:
-                                                                                                  $$thin(第50层:
-$$bold(第51层:$$thin(第52层:$$bold(第53层:$$thin(第54层:$$bold(第55层:$$thin(第56层:$$bold(第57层:$$thin(第58层:$$bold(第59层:$$thin(第60层:$$bold(第61层:$$thin(第62层:$$bold(第63层:$$thin(第64层:$$bold(第65层:$$thin(第66层:$$bold(第67层:$$thin(第68层:$$bold(第69层:$$thin(第70层:$$bold(第71层:$$thin(第72层:$$bold(第73层:$$thin(第74层:$$bold(第75层:$$thin(第76层:$$bold(第77层:$$thin(第78层:$$bold(第79层:$$thin(第80层:$$bold(第81层:$$thin(第82层:$$bold(第83层:$$thin(第84层:$$bold(第85层:$$thin(第86层:$$bold(第87层:$$thin(第88层:$$bold(第89层:$$thin(第90层:$$bold(第91层:$$thin(第92层:$$bold(第93层:$$thin(第94层:$$bold(第95层:$$thin(第96层:$$bold(第97层:$$thin(第98层:$$bold(第99层:$$thin(第100层: 恭喜你来到绝对零度！)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$)$$
-                                                                                                )$$
-                                                                                              )$$
-                                                                                            )$$
-                                                                                          )$$
-                                                                                        )$$
-                                                                                      )$$
-                                                                                    )$$
-                                                                                  )$$
-                                                                                )$$
-                                                                              )$$
-                                                                            )$$
-                                                                          )$$
-                                                                        )$$
-                                                                      )$$
-                                                                    )$$
-                                                                  )$$
-                                                                )$$
-                                                              )$$
-                                                            )$$
-                                                          )$$
-                                                        )$$
-                                                      )$$
-                                                    )$$
-                                                  )$$
-                                                )$$
-                                              )$$
-                                            )$$
-                                          )$$
-                                        )$$
-                                      )$$
-                                    )$$
-                                  )$$
-                                )$$
-                              )$$
-                            )$$
-                          )$$
-                        )$$
-                      )$$
-                    )$$
-                  )$$
-                )$$
-              )$$
-            )$$
-          )$$
-        )$$
-      )$$
-    )$$
-  )$$
+===== BASIC =====
+普通文本 $$bold(hello world)$$ 结束
+$$link(https://google.com | Google)$$
+
+===== INLINE NEST =====
+$$bold($$underline(Hello $$strike(World)$$)$$)$$
+
+===== INFO INLINE =====
+$$info(标题 | 这是 $$bold(重点)$$ 内容)$$
+
+===== WARNING INLINE FALLBACK =====
+$$warning(只有一段内容)$$
+
+===== RAW BASIC =====
+$$info(标题)%
+这里不会解析 $$bold(重点)$$
+%end$$
+
+===== RAW CODE =====
+$$raw-code(ts | 示例)%
+const a = 1
+console.log(a)
+%end$$
+
+===== RAW ESCAPE =====
+$$raw-code(text | 测试)%
+这里有一个假结束符 \%end$$ 不应该被识别
+%end$$
+
+===== BLOCK INFO =====
+$$info(标题)*
+这里是 block 内容
+支持 $$bold(加粗)$$
+*end$$
+
+===== BLOCK WARNING =====
+$$warning(注意)*
+这里是 $$info(嵌套 | $$bold(嵌套内容)$$)$$
+*end$$
+
+===== BLOCK NEST =====
+$$collapse(展开)*
+第一层
+$$info(内部)*
+第二层 $$bold(深层)$$
+*end$$
+结束
+*end$$
+
+===== MIXED =====
+开始
+$$info(标题 | inline)$$
+
+$$info(标题2)%
+raw $$bold(不会解析)$$
+%end$$
+
+$$info(标题3)*
+block $$bold(会解析)$$
+*end$$
+
+结束
+
+===== BLOCK + RAW =====
+$$info(标题)*
+block 内
+$$raw-code(js)%
+console.log("不会解析 $$bold()$$")
+%end$$
+结束
+*end$$
+
+===== RAW WITH BLOCK (SHOULD IGNORE) =====
+$$raw-code(text)%
+$$info(标题)*
+不会解析
+*end$$
+%end$$
+
+===== ERROR INLINE UNCLOSED =====
+$$bold(hello
+world
+
+===== ERROR RAW UNCLOSED =====
+$$info(标题)%
+hello world
+
+===== ERROR BLOCK UNCLOSED =====
+$$info(标题)*
+hello world
+
+===== ERROR CLOSE =====
 )$$
-)$$
+
+===== UNKNOWN TAG =====
+$$unknown(hello world)$$
+
+===== CLOSE VALID =====
+$$info(标题)*
+hello
+*end$$
+
+===== CLOSE INVALID INDENT =====
+$$info(标题)*
+hello
+ *end$$
+
+===== CLOSE INVALID TRAILING =====
+$$info(标题)*
+hello
+*end$$ extra
+
+===== RAW CLOSE INVALID =====
+$$raw-code(text)%
+hello
+ %end$$
 @end

@@ -28,13 +28,14 @@
 
 <script lang="ts" setup>
 import { onMounted, shallowRef, watchEffect } from "vue";
-import { lang } from "@/components/ts/setupLang.ts";
-import { themeColor, useTheme } from "@/components/ts/useTheme.ts";
+import { lang } from "@/components/ts/global/setupLang.ts";
+import { themeColor, useTheme } from "@/components/ts/global/useTheme.ts";
 import { NButton, NIcon, NPopselect, type SelectOption } from "naive-ui";
 import LangIcon from "../icons/langIcon.svg";
-import { $message } from "@/components/ts/msgUtils.ts";
-type I18nMap = Record<string, string>;
+import { $message } from "@/components/ts/global/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
+
+type I18nMap = Record<string, string>;
 const configLoadFailed = commonI18n.configLoadFailed as I18nMap;
 useTheme();
 interface Props {

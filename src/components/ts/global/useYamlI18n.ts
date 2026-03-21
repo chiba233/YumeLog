@@ -1,8 +1,8 @@
 import { computed, onServerPrefetch, ref } from "vue";
-import { lang } from "@/components/ts/setupLang.ts";
-import { useContentStore } from "@/components/ts/contentStore.ts";
-import { $message } from "@/components/ts/msgUtils.ts";
-import { CommonI18nBlock } from "./d";
+import { lang } from "@/components/ts/global/setupLang.ts";
+import { useContentStore } from "@/components/ts/global/contentStore.ts";
+import { $message } from "@/components/ts/global/msgUtils.ts";
+import { CommonI18nBlock } from "../d.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 
 type I18nMap = Record<string, string>;

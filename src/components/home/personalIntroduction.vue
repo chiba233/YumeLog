@@ -9,11 +9,11 @@
 </template>
 
 <script lang="ts" setup>
-import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import { useYamlText } from "@/components/ts/useYamlI18n.ts";
+import { useCardGlow } from "@/components/ts/global/animationCalculate.ts";
+import { useYamlText } from "@/components/ts/global/useYamlI18n.ts";
 import { useHead } from "@unhead/vue";
 import { computed } from "vue";
-import { lang } from "@/components/ts/setupLang.ts";
+import { lang } from "@/components/ts/global/setupLang.ts";
 
 const displayContent = useYamlText("main", "introduction.yaml", "introduction");
 

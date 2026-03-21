@@ -1,6 +1,6 @@
 <script setup>
 import { useMessage } from "naive-ui";
-import { setGlobalMessage } from "@/components/ts/msgUtils.ts";
+import { setGlobalMessage } from "@/components/ts/global/msgUtils.ts";
 
 setGlobalMessage(useMessage());
 </script>

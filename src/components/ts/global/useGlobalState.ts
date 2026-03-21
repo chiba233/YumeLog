@@ -1,11 +1,11 @@
 import { computed, ref, shallowRef, watch } from "vue";
-import { lang } from "@/components/ts/setupLang.ts";
+import { lang } from "@/components/ts/global/setupLang.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
 import { loadSingleYaml } from "@/components/ts/getYaml";
-import { Friend, NekoYamlResponse, Post, PostBlock, ProcessedPost, YamlNekoBlock } from "./d";
-import { parseRichText, stripRichText } from "./dsl/BlogRichText/blogFormat.ts";
+import { Friend, NekoYamlResponse, Post, PostBlock, ProcessedPost, YamlNekoBlock } from "../d.ts";
+import { parseRichText, stripRichText } from "../dsl/BlogRichText/blogFormat.ts";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
-import { socialRawData } from "@/components/ts/setupJson.ts";
+import { socialRawData } from "@/components/ts/global/setupJson.ts";
 
 type I18nSource = Record<string, Record<string, string>>;
 export type WebTitleMap = Record<string, Record<string, string>>;
@@ -26,11 +26,7 @@ export const blogDisplay = computed(() => {
 
   Object.keys(source).forEach((key) => {
     const translations = source[key];
-    displayObj[key] =
-      translations[currentLang] ||
-      translations["en"] ||
-      translations["other"] ||
-      Object.values(translations)[0];
+    displayObj[key] = translations?.[currentLang] ?? translations?.en ?? translations?.other ?? "";
   });
 
   return displayObj;
@@ -40,18 +36,30 @@ export const socialLinks = computed(() => {
 });
 
 export const nekoImg = shallowRef<YamlNekoBlock[]>([]);
-export const loadCat = async () => {
-  if (nekoImg.value.length) return;
-  const res = await loadSingleYaml<NekoYamlResponse>("main", "neko.yaml");
-  if (res && res.img) {
-    nekoImg.value = res.img.map(
-      (img: YamlNekoBlock): YamlNekoBlock => ({
-        imgError: img.imgError,
-        img: img.img,
-        imgName: img.imgName,
-      }),
-    );
-  }
+let catLoadingPromise: Promise<void> | null = null;
+export const loadCat = async (): Promise<void> => {
+  if (nekoImg.value.length > 0) return;
+  if (catLoadingPromise) return catLoadingPromise;
+
+  catLoadingPromise = (async () => {
+    try {
+      const res = await loadSingleYaml<NekoYamlResponse>("main", "neko.yaml");
+
+      if (res && Array.isArray(res.img)) {
+        nekoImg.value = res.img.map(
+          (img: YamlNekoBlock): YamlNekoBlock => ({
+            imgError: img.imgError,
+            img: img.img,
+            imgName: img.imgName,
+          }),
+        );
+      }
+    } finally {
+      catLoadingPromise = null;
+    }
+  })();
+
+  return catLoadingPromise;
 };
 
 export const getDescriptionText = (blocks?: PostBlock[], targetLength = 160): string => {
@@ -79,36 +87,58 @@ export const getDescriptionText = (blocks?: PostBlock[], targetLength = 160): st
   return result.trim();
 };
 
-const descriptionCache = new WeakMap<object, string>();
+const descriptionCache = new Map<string, string>();
 
+const getDescriptionCacheKey = (post: Post): string => {
+  return `${post.title}__${post.time}`;
+};
 export const processedPosts = computed<ProcessedPost[]>(() => {
   if (!posts.value) return [];
+
   return posts.value.map((post) => {
     const blocks = post.blocks ?? [];
     const imageBlocks = blocks.filter((b) => b.type === "image");
-    let description = descriptionCache.get(post);
+
+    const cacheKey = getDescriptionCacheKey(post);
+    let description = descriptionCache.get(cacheKey);
+
     if (description === undefined) {
       description = getDescriptionText(blocks, 350);
-      descriptionCache.set(post, description);
+      descriptionCache.set(cacheKey, description);
     }
+
     return {
       ...post,
       blocks,
       imageBlocks,
       displayDescription: description,
-    } as ProcessedPost;
+    };
   });
 });
 
 export const parsedBlocks = shallowRef<PostBlock[]>([]);
 
-watch([selectedPost, showModal], async ([newPost, isShow]) => {
+let parsedBlocksJobId = 0;
+
+watch([selectedPost, showModal], async ([newPost, isShow], _, onCleanup) => {
+  const jobId = ++parsedBlocksJobId;
+  let cancelled = false;
+
+  onCleanup(() => {
+    cancelled = true;
+  });
+
   if (!isShow || !newPost?.blocks) {
     return;
   }
 
   const rawBlocks = newPost.blocks;
+
   if (import.meta.env.SSR) {
+    if (cancelled || jobId !== parsedBlocksJobId || selectedPost.value !== newPost) {
+      return;
+    }
+
     parsedBlocks.value = rawBlocks.map((block) => {
       if (block.type === "text" && typeof block.content === "string") {
         return {
@@ -124,14 +154,24 @@ watch([selectedPost, showModal], async ([newPost, isShow]) => {
     });
     return;
   }
+
   const temp: PostBlock[] = [];
+
   for (let i = 0; i < rawBlocks.length; i++) {
-    if (!showModal.value) break;
+    if (
+      cancelled ||
+      jobId !== parsedBlocksJobId ||
+      !showModal.value ||
+      selectedPost.value !== newPost
+    ) {
+      return;
+    }
+
     temp.push({ ...rawBlocks[i], tokens: [] });
 
-    if (i % 10 === 0 || i === rawBlocks.length - 1) {
+    if ((i + 1) % 10 === 0 || i === rawBlocks.length - 1) {
       parsedBlocks.value = [...temp];
-      await new Promise((r) => requestAnimationFrame(r));
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
     }
   }
 });
@@ -139,7 +179,7 @@ watch([selectedPost, showModal], async ([newPost, isShow]) => {
 export const friendsTitle = computed(() => {
   const source = friendsMessage as I18nSource;
   return {
-    title: source.title[lang.value] ?? source.title.en,
+    title: source.title?.[lang.value] ?? source.title?.en ?? "",
   };
 });
 

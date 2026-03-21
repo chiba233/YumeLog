@@ -8,7 +8,7 @@ import "dayjs/locale/th";
 import { ref, type Ref, watch } from "vue";
 import relativeTime from "dayjs/plugin/relativeTime";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import { SelectOption } from "./d.ts";
+import { SelectOption } from "../d.ts";
 
 dayjs.extend(buddhistEra);
 dayjs.extend(localizedFormat);

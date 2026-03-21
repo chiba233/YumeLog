@@ -2,7 +2,7 @@
 import type { RichType, TextToken } from "../ts/d.ts";
 import { type Component, defineAsyncComponent, FunctionalComponent, h, VNode } from "vue";
 import { NAlert, NCollapse, NCollapseItem } from "naive-ui";
-import { isSSR } from "@/components/ts/useHead.ts";
+import { isSSR } from "@/components/ts/global/useHead.ts";
 
 const ShikiCodeBlock = defineAsyncComponent(() => import("@/components/blog/ShikiCodeBlock.vue"));
 
@@ -19,7 +19,6 @@ interface CollapseWrapperProps {
   temp_id: string;
   title: string;
 }
-
 const CollapseWrapper: FunctionalComponent<CollapseWrapperProps> = (props, { slots }): VNode => {
   return h(
     NCollapse,
@@ -148,13 +147,13 @@ const normalizeUrl = (raw: string): string | undefined => {
     <component
       :is="tagMap[token.type] || 'span'"
       v-else
-      :class="getComponentClass(token)"
       v-bind="getComponentProps(token)"
+      :class="getComponentClass(token)"
     >
       <RichTextRenderer
         v-if="Array.isArray(token.value) && token.value.length"
-        :lang="lang"
         :tokens="token.value"
+        :lang="lang"
       />
       <template v-else-if="typeof token.value === 'string' && token.type !== 'raw-code'">
         {{ token.value }}

@@ -19,8 +19,8 @@ import HomeTitle from "@/components/home/homeTitle.vue";
 import PersonalIntroductions from "@/components/home/personalIntroduction.vue";
 import ContactInformation from "@/components/home/contactInformation.vue";
 import MyFriends from "@/components/home/myFriends.vue";
-import { globalWebTitleMap } from "@/components/ts/useGlobalState.ts";
-import { lang } from "@/components/ts/setupLang.ts";
+import { globalWebTitleMap } from "@/components/ts/global/useGlobalState.ts";
+import { lang } from "@/components/ts/global/setupLang.ts";
 </script>
 
 <style lang="scss">

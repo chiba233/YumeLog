@@ -133,11 +133,11 @@ import {
 } from "naive-ui";
 import axios from "axios";
 import { useAsyncState, useStorage } from "@vueuse/core";
-import { lang } from "@/components/ts/setupLang.ts";
-import { globalColorDeep, themeColor } from "@/components/ts/useTheme.ts";
+import { lang } from "@/components/ts/global/setupLang.ts";
+import { globalColorDeep, themeColor } from "@/components/ts/global/useTheme.ts";
 import { getMaiUrl } from "../ts/maimaiScore.ts";
-import { maiSections } from "@/components/ts/setupJson.ts";
-import { useCardGlow } from "@/components/ts/animationCalculate.ts";
+import { maiSections } from "@/components/ts/global/setupJson.ts";
+import { useCardGlow } from "@/components/ts/global/animationCalculate.ts";
 import {
   loadCat,
   nekoImg,
@@ -146,12 +146,12 @@ import {
   showLineModel,
   showMaiModal,
   showWechatModel,
-} from "../ts/useGlobalState.ts";
-import { $message } from "../ts/msgUtils.ts";
-import { useRouteModal } from "../ts/useRouteModal.ts";
+} from "../ts/global/useGlobalState.ts";
+import { $message } from "../ts/global/msgUtils.ts";
+import { useRouteModal } from "../ts/global/useRouteModal.ts";
 import { PlatformConfig, PlatformId, UserDataType } from "../ts/d.ts";
-import { socialLinks } from "@/components/ts/useGlobalState.ts";
-import { headLinks } from "@/components/ts/useHead.ts";
+import { socialLinks } from "@/components/ts/global/useGlobalState.ts";
+import { headLinks } from "@/components/ts/global/useHead.ts";
 import { useHead } from "@unhead/vue";
 
 const { onMove, onLeave, onEnter } = useCardGlow();
@@ -398,11 +398,9 @@ useHead({
 .maiCard {
   display: flex;
   width: 42em;
-
   .n-collapse .n-collapse-item:not(:first-child) {
     border-top: 1.5px solid var(--direct-font-color);
   }
-
   .connecter {
     padding-right: 0.6em;
     padding-left: 0.2em;
@@ -436,7 +434,6 @@ useHead({
   .cButton {
     height: 2.2em;
     margin: 0.35rem;
-
     &:focus,
     &:active,
     &:hover {
@@ -447,7 +444,6 @@ useHead({
     a {
       font-weight: normal;
     }
-
     @media (max-width: 550px) {
       .n-icon {
         margin-left: 6px;

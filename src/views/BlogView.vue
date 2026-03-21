@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts" setup>
-import { lang } from "@/components/ts/setupLang.ts";
+import { lang } from "@/components/ts/global/setupLang.ts";
 import BlogCard from "@/components/blog/blogCard.vue";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import {
@@ -20,15 +20,15 @@ import {
   selectedPost,
   showModal,
   WebTitleMap,
-} from "@/components/ts/useGlobalState.ts";
+} from "@/components/ts/global/useGlobalState.ts";
 import { computed, onMounted, onServerPrefetch, watch } from "vue";
 import { useRoute } from "vue-router";
-import { useContentStore } from "@/components/ts/contentStore.ts";
+import { useContentStore } from "@/components/ts/global/contentStore.ts";
 import { Post } from "@/components/ts/d";
 import router from "@/router";
 import { listPrimaryError, listSpareError, yamlLoadingFault } from "@/components/ts/getYaml";
-import { $message } from "@/components/ts/msgUtils.ts";
-import { blogUseHead, isSSR } from "@/components/ts/useHead.ts";
+import { $message } from "@/components/ts/global/msgUtils.ts";
+import { blogUseHead, isSSR } from "@/components/ts/global/useHead.ts";
 
 const titleI18N = commonI18n.blogWelcome as Record<string, string>;
 const ssrHideTitle = computed(() => !(isSSR && selectedPost.value));

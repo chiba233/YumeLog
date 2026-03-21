@@ -10,57 +10,57 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const isVisible = ref(false);
 const container = ref<HTMLElement | null>(null);
 const isParsed = ref(false);
 const localTokens = shallowRef<TextToken[]>([]);
 let observer: IntersectionObserver | null = null;
 
-const stopObserving = () => {
-  if (observer) {
-    observer.disconnect();
-    observer = null;
-  }
-};
-
-const getInitialTokens = (): TextToken[] => {
-  if (Array.isArray(props.block?.tokens) && props.block.tokens.length > 0) {
-    isParsed.value = true;
-    return props.block.tokens;
-  }
-
-  if (props.ssr && props.block?.type === "text" && typeof props.block.content === "string") {
-    try {
-      const tokens = parseRichText(props.block.content);
-      isParsed.value = true;
-      return tokens;
-    } catch (e) {
-      console.error("SSR Parse Error:", e);
-      isParsed.value = false;
-      return [];
-    }
-  }
-
-  isParsed.value = false;
-  return [];
-};
-
 const shouldLazy = computed(() => {
-  if (props.ssr) return false;
-  return !isParsed.value;
+  return !props.ssr && !isParsed.value;
 });
 
 const shouldRenderContent = computed(() => {
-  return !shouldLazy.value || isVisible.value;
+  return props.ssr || isParsed.value;
 });
 
-const parseBlock = () => {
-  if (!props.block || props.block.type !== "text" || typeof props.block.content !== "string") {
-    return;
+const stopObserving = () => {
+  observer?.disconnect();
+  observer = null;
+};
+
+const resolveInitialState = (): { tokens: TextToken[]; parsed: boolean } => {
+  if (Array.isArray(props.block?.tokens) && props.block.tokens.length > 0) {
+    return {
+      tokens: props.block.tokens,
+      parsed: true,
+    };
+  }
+
+  if (!props.ssr) {
+    return {
+      tokens: [],
+      parsed: false,
+    };
   }
 
   try {
-    localTokens.value = parseRichText(props.block.content);
+    return {
+      tokens: parseRichText(props.block!.content as string),
+      parsed: true,
+    };
+  } catch (e) {
+    console.error("SSR Parse Error:", e);
+    return {
+      tokens: [],
+      parsed: false,
+    };
+  }
+};
+const parseBlock = () => {
+  if (isParsed.value) return;
+
+  try {
+    localTokens.value = parseRichText(props.block!.content as string);
     isParsed.value = true;
   } catch (e) {
     console.error("Lazy Parse Error:", e);
@@ -69,71 +69,59 @@ const parseBlock = () => {
   }
 };
 
+const resetState = () => {
+  stopObserving();
+  const { tokens, parsed } = resolveInitialState();
+  localTokens.value = tokens;
+  isParsed.value = parsed;
+};
+
+const estimatedHeight = computed(() => {
+  const content =
+    props.block?.type === "text" && typeof props.block.content === "string"
+      ? props.block.content
+      : "";
+
+  const len = content.length;
+
+  if (len < 80) return 72;
+  if (len < 200) return 120;
+  if (len < 400) return 160;
+  if (len < 800) return 200;
+  return 240;
+});
 const setupObserver = () => {
   stopObserving();
 
-  if (!props.block || !container.value) return;
+  if (!container.value || !shouldLazy.value) return;
 
-  if (!shouldLazy.value) {
-    isVisible.value = true;
-    return;
-  }
-
-  const scrollRoot =
-    container.value.closest(".n-scrollbar-container") ||
-    container.value.closest(".n-card__content");
+  const scrollRoot = container.value.closest(".n-scrollbar-container, .n-card__content");
 
   observer = new IntersectionObserver(
     ([entry]) => {
       if (!entry.isIntersecting) return;
-
-      if (!isParsed.value) {
-        parseBlock();
-      }
-
-      isVisible.value = true;
+      parseBlock();
       stopObserving();
     },
     {
-      root: scrollRoot as HTMLElement | null,
-      rootMargin: "300px",
+      root: scrollRoot instanceof HTMLElement ? scrollRoot : null,
+      rootMargin: "160px 0px",
+      threshold: 0.01,
     },
   );
 
   observer.observe(container.value);
 };
 
-const resetState = () => {
-  stopObserving();
-  isVisible.value = false;
-  isParsed.value = false;
-  localTokens.value = getInitialTokens();
-};
-
-onMounted(async () => {
+const refresh = async () => {
   resetState();
   await nextTick();
   setupObserver();
-});
+};
 
-watch(
-  () => props.block,
-  async () => {
-    resetState();
-    await nextTick();
-    setupObserver();
-  },
-  { deep: false },
-);
+onMounted(refresh);
 
-watch(
-  () => props.ssr,
-  async () => {
-    resetState();
-    await nextTick();
-    setupObserver();
-  },
-);
+watch(() => [props.block, props.ssr], refresh, { deep: false });
 
 onUnmounted(() => {
   stopObserving();
@@ -143,7 +131,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="container" :class="{ 'is-loaded': shouldRenderContent }" class="lazy-block-wrapper">
+  <div
+    ref="container"
+    :style="{ '--lazy-height': `${estimatedHeight}px` }"
+    class="lazy-block-wrapper"
+  >
     <slot v-if="shouldRenderContent" :combined-tokens="localTokens" />
     <div v-else class="lazy-placeholder">
       <div class="skeleton-glow"></div>
@@ -153,18 +145,14 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .lazy-block-wrapper {
-  contain-intrinsic-size: 1px 300px;
+  contain-intrinsic-size: 1px var(--lazy-height);
   width: 100%;
   min-height: 20px;
   transition: opacity 0.5s ease;
 }
 
-.is-loaded {
-  content-visibility: visible;
-}
-
 .lazy-placeholder {
-  height: 300px;
+  height: var(--lazy-height);
   background: rgba(var(--global-theme-rgb-deep), 0.05);
   border-radius: 12px;
   overflow: hidden;

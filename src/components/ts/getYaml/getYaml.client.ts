@@ -1,7 +1,9 @@
+// noinspection DuplicatedCode
+
 import { ref } from "vue";
 import commonI18n from "../../../data/I18N/commonI18n.json";
-import { lang } from "../setupLang";
-import { $message } from "../msgUtils";
+import { lang } from "../global/setupLang.ts";
+import { $message } from "../global/msgUtils.ts";
 import { createYamlApi, createYamlApiState, type YamlApiState } from "./getYaml.core";
 
 type I18nMap = Record<string, string>;

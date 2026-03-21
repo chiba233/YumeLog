@@ -2,8 +2,8 @@ import { RichType, TextToken, TitledBlockType } from "../../d";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { readEscapedSequence, unescapeInline } from "./escape";
 import { ESCAPE_CHAR, TAG_DIVIDER } from "./constants";
-import { lang } from "../../setupLang";
-import { $message } from "@/components/ts/msgUtils.ts";
+import { lang } from "../../global/setupLang.ts";
+import { $message } from "@/components/ts/global/msgUtils.ts";
 import { createToken } from "@/components/ts/dsl/BlogRichText/createToken.ts";
 
 type CommonI18nKeys = keyof typeof commonI18n;

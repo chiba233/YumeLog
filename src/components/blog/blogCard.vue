@@ -20,11 +20,11 @@ import {
   yamlLoading,
   yamlRetrying,
 } from "@/components/ts/getYaml";
-import { formatDate, formatTime, lang } from "@/components/ts/setupLang.ts";
+import { formatDate, formatTime, lang } from "@/components/ts/global/setupLang.ts";
 import Cancel from "@/icons/cancel.svg";
 import { NAlert, NButton, NCard, NIcon, NImage, NModal } from "naive-ui";
-import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import { $message } from "@/components/ts/msgUtils.ts";
+import { useCardGlow } from "@/components/ts/global/animationCalculate.ts";
+import { $message } from "@/components/ts/global/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
 import {
   blogDisplay,
@@ -34,11 +34,11 @@ import {
   processedPosts,
   selectedPost,
   showModal,
-} from "@/components/ts/useGlobalState.ts";
-import { getSlug, useRouteModal } from "@/components/ts/useRouteModal.ts";
+} from "@/components/ts/global/useGlobalState.ts";
+import { getSlug, useRouteModal } from "@/components/ts/global/useRouteModal.ts";
 import RichTextRenderer from "@/components/blog/RichTextRenderer.vue";
 import { ImageContent, Post, PostBlock, ProcessedPost, TextToken } from "../ts/d.ts";
-import { isSSR } from "../ts/useHead.ts";
+import { isSSR } from "../ts/global/useHead.ts";
 import LazyBlock from "@/components/blog/LazyBlock.vue";
 
 const hydrated = ref(false);
@@ -50,22 +50,33 @@ const getPostId = (post: ProcessedPost) => {
   return getSlug(post) || post.time || post.title;
 };
 
+const pendingVisibleIds = new Set<string>();
+let rafId: number | null = null;
+
+const flushVisibleIds = () => {
+  visibleIds.value = new Set([...visibleIds.value, ...pendingVisibleIds]);
+  pendingVisibleIds.clear();
+  rafId = null;
+};
 const initObserver = () => {
   if (observer) observer.disconnect();
+
   observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const id = (entry.target as HTMLElement).dataset.id;
           if (id) {
-            visibleIds.value.add(id);
-            visibleIds.value = new Set(visibleIds.value);
+            pendingVisibleIds.add(id);
+            if (rafId == null) {
+              rafId = requestAnimationFrame(flushVisibleIds);
+            }
             observer?.unobserve(entry.target);
           }
         }
       });
     },
-    { root: null, rootMargin: "300px", threshold: 0.01 },
+    { root: null, rootMargin: "200px", threshold: 0.01 },
   );
 
   document.querySelectorAll(".post-card[data-id]").forEach((el) => {
@@ -94,7 +105,7 @@ onBeforeUnmount(() => {
 
 const isVisible = (post: ProcessedPost, index: number) => {
   if (!isHydrated.value) return true;
-  if (index < 10) return true;
+  if (index < 4) return true;
   return visibleIds.value.has(getPostId(post));
 };
 
@@ -274,11 +285,17 @@ const renderDetailContent = (): VNodeChild => {
 
     blocks.map((block: PostBlock, a: number) => {
       const ctx: PostRenderContext = { post };
+      const key = `${block.type}-${a}`;
+      const isLazyText = block.type === "text" && typeof block.content === "string";
 
-      return h("div", { key: a, class: "postCardBody" }, [
+      if (!isLazyText) {
+        return h("div", { key, class: "postCardBody" }, renderInnerContent(block, ctx));
+      }
+
+      return h("div", { key, class: "postCardBody" }, [
         h(
           LazyBlock,
-          { block: block, ssr: isSSR },
+          { block, ssr: isSSR },
           {
             default: (slotProps: unknown): VNodeChild[] => {
               const props = slotProps as { combinedTokens: TextToken[] };
@@ -297,15 +314,16 @@ const renderDetailContent = (): VNodeChild => {
     <article
       v-for="(post, index) in processedPosts"
       :key="getPostId(post)"
+      :data-id="getPostId(post)"
       class="post-card glass"
       @mouseenter="onEnter"
       @mouseleave="onLeave"
       @mousemove="onMove"
     >
       <router-link
-        :aria-label="post.title"
         :to="{ name: 'blog', params: { id: getSlug(post) || 'error' } }"
         class="post-card-click-overlay"
+        :aria-label="post.title"
         @click.prevent.stop="cardClick(post)"
       >
       </router-link>
@@ -446,7 +464,6 @@ $border-radius: 16px;
   border-radius: $border-radius;
   overflow: hidden;
 }
-
 .sr-only-article {
   position: absolute;
   width: 1px;
@@ -458,7 +475,6 @@ $border-radius: 16px;
   white-space: nowrap;
   border-width: 0;
 }
-
 @keyframes skeleton-shimmer {
   0% {
     background-position: -200% 0;
@@ -467,7 +483,6 @@ $border-radius: 16px;
     background-position: 200% 0;
   }
 }
-
 .post-skeleton {
   display: flex;
   flex-direction: column;
@@ -482,7 +497,6 @@ $border-radius: 16px;
     width: 25rem;
     height: 210px;
   }
-
   .skeleton-title,
   .skeleton-meta,
   .skeleton-image,
@@ -497,25 +511,21 @@ $border-radius: 16px;
     animation: skeleton-shimmer 1.5s infinite linear;
     border-radius: 8px;
   }
-
   .skeleton-header {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 0.4rem;
     gap: 0.4rem;
-
     .skeleton-title {
       width: 70%;
       height: 1.25rem;
     }
-
     .skeleton-meta {
       width: 40%;
       height: 1rem;
     }
   }
-
   .skeleton-body {
     display: flex;
     gap: 0.5rem;
@@ -524,14 +534,12 @@ $border-radius: 16px;
       flex-direction: column;
       align-items: center;
     }
-
     .skeleton-image {
       width: 120px;
       height: 120px;
       flex-shrink: 0;
       border-radius: 12px;
     }
-
     .skeleton-description {
       display: flex;
       flex-direction: column;
@@ -539,22 +547,17 @@ $border-radius: 16px;
       width: 100%;
       gap: 0.5rem;
       justify-content: center;
-
       .skeleton-text-line {
         height: 0.8rem;
-
         &.line-1 {
           width: 100%;
         }
-
         &.line-2 {
           width: 95%;
         }
-
         &.line-3 {
           width: 90%;
         }
-
         &.line-4 {
           width: 40%;
         }
@@ -569,7 +572,6 @@ $border-radius: 16px;
   margin: 0;
   font-weight: bold;
 }
-
 .separator-icon {
   display: flex;
   align-items: center;
@@ -578,22 +580,18 @@ $border-radius: 16px;
   margin: 0.5rem 0;
   font-weight: bold;
 }
-
 .separator-icon::before,
 .separator-icon::after {
   content: "";
   flex: 1;
   height: 2px;
 }
-
 .separator-icon::before {
   background: linear-gradient(to right, transparent, rgba(var(--global-theme-rgb-deep), 0.6));
 }
-
 .separator-icon::after {
   background: linear-gradient(to right, rgba(var(--global-theme-rgb-deep), 0.6), transparent);
 }
-
 .separator-icon span {
   padding: 0 20px;
   font-size: 14px;
@@ -651,11 +649,9 @@ $border-radius: 16px;
   flex-direction: column;
   overflow: hidden;
   max-height: 99dvh !important;
-
   :deep(.n-card-header) {
     flex-shrink: 0;
   }
-
   max-width: 99%;
   @media (min-width: 1050px) {
     max-width: 75em !important;
@@ -895,7 +891,6 @@ $border-radius: 16px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         margin: 0 0.25rem;
       }
-
       .thirdImg,
       .secondImg,
       .fourthImg {
@@ -904,19 +899,16 @@ $border-radius: 16px;
           display: none;
         }
       }
-
       .thirdImg {
         @media (max-width: 450px) {
           display: none;
         }
       }
-
       .secondImg {
         @media (max-width: 300px) {
           display: none;
         }
       }
-
       .fourthImg {
         @media (max-width: 600px) {
           display: none;

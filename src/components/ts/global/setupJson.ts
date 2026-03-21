@@ -1,5 +1,5 @@
 import { shallowRef } from "vue";
-import { MaiSection, PersonConfig, SocialConfig } from "./d";
+import { MaiSection, PersonConfig, SocialConfig } from "../d.ts";
 
 export const maiSections: MaiSection[] = [
   {

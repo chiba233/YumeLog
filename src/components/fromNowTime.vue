@@ -46,12 +46,12 @@ import { NButton, NCard, NIcon, NModal } from "naive-ui";
 import Clock from "../icons/clock.svg";
 import { computed, onMounted, ref } from "vue";
 import Cancel from "../icons/cancel.svg";
-import { formatDate, formatTime, lang } from "@/components/ts/setupLang.ts";
-import { themeColor } from "@/components/ts/useTheme.ts";
+import { formatDate, formatTime, lang } from "@/components/ts/global/setupLang.ts";
+import { themeColor } from "@/components/ts/global/useTheme.ts";
 import fromNowI18 from "@/data/I18N/fromNowI18n.json";
-import { useContentStore } from "@/components/ts/contentStore.ts";
-import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import { useRouteModal } from "@/components/ts/useRouteModal.ts";
+import { useContentStore } from "@/components/ts/global/contentStore.ts";
+import { useCardGlow } from "@/components/ts/global/animationCalculate.ts";
+import { useRouteModal } from "@/components/ts/global/useRouteModal.ts";
 import { FromNowLanguageConfig, FromNowYamlResponse, YamlTimeBlock } from "@/components/ts/d.ts";
 
 const showFromNowModal = ref(false);

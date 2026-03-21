@@ -5,14 +5,14 @@ import { NButton, NIcon, NMessageProvider } from "naive-ui";
 import { Document28Regular, Home12Regular } from "@vicons/fluent";
 import MessageProvider from "@/components/MessageProvider.vue";
 import TopBar from "@/components/topBar.vue";
-import { lang } from "@/components/ts/setupLang.ts";
-import { themeColor } from "@/components/ts/useTheme.ts";
+import { lang } from "@/components/ts/global/setupLang.ts";
+import { themeColor } from "@/components/ts/global/useTheme.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
-import { personRawData, socialRawData } from "@/components/ts/setupJson.ts";
+import { personRawData, socialRawData } from "@/components/ts/global/setupJson.ts";
 import ClientOnly from "@/components/ClientOnly.vue";
-import { useCardGlow } from "@/components/ts/animationCalculate.ts";
+import { useCardGlow } from "@/components/ts/global/animationCalculate.ts";
 import { changeSpareUrl, listPrimaryError } from "@/components/ts/getYaml";
-import { $message } from "./components/ts/msgUtils";
+import { $message } from "./components/ts/global/msgUtils.ts";
 import {
   blogDisplay,
   currentPostTitle,
@@ -21,7 +21,7 @@ import {
   showLineModel,
   showMaiModal,
   showWechatModel,
-} from "@/components/ts/useGlobalState.ts";
+} from "@/components/ts/global/useGlobalState.ts";
 import { useHead } from "@unhead/vue";
 import webTitle from "@/data/I18N/webTitle.json";
 import { PersonConfig, SocialConfig } from "@/components/ts/d.ts";
@@ -223,7 +223,6 @@ figure {
   margin: 0;
   padding: 0;
 }
-
 .seo-link-wrapper {
   text-decoration: none;
   display: contents;

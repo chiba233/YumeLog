@@ -2,9 +2,9 @@
 import { onBeforeMount, shallowRef, watch } from "vue";
 import type { HighlighterCore } from "shiki/core";
 import type { ThemedToken } from "shiki";
-import { $message } from "@/components/ts/msgUtils.ts";
+import { $message } from "@/components/ts/global/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
-import { lang } from "@/components/ts/setupLang.ts";
+import { lang } from "@/components/ts/global/setupLang.ts";
 import { getShiki } from "@/components/ts/shiki.ts";
 
 type I18nMap = Record<string, string>;

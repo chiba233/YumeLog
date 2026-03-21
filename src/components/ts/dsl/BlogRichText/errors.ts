@@ -1,6 +1,6 @@
 import commonI18n from "@/data/I18N/commonI18n.json";
-import { $message } from "../../msgUtils.ts";
-import { lang } from "../../setupLang";
+import { $message } from "../../global/msgUtils.ts";
+import { lang } from "../../global/setupLang.ts";
 
 type I18nMap = Record<string, string>;
 export const emitI18nError = (

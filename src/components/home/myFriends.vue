@@ -12,11 +12,11 @@
         @mousemove="onMove"
       >
         <a
-          :aria-label="lang === 'zh' ? friend.name : friend.alias"
           :href="friend.url"
+          target="_blank"
+          :aria-label="lang === 'zh' ? friend.name : friend.alias"
           class="friend-link-overlay"
           rel="noopener noreferrer"
-          target="_blank"
           @click.prevent="openURL(friend.url)"
         >
           {{ lang === "zh" ? friend.name : friend.alias }}
@@ -24,12 +24,14 @@
 
         <div class="friendsContent">
           <n-avatar
-            :alt="lang === 'zh' ? friend.name : friend.alias"
+            :img-props="{
+              alt: lang === 'zh' ? friend.name : friend.alias,
+            }"
             :fallback-src="friend.spare"
             :size="100"
             :src="friend.icon || friend.spare"
-            bordered
             lazy
+            bordered
             round
           />
           <span :lang="lang" class="friendName commonText">
@@ -44,14 +46,14 @@
 <script lang="ts" setup>
 import { onMounted, onServerPrefetch } from "vue";
 import { NAvatar } from "naive-ui";
-import { lang } from "@/components/ts/setupLang.ts";
-import { useCardGlow } from "@/components/ts/animationCalculate.ts";
-import { useContentStore } from "@/components/ts/contentStore.ts";
-import { $message } from "@/components/ts/msgUtils.ts";
+import { lang } from "@/components/ts/global/setupLang.ts";
+import { useCardGlow } from "@/components/ts/global/animationCalculate.ts";
+import { useContentStore } from "@/components/ts/global/contentStore.ts";
+import { $message } from "@/components/ts/global/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { FriendsYamlResponse } from "../ts/d.ts";
-import { friends, friendsTitle } from "../ts/useGlobalState.ts";
-import { friendsUseHead } from "@/components/ts/useHead.ts";
+import { friends, friendsTitle } from "../ts/global/useGlobalState.ts";
+import { friendsUseHead } from "@/components/ts/global/useHead.ts";
 
 type I18nMap = Record<string, string>;
 
@@ -100,7 +102,6 @@ $transition-speed: 0.3s;
   color: transparent;
   -webkit-tap-highlight-color: transparent;
 }
-
 .friendTitle {
   left: 0;
   right: 0;

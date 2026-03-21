@@ -69,7 +69,6 @@ export interface ComplexTagParseResult {
     index: number;
   };
 }
-
 export interface TagHead {
   tag: string;
   tagStart: number;

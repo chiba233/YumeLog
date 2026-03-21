@@ -10,11 +10,11 @@ import {
   selectedPost,
   showModal,
   socialLinks,
-} from "@/components/ts/useGlobalState.ts";
-import { lang } from "@/components/ts/setupLang.ts";
-import { getSlug } from "@/components/ts/useRouteModal.ts";
+} from "@/components/ts/global/useGlobalState.ts";
+import { lang } from "@/components/ts/global/setupLang.ts";
+import { getSlug } from "@/components/ts/global/useRouteModal.ts";
 import { ImageContent, PostBlock } from "@/components/ts/d.ts";
-import { personRawData } from "@/components/ts/setupJson.ts";
+import { personRawData } from "@/components/ts/global/setupJson.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 
 export const isSSR = import.meta.env.SSR;

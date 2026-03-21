@@ -2,8 +2,8 @@
 import FromNowTime from "@/components/fromNowTime.vue";
 import I18NComponents from "@/components/i18nComponents.vue";
 import { nextTick, onMounted, ref, watch } from "vue";
-import { lang } from "@/components/ts/setupLang.ts";
-import { useCardGlow } from "@/components/ts/animationCalculate.ts";
+import { lang } from "@/components/ts/global/setupLang.ts";
+import { useCardGlow } from "@/components/ts/global/animationCalculate.ts";
 
 const btnWidth = ref<string>("auto");
 

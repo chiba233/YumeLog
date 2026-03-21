@@ -1,4 +1,4 @@
-import { ComplexTagParseResult, TextToken } from "@/components/ts/d.ts";
+import type { ComplexTagParseResult, TextToken } from "./types";
 import {
   findBlockClose,
   findRawClose,

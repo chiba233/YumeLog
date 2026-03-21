@@ -1,4 +1,4 @@
-import { TextToken } from "../../d";
+import type { TextToken } from "./types";
 
 let tokenIdSeed = 0;
 

@@ -1,4 +1,4 @@
-import { ParseContext, ParseStackNode, TagStartInfo, TextToken } from "@/components/ts/d.ts";
+import type { ParseContext, ParseStackNode, TagStartInfo, TextToken } from "./types";
 import {
   BLOCK_CLOSE,
   BLOCK_OPEN,
@@ -133,13 +133,11 @@ export const tryConsumeInlineTag = (
     return true;
   }
 
-  if (!isRichType(info.tag)) {
-    ctx.buffer += ctx.text.slice(ctx.i, info.inlineContentStart);
-    ctx.i = info.inlineContentStart;
-    return true;
-  }
-
-  ctx.stack.push({ tag: info.tag, tokens: [] });
+  ctx.stack.push({
+    tag: info.tag,
+    richType: isRichType(info.tag) ? info.tag : null,
+    tokens: [],
+  });
   ctx.i = info.inlineContentStart;
   return true;
 };
@@ -162,7 +160,7 @@ export const tryConsumeTagStart = (
 };
 
 export const finalizeClosedNode = (ctx: ParseContext, node: ParseStackNode) => {
-  if (!isRichType(node.tag)) {
+  if (!node.richType) {
     emitI18nError("richTextUnknownTag", { tag: node.tag, i: ctx.i }, ctx.silent);
 
     node.tokens.forEach((t) => {
@@ -176,12 +174,12 @@ export const finalizeClosedNode = (ctx: ParseContext, node: ParseStackNode) => {
     return;
   }
 
-  const handler = TAG_HANDLERS[node.tag];
+  const handler = TAG_HANDLERS[node.richType];
   getCurrentTokens(ctx).push(
     handler?.inline
       ? handler.inline(node.tokens)
       : createToken({
-          type: node.tag,
+          type: node.richType,
           value: node.tokens,
         }),
   );

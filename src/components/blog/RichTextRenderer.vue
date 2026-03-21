@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { RichType, TextToken } from "../ts/d.ts";
+import type { RichType, TextToken } from "../ts/dsl/BlogRichText/types";
 import { type Component, defineAsyncComponent, FunctionalComponent, h, VNode } from "vue";
 import { NAlert, NCollapse, NCollapseItem } from "naive-ui";
 import { isSSR } from "@/components/ts/global/useHead.ts";

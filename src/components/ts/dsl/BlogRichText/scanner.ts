@@ -1,4 +1,4 @@
-import { TagHead, TagStartInfo } from "../../d";
+import type { TagHead, TagStartInfo } from "./types";
 import { getLineEnd, isTagChar, isTagStartChar, isWholeLineToken } from "./chars";
 import {
   BLOCK_CLOSE,

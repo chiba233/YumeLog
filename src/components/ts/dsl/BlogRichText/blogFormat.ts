@@ -1,6 +1,6 @@
 // noinspection DuplicatedCode
 
-import { ParseContext, TextToken } from "../../d.ts";
+import type { ParseContext, TextToken } from "./types";
 import { extractText } from "./builders.ts";
 import { tryConsumeEscape, tryConsumeTagClose, tryConsumeTagStart } from "./consumers.ts";
 import { finalizeUnclosedTags, flushBuffer } from "./context.ts";

@@ -92,7 +92,7 @@ watch(
 <template>
   <div class="shiki-code-block-container light-theme">
     <div v-if="label || codeLang" class="code-block-header">
-      <span :lang="lang" class="code-title">{{ title }}</span>
+      <span class="code-title" :lang="lang">{{ title }}</span>
       <span class="code-lang-label">{{ codeLang }}</span>
     </div>
 
@@ -113,7 +113,7 @@ watch(
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .shiki-code-block-container.light-theme {
   margin: 1.2rem auto;
   border-radius: 10px;

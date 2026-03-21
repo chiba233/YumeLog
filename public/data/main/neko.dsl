@@ -1,0 +1,8 @@
+@img
+- imgError: /cat/猫咪图片1.webp
+  img: https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E6%A9%98%E7%8C%AB.webp
+  imgName: 猫咪图片1
+- imgError: /cat/猫咪图片2.webp
+  img: https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E5%A5%B6%E5%AD%90.webp
+  imgName: 猫咪图片2
+@end

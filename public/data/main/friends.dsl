@@ -1,0 +1,11 @@
+@friends
+- name: "星野夢華"
+  alias: "Hoshino Yumeka"
+  url: "https://qwwq.org"
+  icon: "/icon.webp"
+
+- name: "来骗来偷袭"
+  alias: "Rick Roll"
+  url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  spare: "/rickroll.webp"
+@end

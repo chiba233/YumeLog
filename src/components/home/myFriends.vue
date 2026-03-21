@@ -3,7 +3,7 @@
     {{ friendsTitle.title }}
   </h2>
   <div class="allFriends">
-    <template v-for="friend in friends" :key="friend.name">
+    <template v-for="friend in friends" :key="friend.temp_id">
       <div
         class="friendBox glass"
         style="position: relative"
@@ -14,9 +14,9 @@
         <a
           :href="friend.url"
           target="_blank"
-          :aria-label="lang === 'zh' ? friend.name : friend.alias"
-          class="friend-link-overlay"
           rel="noopener noreferrer"
+          class="friend-link-overlay"
+          :aria-label="lang === 'zh' ? friend.name : friend.alias"
           @click.prevent="openURL(friend.url)"
         >
           {{ lang === "zh" ? friend.name : friend.alias }}
@@ -43,7 +43,7 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 import { onMounted, onServerPrefetch } from "vue";
 import { NAvatar } from "naive-ui";
 import { lang } from "@/components/ts/global/setupLang.ts";
@@ -61,13 +61,13 @@ const { onMove, onLeave, onEnter } = useCardGlow();
 const { getSingle } = useContentStore();
 const loadFriendsData = async () => {
   try {
-    const rawData = await getSingle<FriendsYamlResponse>("main", "friends.yaml");
+    const rawData = await getSingle<FriendsYamlResponse>("main", "friends.dsl");
     if (rawData && rawData.friends) {
       friends.value = rawData.friends;
     }
   } catch {
     const yamlEntry = commonI18n.yamlLoadFailed as I18nMap;
-    const yamlMsg = (yamlEntry[lang.value] || yamlEntry.en).replace("{err}", "friends.yaml");
+    const yamlMsg = (yamlEntry[lang.value] || yamlEntry.en).replace("{err}", "friends.dsl");
     $message.error(yamlMsg, true, 3000);
   }
 };

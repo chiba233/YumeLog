@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import { RouterView, useRoute, useRouter } from "vue-router";
 import { computed, onMounted, watch } from "vue";
 import { NButton, NIcon, NMessageProvider } from "naive-ui";
@@ -190,23 +190,19 @@ watch(
       <div class="copyright" @mouseenter="onEnter" @mouseleave="onLeave" @mousemove="onMove">
         <div class="cardButton">
           <div class="cardButton">
-            <a class="seo-link-wrapper" href="/" @click.prevent="goTo('home')">
+            <a href="/" class="seo-link-wrapper" @click.prevent="goTo('home')">
               <n-button :color="themeColor" class="bottomButton" round>
                 <template #icon>
-                  <n-icon size="23">
-                    <Home12Regular />
-                  </n-icon>
+                  <n-icon size="23"><Home12Regular /></n-icon>
                 </template>
                 <span :lang="lang" class="commonText">{{ homeLabel[lang] || homeLabel.en }}</span>
               </n-button>
             </a>
 
-            <a class="seo-link-wrapper" href="/blog" @click.prevent="goTo('blog')">
+            <a href="/blog" class="seo-link-wrapper" @click.prevent="goTo('blog')">
               <n-button :color="themeColor" class="bottomButton" round>
                 <template #icon>
-                  <n-icon size="23">
-                    <Document28Regular />
-                  </n-icon>
+                  <n-icon size="23"><Document28Regular /></n-icon>
                 </template>
                 <span :lang="lang" class="commonText">{{ blogLabel[lang] || blogLabel.en }}</span>
               </n-button>
@@ -278,7 +274,7 @@ figure {
     &:focus,
     &:active,
     &:hover {
-      --n-color: rgba(var(--global-theme-rgb-deep), 0.25) !important;
+      --n-color: rgba(var(--global-theme-rgb-deep), 0.25) !important ;
     }
 
     svg {

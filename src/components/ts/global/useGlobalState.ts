@@ -2,7 +2,16 @@ import { computed, ref, shallowRef, watch } from "vue";
 import { lang } from "@/components/ts/global/setupLang.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
 import { loadSingleYaml } from "@/components/ts/getYaml";
-import { Friend, NekoYamlResponse, Post, PostBlock, ProcessedPost, YamlNekoBlock } from "../d.ts";
+import {
+  Friend,
+  ImagePostBlock,
+  NekoYamlResponse,
+  Post,
+  PostBlock,
+  ProcessedPost,
+  YamlNekoBlock,
+} from "../d.ts";
+import { getCachedBlockTokens, setCachedBlockTokens } from "../dsl/BlogRichText/blockTokenCache.ts";
 import { parseRichText, stripRichText } from "../dsl/BlogRichText/blogFormat.ts";
 import friendsMessage from "@/data/I18N/friendsMessage.json";
 import { socialRawData } from "@/components/ts/global/setupJson.ts";
@@ -43,7 +52,7 @@ export const loadCat = async (): Promise<void> => {
 
   catLoadingPromise = (async () => {
     try {
-      const res = await loadSingleYaml<NekoYamlResponse>("main", "neko.yaml");
+      const res = await loadSingleYaml<NekoYamlResponse>("main", "neko.dsl");
 
       if (res && Array.isArray(res.img)) {
         nekoImg.value = res.img.map(
@@ -51,6 +60,7 @@ export const loadCat = async (): Promise<void> => {
             imgError: img.imgError,
             img: img.img,
             imgName: img.imgName,
+            temp_id: img.temp_id,
           }),
         );
       }
@@ -90,14 +100,42 @@ export const getDescriptionText = (blocks?: PostBlock[], targetLength = 160): st
 const descriptionCache = new Map<string, string>();
 
 const getDescriptionCacheKey = (post: Post): string => {
-  return `${post.title}__${post.time}`;
+  return post.id || `${post.title}__${post.time}`;
 };
+
+const getProcessedPostTempId = (post: Post): string => {
+  return post.id || `${post.title}__${post.time}`;
+};
+
+const getCachedTokensForBlock = (block: PostBlock) => {
+  if (block.type !== "text" || typeof block.content !== "string") {
+    return [];
+  }
+
+  return getCachedBlockTokens(block.temp_id) ?? [];
+};
+
+const parseAndCacheBlockTokens = (block: PostBlock) => {
+  if (block.type !== "text" || typeof block.content !== "string") {
+    return [];
+  }
+
+  const cachedTokens = getCachedBlockTokens(block.temp_id);
+  if (cachedTokens) {
+    return cachedTokens;
+  }
+
+  const tokens = parseRichText(block.content);
+  setCachedBlockTokens(block.temp_id, tokens);
+  return tokens;
+};
+
 export const processedPosts = computed<ProcessedPost[]>(() => {
   if (!posts.value) return [];
 
   return posts.value.map((post) => {
     const blocks = post.blocks ?? [];
-    const imageBlocks = blocks.filter((b) => b.type === "image");
+    const imageBlocks = blocks.filter((block): block is ImagePostBlock => block.type === "image");
 
     const cacheKey = getDescriptionCacheKey(post);
     let description = descriptionCache.get(cacheKey);
@@ -112,6 +150,7 @@ export const processedPosts = computed<ProcessedPost[]>(() => {
       blocks,
       imageBlocks,
       displayDescription: description,
+      temp_id: getProcessedPostTempId(post),
     };
   });
 });
@@ -143,7 +182,7 @@ watch([selectedPost, showModal], async ([newPost, isShow], _, onCleanup) => {
       if (block.type === "text" && typeof block.content === "string") {
         return {
           ...block,
-          tokens: parseRichText(block.content),
+          tokens: parseAndCacheBlockTokens(block),
         };
       }
 
@@ -167,7 +206,7 @@ watch([selectedPost, showModal], async ([newPost, isShow], _, onCleanup) => {
       return;
     }
 
-    temp.push({ ...rawBlocks[i], tokens: [] });
+    temp.push({ ...rawBlocks[i], tokens: getCachedTokensForBlock(rawBlocks[i]) });
 
     if ((i + 1) % 10 === 0 || i === rawBlocks.length - 1) {
       parsedBlocks.value = [...temp];

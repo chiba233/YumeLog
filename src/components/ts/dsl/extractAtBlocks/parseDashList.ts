@@ -1,6 +1,8 @@
 // noinspection DuplicatedCode
 
+import { createDSLTempId } from "./createDSLTempId.ts";
 import type { DSLError, DSLErrorCode } from "./dslError.ts";
+import { splitTextLines } from "./textLines.ts";
 
 export interface ParseDashObjectListOptions {
   onError?: (error: DSLError) => void;
@@ -9,10 +11,17 @@ export interface ParseDashObjectListOptions {
 export const parseDashObjectList = (
   content: string,
   options: ParseDashObjectListOptions = {},
-): Record<string, string>[] => {
-  const lines = content.split(/\r?\n/);
-  const result: Record<string, string>[] = [];
-  let current: Record<string, string> | null = null;
+): Array<Record<string, string> & { temp_id: string }> => {
+  return parseTypedDashObjectList<Record<string, string> & { temp_id: string }>(content, options);
+};
+
+export const parseTypedDashObjectList = <T extends { temp_id: string }>(
+  content: string,
+  options: ParseDashObjectListOptions = {},
+): T[] => {
+  const lines = splitTextLines(content);
+  const result: T[] = [];
+  let current: T | null = null;
   let multiKey: string | null = null;
   let multiBuffer: string[] = [];
 
@@ -23,6 +32,10 @@ export const parseDashObjectList = (
     });
   };
 
+  const hasMeaningfulFields = (value: T): boolean => {
+    return Object.keys(value).some((key) => key !== "temp_id");
+  };
+
   const flushMulti = (): void => {
     if (current && multiKey) {
       const indents = multiBuffer
@@ -31,10 +44,10 @@ export const parseDashObjectList = (
 
       const minIndent = indents.length ? Math.min(...indents) : 0;
 
-      current[multiKey] = multiBuffer
+      current[multiKey as keyof T] = multiBuffer
         .map((l) => l.slice(minIndent))
         .join("\n")
-        .trimEnd();
+        .trimEnd() as T[keyof T];
     }
 
     multiKey = null;
@@ -68,11 +81,11 @@ export const parseDashObjectList = (
       if (isListItem) {
         flushMulti();
 
-        if (current && Object.keys(current).length > 0) {
+        if (current && hasMeaningfulFields(current)) {
           result.push(current);
         }
 
-        current = {};
+        current = { temp_id: createDSLTempId("dsl-item") } as T;
       }
 
       if (!current) {
@@ -96,7 +109,7 @@ export const parseDashObjectList = (
         continue;
       }
 
-      current[key] = processValue(valuePart);
+      current[key as keyof T] = processValue(valuePart) as T[keyof T];
     } else {
       emitError("dslUnrecognizedLine", raw);
     }
@@ -104,7 +117,7 @@ export const parseDashObjectList = (
 
   flushMulti();
 
-  if (current && Object.keys(current).length > 0) {
+  if (current && hasMeaningfulFields(current)) {
     result.push(current);
   }
 
@@ -116,7 +129,7 @@ const stripQuotes = (value: string): string => {
   if (len < 2) return value;
 
   const first = value[0];
-  if ((first === "\"" || first === "'") && value[len - 1] === first) {
+  if ((first === '"' || first === "'") && value[len - 1] === first) {
     const content = value.slice(1, -1);
     return content.includes("\\")
       ? content.replace(/\\(["\\])/g, (_: string, p1: string): string => p1)

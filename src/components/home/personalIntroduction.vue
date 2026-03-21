@@ -8,14 +8,14 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 import { useCardGlow } from "@/components/ts/global/animationCalculate.ts";
 import { useYamlText } from "@/components/ts/global/useYamlI18n.ts";
 import { useHead } from "@unhead/vue";
 import { computed } from "vue";
 import { lang } from "@/components/ts/global/setupLang.ts";
 
-const displayContent = useYamlText("main", "introduction.yaml", "introduction");
+const displayContent = useYamlText("main", "introduction.dsl", "introduction");
 
 useHead({
   meta: [

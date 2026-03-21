@@ -14,7 +14,7 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 import HomeTitle from "@/components/home/homeTitle.vue";
 import PersonalIntroductions from "@/components/home/personalIntroduction.vue";
 import ContactInformation from "@/components/home/contactInformation.vue";

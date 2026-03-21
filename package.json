@@ -12,6 +12,7 @@
     "build-only": "vite-ssg build",
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint . --fix",
+    "test:dsl": "node --import ./tests/register-alias.mjs ./tests/run-dsl-tests.ts",
     "test-build-dist": "npx serve dist -s"
   },
   "dependencies": {

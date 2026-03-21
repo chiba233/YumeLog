@@ -13,7 +13,7 @@ import {
 } from "@/components/ts/global/useGlobalState.ts";
 import { lang } from "@/components/ts/global/setupLang.ts";
 import { getSlug } from "@/components/ts/global/useRouteModal.ts";
-import { ImageContent, PostBlock } from "@/components/ts/d.ts";
+import { PostBlock } from "@/components/ts/d.ts";
 import { personRawData } from "@/components/ts/global/setupJson.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 
@@ -40,7 +40,7 @@ export const blogUseHead = () => {
     const blocks = post.blocks ?? [];
     const slug = getSlug(post);
     const url = `${siteOrigin}/blog/${slug}`;
-    const firstImg = (getImageBlocks(blocks)?.[0]?.content as ImageContent[])?.[0]?.src ?? "";
+    const firstImg = getImageBlocks(blocks)?.[0]?.content?.[0]?.src ?? "";
     const desc = getDescriptionText(blocks).slice(0, 160);
     const published = post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
     return {
@@ -253,10 +253,10 @@ export const friendsUseHead = () => {
 export const headLinks = computed(() => {
   const links = socialLinks.value;
   const social = platforms.value
-    .filter((p) => p.type === "link" && links[p.id as keyof typeof links])
+    .filter((p) => p.type === "link" && links[p.id])
     .map((p) => ({
       rel: "me",
-      href: links[p.id as keyof typeof links],
+      href: links[p.id],
       title: p.label,
     }));
   return [

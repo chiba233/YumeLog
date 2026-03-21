@@ -1,5 +1,5 @@
 import type { ImageContent, PostBlock } from "../../d.ts";
-import { parseDashObjectList } from "./parseDashList.ts";
+import { parseTypedDashObjectList } from "./parseDashList.ts";
 import type { DSLError } from "./dslError.ts";
 
 export type BlockContent = PostBlock["content"];
@@ -12,8 +12,8 @@ export type BlockParser = (content: string, ctx?: BlockParserContext) => BlockCo
 
 export const blockParsers: Record<string, BlockParser> = {
   image(content: string, ctx?: BlockParserContext) {
-    return parseDashObjectList(content, {
+    return parseTypedDashObjectList<ImageContent>(content, {
       onError: ctx?.onError,
-    }) as unknown as ImageContent[];
+    });
   },
 };

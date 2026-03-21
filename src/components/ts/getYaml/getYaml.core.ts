@@ -1,9 +1,12 @@
-import yaml from "js-yaml";
 import pLimit from "p-limit";
 import type { BaseMetadata, YamlUrlConfig } from "../d";
+import type { ParseDSLOptions } from "../dsl/extractAtBlocks/parseDSL";
 import { parseDSL } from "../dsl/extractAtBlocks/parseDSL";
+import type { DSLNode } from "../dsl/extractAtBlocks/types.ts";
 import { astToPost } from "../dsl/extractAtBlocks/astToPost";
 import type { DSLError } from "../dsl/extractAtBlocks/dslError.ts";
+import type { SingleResourceData, SingleResourceParser } from "./singleResourceDSL.ts";
+import { SINGLE_RESOURCE_DSL_PARSERS } from "./singleResourceDSL.ts";
 
 export interface YamlApiHooks {
   onConfigLoadFailed?: (payload: { err: string }) => void;
@@ -45,6 +48,19 @@ const parseTime = (value?: string): number => {
 
 type ReadTextResult = { ok: true; text: string } | { ok: false; reason: "not-found" | "network" };
 type ReadTextError = Extract<ReadTextResult, { ok: false }>;
+type SingleResourceParserKey = keyof typeof SINGLE_RESOURCE_DSL_PARSERS;
+type RegisteredSingleResourceParser = (typeof SINGLE_RESOURCE_DSL_PARSERS)[SingleResourceParserKey];
+type ParserName<P> = P extends SingleResourceParser<infer Name, SingleResourceData> ? Name : never;
+type ParserOutput<P> = P extends SingleResourceParser<string, infer T> ? T : never;
+
+const BLOG_POST_DSL_SYNTAX: ParseDSLOptions = {
+  maxDepth: 1,
+  nestableBlocks: [],
+};
+
+const isSingleResourceParserKey = (value: string): value is SingleResourceParserKey => {
+  return value in SINGLE_RESOURCE_DSL_PARSERS;
+};
 
 export interface YamlApiState {
   yamlLoading: boolean;
@@ -56,13 +72,6 @@ export interface YamlApiState {
   listPrimaryError: boolean;
   listSpareError: boolean;
   yamlLoadingFault: boolean;
-}
-
-export interface YamlApiHooks {
-  onConfigLoadFailed?: (payload: { err: string }) => void;
-  onConfigTypeError?: (payload: { type: string }) => void;
-  onYamlLoadFailed?: (payload: { err: string }) => void;
-  state?: YamlApiState;
 }
 
 export interface YamlApi {
@@ -95,6 +104,54 @@ export const createYamlApi = (
   const readJsonResource = async <T>(resourcePath: string): Promise<T> => {
     const text = await readTextResource(resourcePath);
     return JSON.parse(text) as T;
+  };
+
+  const parseDslResource = <P extends RegisteredSingleResourceParser>(
+    text: string,
+    parser: P,
+  ): ParserOutput<P> => {
+    const parserBridge = parser as unknown as {
+      syntax: ParseDSLOptions<ParserName<P>>;
+      parse: (
+        ast: DSLNode<ParserName<P>>[],
+        onError?: (error: DSLError) => void,
+      ) => ParserOutput<P>;
+    };
+
+    const ast = parseDSL<ParserName<P>>(text, {
+      onError: hooks.onDslError,
+      ...parserBridge.syntax,
+    } as ParseDSLOptions<ParserName<P>>);
+
+    return parserBridge.parse(ast, hooks.onDslError);
+  };
+
+  const parseSingleResource = <T extends object>(
+    type: string,
+    fileName: string,
+    text: string,
+  ): T => {
+    if (fileName.endsWith(".json")) {
+      return JSON.parse(text) as T;
+    }
+
+    if (fileName.endsWith(".dsl")) {
+      const parserKey = `${type}:${fileName}`;
+
+      if (!isSingleResourceParserKey(parserKey)) {
+        throw new Error(`Unsupported DSL resource: ${parserKey}`);
+      }
+
+      const parser = SINGLE_RESOURCE_DSL_PARSERS[parserKey];
+
+      if (!parser) {
+        throw new Error(`Unsupported DSL resource: ${parserKey}`);
+      }
+
+      return parseDslResource(text, parser) as T;
+    }
+
+    throw new Error(`Unsupported resource format: ${fileName}`);
   };
 
   const getYamlConfig = (): Promise<YamlUrlConfig> => {
@@ -216,6 +273,7 @@ export const createYamlApi = (
 
             const ast = parseDSL(textResult.text, {
               onError: hooks.onDslError,
+              ...BLOG_POST_DSL_SYNTAX,
             });
 
             return astToPost(ast, {
@@ -278,13 +336,7 @@ export const createYamlApi = (
     }
 
     try {
-      const parsed: unknown = yaml.load(textResult.text, { schema: yaml.FAILSAFE_SCHEMA });
-
-      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-        return null;
-      }
-
-      return parsed as T;
+      return parseSingleResource<T>(type, fileName, textResult.text);
     } catch (e: unknown) {
       hooks.onYamlLoadFailed?.({ err: String(e) });
       return null;

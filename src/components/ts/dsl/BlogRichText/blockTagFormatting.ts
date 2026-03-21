@@ -1,4 +1,4 @@
-import { BlockType } from "@/components/ts/d.ts";
+import type { BlockType } from "./types";
 import { BLOCK_TYPES_SET } from "./handlers";
 
 export const isBlockTag = (tag: string): boolean => {

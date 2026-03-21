@@ -16,7 +16,7 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 import { NAvatar } from "naive-ui";
 import icon from "../../icons/icon.webp";
 import { useYamlText } from "@/components/ts/global/useYamlI18n.ts";
@@ -24,7 +24,7 @@ import { useHead } from "@unhead/vue";
 import { lang } from "@/components/ts/global/setupLang.ts";
 import { personRawData } from "@/components/ts/global/setupJson.ts";
 
-const displayTitle = useYamlText("main", "title.yaml", "title");
+const displayTitle = useYamlText("main", "title.dsl", "title");
 const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
 useHead(() => ({
   meta: [

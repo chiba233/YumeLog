@@ -28,23 +28,25 @@ html {
     text-rendering: optimizeLegibility;
 
     [lang^="zh"] {
-        font-family: "PingFang SC",
-        "Hiragino Sans GB",
-        "Microsoft YaHei",
-        "Noto Sans SC",
-        "Source Han Sans SC",
-        sans-serif;
+        font-family:
+                "PingFang SC",
+                "Hiragino Sans GB",
+                "Microsoft YaHei",
+                "Noto Sans SC",
+                "Source Han Sans SC",
+                sans-serif;
         letter-spacing: 0.01em;
         line-height: 1.7;
 
     }
 
     [lang="ja"] {
-        font-family: "Hiragino Sans",
-        "Yu Gothic",
-        "Meiryo",
-        "Noto Sans JP",
-        sans-serif;
+        font-family:
+                "Hiragino Sans",
+                "Yu Gothic",
+                "Meiryo",
+                "Noto Sans JP",
+                sans-serif;
 
         line-height: 1.7;
         font-feature-settings: "palt";
@@ -53,7 +55,7 @@ html {
     }
 
     [lang^="en"] {
-        font-family: "Inter Variable", "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        font-family: "Inter Variable", "Inter","Segoe UI", "Helvetica Neue", Arial, sans-serif;
         line-height: 1.6;
         letter-spacing: 0;
         hyphens: auto;
@@ -61,19 +63,20 @@ html {
     }
 
     [lang="th"] {
-        font-family: "Noto Sans Thai",
-        "Kanit",
-        "Inter Variable",
-        "Inter",
-        "Tahoma",
-        sans-serif;
+        font-family:
+                "Noto Sans Thai",
+                "Kanit",
+                "Inter Variable",
+                "Inter",
+                "Tahoma",
+                sans-serif;
 
         line-height: 1.75;
         letter-spacing: 0.01em;
     }
 
     [lang^="other"] {
-        font-family: "Inter Variable", "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        font-family: "Inter Variable","Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
         line-height: 1.6;
         letter-spacing: 0;
         hyphens: auto;

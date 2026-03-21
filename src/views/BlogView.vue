@@ -8,7 +8,7 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 import { lang } from "@/components/ts/global/setupLang.ts";
 import BlogCard from "@/components/blog/blogCard.vue";
 import commonI18n from "@/data/I18N/commonI18n.json";

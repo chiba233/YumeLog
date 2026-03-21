@@ -202,6 +202,20 @@
     "th": "[DSL Error] บล็อก DSL ยังไม่ได้ปิด: \"{name}\"",
     "other": "[DSL Error] DSL block not closed: \"{name}\""
   },
+  "dslUnexpectedBlockEnd": {
+    "zh": "[DSL Error] 发现多余的 @end，位置在第 {line} 行",
+    "en": "[DSL Error] Unexpected @end at line {line}",
+    "ja": "[DSL Error] 余分な @end が見つかりました（{line} 行目）",
+    "th": "[DSL Error] พบ @end ที่ไม่ควรมีในบรรทัด {line}",
+    "other": "[DSL Error] Unexpected @end at line {line}"
+  },
+  "dslMaxDepthExceeded": {
+    "zh": "[DSL Error] DSL 嵌套超过最大深度 {maxDepth}，块 \"{name}\" 位于第 {line} 行",
+    "en": "[DSL Error] DSL nesting exceeded max depth {maxDepth}; block \"{name}\" is at line {line}",
+    "ja": "[DSL Error] DSL のネストが最大深度 {maxDepth} を超えました。ブロック \"{name}\" は {line} 行目です",
+    "th": "[DSL Error] การซ้อน DSL เกินความลึกสูงสุด {maxDepth}; บล็อก \"{name}\" อยู่ที่บรรทัด {line}",
+    "other": "[DSL Error] DSL nesting exceeded max depth {maxDepth}; block \"{name}\" is at line {line}"
+  },
   "richTextBlockNotClosed": {
     "zh": "[RichText Error] 富文本 Block 标签未闭合（位置 {i}）",
     "en": "[RichText Error] Block tag not closed at position {i}",

@@ -1,4 +1,4 @@
-import { ParseContext, TextToken } from "@/components/ts/d.ts";
+import type { ParseContext, TextToken } from "./types";
 import { TAG_OPEN, TAG_PREFIX } from "./constants";
 import { createToken } from "./createToken";
 

@@ -1,0 +1,10 @@
+@title
+- type: "zh"
+  content: "天气真好啊，我们去散步吧"
+- type: "en"
+  content: "How are you? I am fine."
+- type: "ja"
+  content: "元気いいね、何かいいことでもあったのかい？"
+- type: "other"
+  content: "Sorry Unknown Language!"
+@end

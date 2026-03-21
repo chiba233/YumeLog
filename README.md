@@ -1,41 +1,45 @@
-# 🌙 yumeLog (ユメログ)
+# yumeLog (ユメログ)
 
 <p align="center">
   <img alt="Vue" src="https://img.shields.io/badge/Vue%203-35495E?style=for-the-badge&logo=vue.js&logoColor=4FC08D" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
-  <img alt="Vite" src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" />
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=FFD62E" />
 </p>
 
-一个基于 **Vue 3** + **TypeScript** + **Naive UI** + **Vite SSG** 构建的高颜值个人主页与自制 **RICH-TEXT-DSL** 博客系统。
+一个基于 **Vue 3** + **TypeScript** + **Naive UI** + **Vite SSG** 构建的静态个人主页与自定义 DSL 博客系统。
 
-本项目为纯静态网页，可实现极低成本部署。通过 `vite-SSG` 预渲染技术，在每次编译时自动生成包含所有文章的 HTML、`sitemap.xml` 与 `robots.txt`，实现全站级 SEO 优化，搜索引擎与各类社交软件分享抓取都能稳定适配。
+yumeLog 的核心理念不是“把 Markdown 换个皮”，而是围绕这个项目本身的展示需求，拆出一套更适合静态个人站点的内容架构：
 
----
+- 博客文章使用 **块级 DSL** 组织结构
+- 正文内部使用 **Rich Text DSL** 处理强调、链接、提示块、代码块等富文本内容
+- 首页与业务资源使用 **单文件 DSL / JSON** 管理
 
-## 🌟 特性速览 (Features Overview)
-
-| Feature | Description |
-|:--|:--|
-| **Static Architecture** | 纯静态博客架构，极低成本，无后端部署 |
-| **Vite SSG** | 自动预渲染 HTML / sitemap / robots，SEO 完备 |
-| **Custom DSL** | 拒绝传统臃肿 Markdown，自造轻量级 RICH-TEXT DSL |
-| **Nested Rendering** | 核心引擎支持无限嵌套语法解析 |
-| **Image Blocks** | 图像块完美支持主干与双轨容灾备用地址 |
-| **Responsive UI** | 全端响应式设计，深度适配移动端与毛玻璃交互 |
-| **Theme System** | 灵活的主题系统：背景壁纸 + 对应全场景主题色覆盖 |
-| **Multi Language** | 抛弃繁重框架，自制轻量级 i18n |
-| **Anniversary Timeline** | 专属纪念日时间轴 |
-| **Photo Wall** | 专为晒猫与个人照片设计的照片墙展示 |
-| **Social Links** | 全域联系方式收纳，支持 Web3 钱包地址展示 |
-| **Remote Data** | 灵活的数据双轨：支持从本地、CDN 或 HTTP 动态拉取 YAML |
-| **Maimai Module** | MaiMai DX AQUA API 接入 |
+项目为纯静态网页，可低成本部署到 GitHub Pages、对象存储、CDN 或 Nginx。
 
 ---
 
-## 📸 视觉预览
+## 特性速览 (Features Overview)
+
+| Feature                 | Description                          |
+|:------------------------|:-------------------------------------|
+| **Static Architecture** | 纯静态架构，无需后端                           |
+| **Vite SSG**            | 自动预渲染 HTML / sitemap / robots，SEO 友好 |
+| **Custom DSL**          | 自定义块级 DSL + Rich Text DSL，适合本项目内容结构  |
+| **Graceful Fallback**   | DSL 具备容错机制，语法错误尽量不让整页崩溃              |
+| **Image Blocks**        | 图片块支持主链接与备用链接                        |
+| **Responsive UI**       | 桌面端与移动端适配                            |
+| **Theme System**        | 背景图与主题色联动                            |
+| **Multi Language**      | 多语言内容支持                              |
+| **Timeline Module**     | 纪念日 / 时间线展示                          |
+| **Photo Wall**          | 照片墙 / 猫图模块                           |
+| **Remote Data**         | 支持本地与远程内容资源加载                        |
+
+---
+
+## 视觉预览
 
 <details>
-<summary><b>💻 桌面端视图</b> (点击展开)</summary>
+<summary><b>桌面端视图</b> (点击展开)</summary>
 <br>
 <p align="center">
   <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/1.png" width="48%" />
@@ -45,7 +49,7 @@
 </details>
 
 <details>
-<summary><b>📱 移动端视图</b> (点击展开)</summary>
+<summary><b>移动端视图</b> (点击展开)</summary>
 <br>
 <p align="center">
   <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/3.png" width="30%" />
@@ -54,7 +58,7 @@
 </details>
 
 <details>
-<summary><b>🧩 特色功能模块 (Maimai / 纪念日 / 照片墙)</b> (点击展开)</summary>
+<summary><b>特色功能模块</b> (点击展开)</summary>
 <br>
 <p align="center">
   <img src="https://raw.githubusercontent.com/chiba233/YumeLog/refs/heads/master/demo/5.png" width="30%" />
@@ -65,54 +69,1052 @@
 
 ---
 
-## 🛠️ 技术栈与环境
+## 技术栈与环境
 
-- **框架 & 语言**：Vue 3 (Composition API) / TypeScript (Strict Mode)
-- **UI & 样式**：Naive UI（针对毛玻璃美学与移动端进行魔改）
-- **构建 & SEO**：Vite 7 / Vite SSG
-- **数据处理**：`js-yaml`  
-  仅用于解析非富文本内容。由于自研递归 DSL 语法并不适合直接完全交给 YAML 处理，因此富文本部分由自研 Parser 全权接管。
-- **依赖管理**：`pnpm` (>= 10.0.0), Node.js (>= 24.0.0)
+- **框架 & 语言**：Vue 3 / TypeScript
+- **UI & 样式**：Naive UI
+- **构建与预渲染**：Vite / Vite SSG
+- **依赖管理**：pnpm
+- **部署方式**：纯静态部署
+
+说明：
+
+- 当前博客内容与主内容资源的核心解析由自定义 DSL 完成
+- `.json` 资源仍然按原生 JSON 处理
+- 旧版本中部分 YAML 示例已过时，当前主资源文件以 `.dsl` 为主
 
 ---
 
-## 🚀 极速启动与部署
+## 快速开始
 
-本项目强依赖 **pnpm**，请确保环境配置正确。
-
-### 1. 本地开发
+### 1. 安装依赖
 
 ```bash
 pnpm install
-pnpm dev
+```
 
-# 局域网移动端调试
+### 2. 本地开发
+
+```bash
+pnpm dev
+```
+
+### 3. 局域网调试
+
+```bash
 pnpm run host
 ```
 
-### 2. 生产环境构建
+### 4. 生产构建
 
 ```bash
-# 方案 A：完整构建（严格类型检查 + SSG SEO 优化）—— 推荐
-vue-tsc --noEmit && vite-ssg build
-
-# 方案 B：仅基础构建（不执行 SSG）
-vite build
-
-# 方案 C：对已有 dist 目录进行 SSG 补全
+pnpm type-check
 vite-ssg build
 ```
 
-### 3. 代码质量检查
+### 5. 代码质量检查
 
 ```bash
 pnpm lint
 pnpm type-check
 ```
 
-### 4. 部署 Nginx 配置参考
+---
 
-项目采用 Vue Router History 模式，部署到 Nginx 时需添加以下配置避免刷新 404：
+# DSL 总体架构 (DSL Architecture)
+
+yumeLog 当前的内容系统可以理解为三层：
+
+## 1. 博客块级 DSL
+
+这一层负责把一篇博客文章拆成结构块，例如：
+
+- `@meta`
+- `@text`
+- `@image`
+- `@divider`
+
+它解决的是“文章结构”问题，而不是正文富文本问题。
+
+## 2. 博客 Rich Text DSL
+
+这一层只在 `@text` 的内容内部生效。
+
+它负责：
+
+- 粗体
+- 删除线
+- 居中
+- 链接
+- 提示块
+- 折叠块
+- 代码块
+
+真正的正文内嵌套发生在这一层。
+
+## 3. 单文件资源 DSL
+
+这一层用于首页和业务资源，例如：
+
+- `title.dsl`
+- `introduction.dsl`
+- `friends.dsl`
+- `neko.dsl`
+- `fromNow.dsl`
+
+它不是博客文章系统，而是站点数据配置系统。
+
+---
+
+## DSL 解析流程 (Parsing Pipeline)
+
+以博客文章为例，内容大致会经过以下流程：
+
+```text
+博客原文
+   │
+   ▼
+块级 DSL 解析器（识别 @meta / @text / @image / @divider）
+   │
+   ▼
+生成块级 AST
+   │
+   ▼
+转换为 Post / PostBlock
+   │
+   ▼
+若 block.type === text
+   │
+   ▼
+Rich Text DSL 解析器（识别 $$bold(...)$$ / $$link(...)$$ / raw / block）
+   │
+   ▼
+生成富文本 token 树
+   │
+   ▼
+Vue 渲染输出
+```
+
+单文件资源 DSL 的流程类似，但不会转成 `Post`，而是转成业务数据结构。
+
+---
+
+# 博客块级 DSL 说明 (Block-level Blog DSL)
+
+博客文章由多个 `@type` 块组成。
+
+## 基础结构
+
+```text
+@meta
+title: Hello DSL
+time: 20260321
+id: hello-dsl
+lang: zh
+@end
+
+@text
+这是一段正文。
+@end
+
+@divider
+@end
+
+@image
+- src: /images/demo.webp
+  desc: 示例图片
+@end
+```
+
+## 可用块
+
+| Block      | Description | 是否必选 |
+|:-----------|:------------|:----:|
+| `@meta`    | 文章元信息       | yes  |
+| `@text`    | 正文文本块       |  no  |
+| `@image`   | 图片块         |  no  |
+| `@divider` | 分割线块        |  no  |
+
+## 当前结构规则
+
+博客块级 DSL 现在是 **平铺结构**：
+
+- 不支持 `@text` 里再嵌 `@image`
+- 不支持 `@image` 里再嵌别的块
+- 每个块都是文章顶层块
+
+也就是说，博客文章的结构嵌套不是在这一层完成的，而是在 `@text` 内部的 Rich Text DSL 中完成。
+
+---
+
+## `@meta` 详细说明
+
+`@meta` 是每篇博客文章最重要的块，它负责定义文章的元信息。
+
+示例：
+
+```text
+@meta
+layout: common
+time: 20260321
+lang: zh
+id: bangkok-life
+pin: true
+title: 曼谷的午后
+@end
+```
+
+### 当前常用字段
+
+| Field    | Type   | Description               |
+|:---------|:-------|:--------------------------|
+| `title`  | string | 文章标题，列表页与详情页显示用           |
+| `time`   | string | 文章时间，通常写 `YYYYMMDD`       |
+| `id`     | string | 文章唯一标识，推荐填写，用于路由与稳定链接     |
+| `lang`   | string | 文章语言，如 `zh` / `en` / `ja` |
+| `layout` | string | 布局类型，供页面层决定如何展示           |
+| `pin`    | string | 是否置顶，通常写 `true` / `false` |
+
+### 每个字段的用途
+
+#### `title`
+
+- 博客列表展示标题
+- 文章详情页标题
+- 路由和描述缓存的辅助字段
+
+#### `time`
+
+- 页面上显示文章日期
+- 用于文章排序
+- 当没有 `id` 时，也常参与生成稳定标识
+
+#### `id`
+
+- 推荐填写
+- 用于生成更稳定的文章路由
+- 用于生成更稳定的文章级 `temp_id`
+
+#### `lang`
+
+- 控制这篇文章渲染时使用的语言上下文
+- 对正文和某些 UI 展示有影响
+
+#### `layout`
+
+- 供页面层决定展示方式
+- 当前通常作为布局配置字段保留
+
+#### `pin`
+
+- 控制文章是否置顶
+- 当前排序逻辑中，`pin: true` 的文章会优先显示
+
+### 注意
+
+- `@meta` 内部采用简单 `key: value` 形式
+- 同名字段后写会覆盖前写，并输出警告
+- `blocks` 是保留字段，不应在 `@meta` 中手动写入
+
+---
+
+## `@text`
+
+`@text` 是博客正文块。
+
+示例：
+
+```text
+@text
+今天写了一篇新文章。
+$$bold(这一段会加粗)$$
+$$link(https://example.com | 点我访问)$$
+@end
+```
+
+### 作用
+
+- 承载文章正文
+- 内部支持第二层 Rich Text DSL
+- 会在前端懒解析并缓存富文本 token
+
+### 注意
+
+- 块级 DSL 不支持在 `@text` 中嵌别的博客块
+- 但 `@text` 内容内部支持 Rich Text DSL 的嵌套
+
+---
+
+## `@image`
+
+`@image` 使用 dash-list 语法描述图片列表。
+
+示例：
+
+```text
+@image
+- src: /images/main.webp
+  spareUrl: https://cdn.example.com/main.webp
+  desc: 一张图片
+- src: /images/second.webp
+  desc: 第二张图片
+@end
+```
+
+### 字段说明
+
+| Field      | Description |
+|:-----------|:------------|
+| `src`      | 主图片地址       |
+| `spareUrl` | 备用图片地址      |
+| `desc`     | 图片说明文字      |
+
+### 多行字段
+
+支持 `|` 写法：
+
+```text
+@image
+- src: /images/demo.webp
+  desc: |
+    第一行说明
+    第二行说明
+@end
+```
+
+---
+
+## `@divider`
+
+分割线块通常写成：
+
+```text
+@divider
+@end
+```
+
+它没有必须填写的内容，一般只用于视觉分隔。
+
+---
+
+# 博客 Rich Text DSL 说明
+
+博客正文中的富文本 DSL 支持 **inline**、**raw**、**block** 三种形式。
+
+---
+
+## 1. Inline 语法
+
+```text
+$$type(content)$$
+$$type(arg1 | arg2)$$
+```
+
+示例：
+
+```text
+$$bold(Hello World)$$
+$$link(https://example.com | 点我访问)$$
+```
+
+---
+
+## 2. Raw 语法
+
+Raw 语法中的内容区不会继续按 Rich Text DSL 深入解析，适合代码块或需要保留原样文本的内容。
+
+```text
+$$type(args)%
+content
+%end$$
+```
+
+示例：
+
+```text
+$$raw-code(ts | example)%
+const a = 1
+%end$$
+```
+
+---
+
+## 3. Block 语法
+
+Block 语法适合真正需要承载多行结构内容的富文本组件。
+
+```text
+$$type(args)*
+content
+*end$$
+```
+
+示例：
+
+```text
+$$collapse(点我展开)*
+这里是一段多行内容。
+这里可以继续写。
+*end$$
+```
+
+说明：
+
+- Rich Text DSL 的 block 语法和博客的 `@type ... @end` 不是一回事
+- `$$type(args)* ... *end$$` 仍然属于第二层正文 DSL
+- `@text / @image / @meta` 属于第一层博客块 DSL
+
+---
+
+## 支持的 Rich Text 类型
+
+| Type        | Description | 支持 Raw | 支持 Block | 支持嵌套 |
+|:------------|:------------|:------:|:--------:|:----:|
+| `bold`      | 粗体          |   no   |    no    | yes  |
+| `thin`      | 细体          |   no   |    no    | yes  |
+| `underline` | 下划线         |   no   |    no    | yes  |
+| `strike`    | 删除线         |   no   |    no    | yes  |
+| `center`    | 居中          |   no   |    no    | yes  |
+| `code`      | 行内代码        |   no   |    no    | yes  |
+| `link`      | 超链接         |   no   |    no    | yes  |
+| `info`      | 信息提示块       |  yes   |   yes    | yes  |
+| `warning`   | 警告提示块       |  yes   |   yes    | yes  |
+| `collapse`  | 折叠块         |  yes   |   yes    | yes  |
+| `raw-code`  | 原始代码块       |  yes   |    no    |  no  |
+
+---
+
+## 常见 Rich Text 示例
+
+### 粗体
+
+```text
+$$bold(Hello World)$$
+```
+
+### 链接
+
+```text
+$$link(https://example.com | 点我访问)$$
+```
+
+### 提示块
+
+```text
+$$info(标题 | 这里是提示内容)$$
+```
+
+### 警告块
+
+```text
+$$warning(注意 | 这里有需要注意的内容)$$
+```
+
+### 折叠块
+
+```text
+$$collapse(点我展开)*
+这里是折叠内容
+*end$$
+```
+
+### 原始代码块
+
+```text
+$$raw-code(ts | example)%
+const a = 1
+%end$$
+```
+
+---
+
+## Rich Text 参数规则
+
+Rich Text DSL 的参数分隔符是 `|`。
+
+基础写法：
+
+```text
+$$type(arg1 | arg2)$$
+```
+
+需要注意的是，不同 tag 的参数规则并不完全一样。
+
+### 单参数类型
+
+以下类型本质上只接收一个正文参数：
+
+- `bold`
+- `thin`
+- `underline`
+- `strike`
+- `center`
+- `code`
+
+示例：
+
+```text
+$$bold(Hello World)$$
+$$code(const a = 1)$$
+```
+
+如果你在这些类型里写了额外的 `|`，解析器仍会把它当作文本中的参数切割处理，因此不建议这样写。
+
+### `link`
+
+标准写法：
+
+```text
+$$link(url | text)$$
+```
+
+#### 参数含义
+
+- 第一个参数：URL
+- 第二个参数：显示文本
+
+#### 参数不足时的 fallback
+
+如果只写一个参数：
+
+```text
+$$link(https://example.com)$$
+```
+
+那么显示文本会 fallback 为 URL 本身。最终效果等价于：
+
+```text
+url = https://example.com
+text = https://example.com
+```
+
+#### 参数过多时
+
+如果写了超过两个参数：
+
+```text
+$$link(https://example.com | hello | world)$$
+```
+
+解析器会把第二个及后续参数合并为显示内容。效果近似于：
+
+```text
+url = https://example.com
+text = helloworld
+```
+
+#### 建议
+
+- URL 参数尽量写纯文本
+- 显示文本可以包含嵌套 Rich Text DSL
+
+推荐示例：
+
+```text
+$$link(https://example.com | $$bold(点我访问)$$)$$
+```
+
+### `info` / `warning` / `collapse` 的 inline 写法
+
+标准写法：
+
+```text
+$$info(title | content)$$
+$$warning(title | content)$$
+$$collapse(title | content)$$
+```
+
+#### 参数含义
+
+- 第一个参数：标题
+- 第二个参数：正文
+
+#### 参数不足时的 fallback
+
+如果只传一个参数：
+
+```text
+$$info(这里只有正文)$$
+```
+
+那么：
+
+- 标题会自动 fallback 为当前语言的默认标题
+- 你写入的内容会作为正文显示
+
+也就是说，这种写法不会丢内容，只是标题不再由你自定义。
+
+#### 参数过多时
+
+如果写了多个 `|`：
+
+```text
+$$warning(标题 | 第一段 | 第二段 | 第三段)$$
+```
+
+解析器会把第二段及之后的部分全部合并进正文内容。
+
+### `info` / `warning` / `collapse` 的 raw / block 写法
+
+#### Raw
+
+```text
+$$info(title)%
+content
+%end$$
+```
+
+#### Block
+
+```text
+$$collapse(title)*
+content
+*end$$
+```
+
+#### 参数规则
+
+- 这两种写法只把括号中的内容当作标题参数
+- 内容主体来自 `% ... %end$$` 或 `* ... *end$$` 之间的正文
+
+#### 标题 fallback
+
+如果标题为空：
+
+```text
+$$info()%
+正文
+%end$$
+```
+
+则会 fallback 为当前语言的默认标题。
+
+### `raw-code`
+
+标准写法：
+
+```text
+$$raw-code(lang | title | label)%
+code
+%end$$
+```
+
+#### 参数含义
+
+- 第一个参数：代码语言
+- 第二个参数：标题
+- 第三个参数：标签
+
+#### fallback 规则
+
+- 语言为空时：默认 `typescript`
+- 标题为空时：默认 `Code:`
+- 标签为空时：留空
+
+#### 语言别名
+
+以下语言别名会归一化到 `typescript`：
+
+- `js`
+- `javascript`
+- `ts`
+- `typescript`
+
+#### 当前支持的代码语言
+
+- `typescript`
+- `bash`
+- `json`
+- `yaml`
+- `vue`
+- `html`
+- `text`
+
+如果写了不支持的语言，页面会提示 warning，并回退到 `text`。
+
+---
+
+## Rich Text 参数规则速查表
+
+| Type        | 推荐写法                                             | 参数说明                     | 参数不足时                                 | 参数过多时         |
+|:------------|:-------------------------------------------------|:-------------------------|:--------------------------------------|:--------------|
+| `bold`      | `$$bold(text)$$`                                 | `text`                   | 无特殊 fallback                          | 不建议传多参数       |
+| `thin`      | `$$thin(text)$$`                                 | `text`                   | 无特殊 fallback                          | 不建议传多参数       |
+| `underline` | `$$underline(text)$$`                            | `text`                   | 无特殊 fallback                          | 不建议传多参数       |
+| `strike`    | `$$strike(text)$$`                               | `text`                   | 无特殊 fallback                          | 不建议传多参数       |
+| `center`    | `$$center(text)$$`                               | `text`                   | 无特殊 fallback                          | 不建议传多参数       |
+| `code`      | `$$code(text)$$`                                 | `text`                   | 无特殊 fallback                          | 不建议传多参数       |
+| `link`      | `$$link(url \| text)$$`                          | `url`, `text`            | `text` fallback 为 `url`               | 多余参数合并进显示内容   |
+| `info`      | `$$info(title \| content)$$`                     | `title`, `content`       | 标题 fallback 为默认文案                     | 多余参数合并进正文     |
+| `warning`   | `$$warning(title \| content)$$`                  | `title`, `content`       | 标题 fallback 为默认文案                     | 多余参数合并进正文     |
+| `collapse`  | `$$collapse(title \| content)$$`                 | `title`, `content`       | 标题 fallback 为默认文案                     | 多余参数合并进正文     |
+| `raw-code`  | `$$raw-code(lang \| title \| label)% ... %end$$` | `lang`, `title`, `label` | `lang -> typescript`，`title -> Code:` | 第三个之后的参数不建议使用 |
+
+---
+
+## Rich Text 容错策略
+
+### 未知标签
+
+如果写了：
+
+```text
+$$unknown(hello world)$$
+```
+
+当前行为是：
+
+- 前端输出 warning
+- 去掉未知标签外壳
+- 最终只显示 `hello world`
+
+### 未闭合标签
+
+如果标签结构不完整，解析器会尽量保留可读文本，而不是让整段内容消失。
+
+### 深度过深
+
+解析器会限制递归深度，超过限制时会降级处理，避免极端输入拖垮页面。
+
+### Raw / Block 未闭合
+
+会退化为普通文本或部分可恢复内容，并输出错误提示。
+
+---
+
+# 转义与语法边界
+
+## 1. Rich Text 转义规则
+
+Rich Text DSL 中常见需要转义的内容有：
+
+- `(`
+- `)`
+- `|`
+- `\`
+- `%end$$`
+- `*end$$`
+
+也就是说，如果你想在正文里把这些内容当普通文本输出，而不是让解析器把它们当语法的一部分，就需要在前面加 `\`。
+
+### 转义 `|`
+
+```text
+$$info(这是一道 \| 分隔线 | 正文内容)$$
+```
+
+效果：
+
+- 标题中会显示 `|`
+- 不会把这个 `|` 当作参数分隔符
+
+### 转义 `)`
+
+```text
+$$bold(这是一个右括号 \))$$
+```
+
+效果：
+
+- 正文里会显示 `)`
+- 不会让标签提前闭合
+
+### 转义反斜杠本身
+
+```text
+$$code(C:\\Users\\Admin)$$
+```
+
+效果：
+
+- 会显示真实的 `\`
+
+### 转义 raw 结束符
+
+如果你在 raw 内容里需要展示 `%end$$` 本身，可以写：
+
+```text
+$$raw-code(text | demo)%
+\%end$$
+%end$$
+```
+
+### 转义 block 结束符
+
+如果你在 block 内容里需要展示 `*end$$` 本身，可以写：
+
+```text
+$$collapse(示例)*
+\*end$$
+*end$$
+```
+
+### 一个完整示例
+
+```text
+$$warning(标题里有 \| 竖线 | 正文里有右括号 \) 和反斜杠 \\ )$$
+```
+
+当前解析器会把这些转义恢复成真实字符后再渲染。
+
+## 2. 转义块级指令
+
+如果你需要在博客块内容中输出看起来像 `@image` 的文本，而不是让它被识别成块指令，可以在行首加反斜杠：
+
+```text
+@text
+\@image
+@end
+```
+
+它会显示成：
+
+```text
+@image
+```
+
+## 3. 闭合标记必须独占一行
+
+以下闭合标记都要求：
+
+- 顶格
+- 独占一整行
+- 前面不能有空格
+- 后面不能有额外字符
+
+合法示例：
+
+```text
+@end
+%end$$
+*end$$
+```
+
+非法示例：
+
+```text
+ @end
+%end$$ hello
+ *end$$
+```
+
+---
+
+# 单文件资源 DSL 说明
+
+除博客文章外，首页和业务资源也可以通过 DSL 管理。
+
+常见文件：
+
+- `title.dsl`
+- `introduction.dsl`
+- `friends.dsl`
+- `neko.dsl`
+- `fromNow.dsl`
+
+---
+
+## `title.dsl`
+
+```text
+@title
+- type: zh
+  content: 天气真好啊，我们去散步吧
+- type: en
+  content: Nice weather today
+@end
+```
+
+---
+
+## `introduction.dsl`
+
+```text
+@introduction
+- type: zh
+  content: |
+    这是多行介绍。
+    第二行内容。
+- type: en
+  content: |
+    This is the introduction.
+@end
+```
+
+---
+
+## `friends.dsl`
+
+```text
+@friends
+- name: Alice
+  alias: Alice
+  url: https://example.com
+  icon: /images/alice.webp
+  spare: https://cdn.example.com/alice.webp
+@end
+```
+
+---
+
+## `neko.dsl`
+
+```text
+@img
+- imgError: /cat/a.webp
+  img: https://example.com/a.webp
+  imgName: cat-a
+@end
+```
+
+---
+
+## `fromNow.dsl`
+
+`fromNow.dsl` 是当前单文件资源中结构最复杂的一种，支持有限嵌套。
+
+```text
+@fromNow
+@event
+time: 20200101
+photo: /img/a.webp
+@names
+- type: zh
+  content: 认识的那一天
+- type: en
+  content: The first day we met
+@end
+@end
+@end
+```
+
+说明：
+
+- `fromNow` 可以包含 `event`
+- `event` 可以包含 `names`
+- `names` 里再使用 dash-list 描述多语言文本
+
+---
+
+# 空白、换行与容错
+
+## 空白与换行
+
+当前块级 DSL 的基本行为是：
+
+- 正文内部换行会保留
+- 中间空行会保留
+- 块尾多余空行会被裁掉
+- 指令行本身不会进入正文内容
+
+## 块级 DSL 容错
+
+- 多余的 `@end` 会报错，但不会让整篇文章中断
+- 不允许的嵌套会报错，并尽量按普通文本保留
+- 未闭合块会在文件结束时尽量自动恢复
+
+## 单文件 DSL 容错
+
+- 格式错误的行会报错
+- 其他合法数据仍会继续解析
+
+## Rich Text DSL 容错
+
+- 未知标签去壳保留内容
+- 未闭合标签尽量保留为文本
+- raw / block 未闭合会降级
+
+---
+
+# temp_id 是什么
+
+项目中很多解析结果会附带 `temp_id`。
+
+它主要用于：
+
+- Vue `v-for` 的稳定 `key`
+- 前端运行时缓存
+
+需要注意：
+
+- `temp_id` 不是数据库主键
+- 更适合同一次解析过程中的前端使用
+
+当前常见带 `temp_id` 的内容包括：
+
+- 博客块
+- 图片项
+- 处理后的文章对象
+- 首页资源列表项
+- 时间轴项
+
+---
+
+# 内容配置与文件位置
+
+## 1. 资源入口配置
+
+文件位置：
+
+- `/public/data/config/yamlUrl.json`
+
+示例：
+
+```json
+{
+  "blog": {
+    "listUrl": "https://raw.githubusercontent.com/chiba233/mainpageData/refs/heads/master/blog/list.json",
+    "url": "https://raw.githubusercontent.com/chiba233/mainpageData/refs/heads/master/blog/",
+    "spareUrl": "/data/blog/",
+    "spareListUrl": "/data/blog/list.json"
+  },
+  "main": {
+    "url": "/data/main/",
+    "spareUrl": "",
+    "listUrl": ""
+  }
+}
+```
+
+说明：
+
+- `blog` 指向博客文章目录与列表
+- `main` 指向首页等单文件资源目录
+
+## 2. 博客列表
+
+博客列表由 `list.json` 驱动。
+
+添加新文章时：
+
+1. 新建文章文件
+2. 将文件名加入 `list.json`
+
+## 3. 主资源目录
+
+当前主资源目录通常为：
+
+- `/public/data/main`
+
+常见文件：
+
+- `title.dsl`
+- `introduction.dsl`
+- `friends.dsl`
+- `neko.dsl`
+- `fromNow.dsl`
+- `webTitle.json`
+
+说明：
+
+- `.dsl` 文件由 DSL parser 处理
+- `.json` 文件由原生 JSON 处理
+
+---
+
+# 部署说明
+
+如果使用 Vue Router History 模式，部署到 Nginx 时可参考：
 
 ```nginx
 server {
@@ -129,1165 +1131,6 @@ server {
 
 ---
 
-# 自研 DSL 语法指南 (DSL Grammar)
+## License
 
-yumeLog 采用块级架构与自研 DSL 引擎渲染博客文本。文章可以指定 `id` 以便路由访问，也可以直接使用文章标题作为页面链接，但这两者至少必须提供一个。
-
----
-
-## DSL 速查 (Quick Reference)
-
-### Inline 语法
-
-```text
-$$type(content)$$
-$$type(arg1 | arg2)$$
-```
-
-### Raw 语法
-
-```text
-$$type(arg1 | arg2)%
-content
-%end$$
-```
-
-### Block 语法
-
-```text
-@type
-content
-@end
-```
-
-### Block DSL 语法（结构级 DSL）
-
-```text
-$$type(args)*
-content
-*end$$
-```
-
-### 闭合规则总览
-
-以下闭合标记都必须满足：
-
-- **顶格**
-- **独占一整行**
-- **前面不能有空格**
-- **后面不能有额外字符**
-- **不能缩进**
-- **不能同行追加说明**
-
-合法示例：
-
-```text
-@end
-%end$$
-*end$$
-```
-
-非法示例：
-
-```text
- @end
-%end$$ hello
-  *end$$
-```
-
----
-
-## DSL 容错策略 (Error Tolerance)
-
-yumeLog 的 DSL 采用 **宽容解析策略 (Permissive Parsing)**。
-
-设计原则：
-
-> 解析器会尽量渲染内容，而不是因为语法错误直接中断解析。
-
-这意味着即使 DSL 写法不完全合法，系统仍然会尝试生成可用输出，并在 Web 端输出警告信息。
-
-### 行为规则
-
-解析器遇到异常时会按以下优先级处理：
-
-1. **尽量保持文本可读**
-2. **保留原始内容**
-3. **输出错误日志**
-
-### 非法 Tag
-
-如果 DSL 类型未注册，例如：
-
-```text
-$$something(hello world)$$
-```
-
-解析器不会抛出致命错误，而是：
-
-- 在 Web 输出 warning
-- 将该内容作为普通文本渲染
-
-最终页面仍然可以正常显示。
-
-### 结构错误
-
-如果 DSL 嵌套结构不完整，例如：
-
-```text
-$$bold(hello
-```
-
-解析器会停止当前 DSL 解析，并将剩余部分当作普通文本处理，直到下一个合法闭合标签。
-
-### 参数异常
-
-如果参数数量异常：
-
-- **不足参数** → 自动 fallback
-- **多余参数** → 合并到最后一个参数
-
-例如：
-
-```text
-$$info(title | text | extra)$$
-```
-
-最终解析为：
-
-```text
-title = "title"
-text = "textextra"
-```
-
-### RAW Block 异常
-
-如果 RAW Block 未正确闭合，例如：
-
-```text
-$$raw-code(js)%
-console.log("hello")
-```
-
-解析器会把整个 RAW block 当作普通文本输出，并记录错误日志。
-
-### Block DSL 异常
-
-如果结构级 DSL 未正确闭合，例如：
-
-```text
-$$spoiler(title)*
-这里是内容
-```
-
-解析器会将其降级为普通文本或部分可恢复结构，并输出错误日志，避免整体页面崩溃。
-
-### 为什么采用宽容解析
-
-DSL 的主要目标是 **博客写作体验**，而不是严格编程语言。
-
-因此：
-
-- 用户不需要担心小语法错误
-- 页面不会因为 DSL 失误而完全崩溃
-- 内容始终保持可读
-
-这种设计理念与 HTML、Markdown 的容错思想类似。
-
----
-
-## DSL 解析流程 (Parsing Pipeline)
-
-yumeLog 的富文本系统不是简单字符串替换，而是一个递归解析引擎。  
-DSL 文本会先被转换为 **Rich-Text AST（抽象语法树）**，再渲染为 Vue 组件。
-
-解析流程如下：
-
-```text
-Raw Text
-   │
-   ▼
-Tokenizer (识别 `$$type(...)$$` / `$$type(...)%` / `$$type(...)*` 结构)
-   │
-   ▼
-AST Builder (递归解析嵌套 DSL)
-   │
-   ▼
-Argument Parser (解析 | 参数系统)
-   │
-   ▼
-Renderer (转换为 Vue 渲染结构)
-   │
-   ▼
-HTML Output
-```
-
-### 1. Tokenizer
-
-扫描文本并识别 DSL 指令，例如：
-
-```text
-$$bold(Hello)$$
-```
-
-会被识别为：
-
-```text
-type: bold
-content: Hello
-```
-
-普通文本会作为 Text Token 保留。
-
-### 2. AST 构建
-
-解析器会递归解析嵌套 DSL，例如：
-
-```text
-$$bold($$underline(Hello)$$)$$
-```
-
-解析结构：
-
-```text
-bold
- └ underline
-     └ Hello
-```
-
-因此 DSL 可以无限嵌套。
-
-### 3. 参数解析
-
-DSL 支持使用 `|` 传递多个参数，例如：
-
-```text
-$$link(url | text)$$
-```
-
-解析为：
-
-```text
-[url, text]
-```
-
-注意：`|` 只会在 **纯文本 token** 中被识别，因此不会破坏嵌套结构。
-
-### 4. 渲染阶段
-
-最终 AST 会交给对应渲染器，将 DSL 节点转换为 Vue 渲染结构，例如：
-
-- `bold` → `<b>`
-- `link` → `<a>`
-- `info` → InfoBox 组件
-
-最终输出为 HTML。
-
----
-
-## DSL 基础语法
-
-### 基础语法
-
-```text
-$$type(content)$$
-```
-
-示例：
-
-```text
-$$bold(Hello World)$$
-```
-
-### 嵌套语法
-
-所有常规 type 均支持无限嵌套。
-
-示例：
-
-```text
-$$bold($$underline(Hello)$$)$$
-```
-
-### 拼接语法
-
-```text
-$$link(URL | content)$$
-$$info(我去，这怎么是 title | 哇哦我是正文欸)$$
-```
-
-示例：
-
-```text
-$$link(https://example.com | 点我访问)$$
-```
-
-### 严格注意
-
-- **URL**：绝对不能嵌套，必须在第一层级声明
-- **content**：可以嵌套其他指令
-- 正确复合示例：
-
-```text
-$$link(https://google.com | $$bold(Google)$$)$$
-```
-
-- 如果你传入：
-
-```text
-$$info(我去，这怎么是 title | 哇哦我是正文欸 | 欸我又跳出来了 | 欸我又进去了)$$
-```
-
-由于 `info` 只接受 `title` 和 `正文` 两个参数，所以正文最终会显示为：
-
-```text
-哇哦我是正文欸欸我又跳出来了欸我又进去了
-```
-
----
-
-## Raw Code Block / Raw DSL 语法
-
-Raw block 内部 **不会解析任何 DSL 指令**。
-
-理论上很多基础语法都可以扩展成 Raw 版本，但实际项目中只为真正有使用价值的类型提供 Raw Support。
-
-### 基础写法
-
-```text
-$$raw-code(lang | title)%
-content
-%end$$
-```
-
-### 示例
-
-```text
-$$raw-code(ts | example)%
-const a = 1
-%end$$
-```
-
-### 其他支持 Raw 的 DSL 示例
-
-```text
-$$info(你好，我是标题)%
-content
-%end$$
-```
-
-### 非法闭合示例
-
-```text
-$$info(你好，我是标题)%
-content
- %end$$
-```
-
-上例中 `%end$$` 前面多了一个空格，因此不会被视为合法闭合。
-
-### RAW 闭合规则
-
-`%end$$` 必须满足以下条件：
-
-- 顶格
-- 独占一整行
-- 前面不能有空格
-- 后面不能有任何字符
-
-也就是说，这样才合法：
-
-```text
-%end$$
-```
-
-而这些都不合法：
-
-```text
- %end$$
-%end$$ hello
-```
-
----
-
-## Block DSL 语法（结构级 DSL）
-
-除了 inline 与 raw 之外，yumeLog 还支持 **结构级 DSL**：
-
-```text
-$$type(args)*
-content
-*end$$
-```
-
-这种语法适合真正需要承载多行结构内容的 DSL。
-
-### 示例
-
-```text
-$$spoiler(点我展开)*
-这里是隐藏内容
-*end$$
-```
-
-### Block 闭合规则
-
-`*end$$` 必须满足以下条件：
-
-- 顶格
-- 独占一整行
-- 前面不能有空格
-- 后面不能有任何额外字符
-
-合法示例：
-
-```text
-*end$$
-```
-
-非法示例：
-
-```text
- *end$$
-*end$$ more
-```
-
-### 适用场景
-
-Block DSL 更适合：
-
-- 折叠块
-- 多行警告块
-- 复杂引用块
-- 自定义布局区块
-- 未来扩展的结构级组件
-
----
-
-## 支持的 Type 清单
-
-| Type          | Description | 是否支持 Raw 语法 | 是否支持 Block 语法 | 是否支持嵌套语法 | 可以传入的参数                          |
-|:--------------|:------------|:-----------:|:-------------:|:--------:|:---------------------------------|
-| **bold**      | 粗体          |     no      |      no       |   yes    | `(text)`                         |
-| **thin**      | 细体          |     no      |      no       |   yes    | `(text)`                         |
-| **underline** | 下划线         |     no      |      no       |   yes    | `(text)`                         |
-| **strike**    | 删除线         |     no      |      no       |   yes    | `(text)`                         |
-| **center**    | 居中对齐        |     no      |      no       |   yes    | `(text)`                         |
-| **code**      | 行内代码        |     no      |      no       |   yes    | `(text)`                         |
-| **link**      | 超链接         |     no      |      no       |   yes    | `(URL \| text)`                  |
-| **info**      | 基础信息提示框     |     yes     |      yes      |   yes    | `(title \| text)` 或 `(title)%正文` |
-| **warning**   | 警告提示框       |     yes     |      yes      |   yes    | `(title \| text)` 或 `(title)%正文` |
-| **raw-code**  | 原始代码块       |     yes     |      no       |    no    | `(code-lang \| code-title)%正文`   |
-
-> 说明：  
-> 当前项目中最稳定、最常用的是 **inline** 与 **raw**。  
-> **block 语法已经纳入语法体系说明**，适合作为后续扩展结构级 DSL 的统一规范。
-
----
-
-## DSL 类型详解
-
-### `bold`
-
-用于渲染粗体文本。
-
-```text
-$$bold(text)$$
-```
-
-- 支持嵌套：yes
-- 支持 Raw：no
-- 支持 Block：no
-
-示例：
-
-```text
-$$bold(Hello World)$$
-```
-
----
-
-### `thin`
-
-用于渲染细体文本。
-
-```text
-$$thin(text)$$
-```
-
-- 支持嵌套：yes
-- 支持 Raw：no
-- 支持 Block：no
-
----
-
-### `underline`
-
-用于渲染下划线文本。
-
-```text
-$$underline(text)$$
-```
-
-- 支持嵌套：yes
-- 支持 Raw：no
-- 支持 Block：no
-
----
-
-### `strike`
-
-用于渲染删除线文本。
-
-```text
-$$strike(text)$$
-```
-
-- 支持嵌套：yes
-- 支持 Raw：no
-- 支持 Block：no
-
----
-
-### `center`
-
-用于渲染居中对齐内容。
-
-```text
-$$center(text)$$
-```
-
-- 支持嵌套：yes
-- 支持 Raw：no
-- 支持 Block：no
-
----
-
-### `code`
-
-用于渲染行内代码。
-
-```text
-$$code(text)$$
-```
-
-- 支持嵌套：yes
-- 支持 Raw：no
-- 支持 Block：no
-
----
-
-### `link`
-
-用于渲染超链接。
-
-```text
-$$link(URL | text)$$
-```
-
-规则：
-
-- 第一个参数 `URL` 必须为纯文本
-- 第二个参数 `text` 可以嵌套其他 DSL
-- URL 不能嵌套
-
-正确示例：
-
-```text
-$$link(https://google.com | $$bold(Google)$$)$$
-```
-
-错误用法示例：
-
-```text
-$$link($$bold(https://google.com)$$ | Google)$$
-```
-
----
-
-### `info`
-
-用于渲染基础信息提示框。
-
-#### Inline 写法
-
-```text
-$$info(title | text)$$
-```
-
-#### Raw 写法
-
-```text
-$$info(title)%
-content
-%end$$
-```
-
-- 支持嵌套：yes
-- 支持 Raw：yes
-- 支持 Block：可扩展
-
----
-
-### `warning`
-
-用于渲染警告提示框。
-
-#### Inline 写法
-
-```text
-$$warning(title | text)$$
-```
-
-#### Raw 写法
-
-```text
-$$warning(title)%
-content
-%end$$
-```
-
-- 支持嵌套：yes
-- 支持 Raw：yes
-- 支持 Block：可扩展
-
----
-
-### `raw-code`
-
-用于渲染原始代码块。
-
-```text
-$$raw-code(lang | title)%
-content
-%end$$
-```
-
-规则：
-
-- 内容区不会解析任何 DSL
-- 不支持嵌套
-- 必须以 `%end$$` 顶格独占一行闭合
-
----
-
-## 参数解析与 Fallback 规则
-
-DSL 在解析时会执行 **参数拆分与容错处理**。  
-为了保证 DSL 在各种输入情况下都能稳定运行，解析器定义了一套明确的 fallback 规则。
-
-### 1. 单参数 DSL
-
-当 DSL 只定义 **一个参数** 时：
-
-```text
-$$bold(hello world)$$
-```
-
-解析器会把整个内容视为一个参数，不进行拆分。
-
-### 2. 多参数 DSL
-
-当 DSL 定义多个参数时，使用 `|` 分隔：
-
-```text
-$$link(https://google.com | Google)$$
-```
-
-解析结果为：
-
-```text
-url = "https://google.com"
-text = "Google"
-```
-
-### 3. 参数数量不足
-
-当 DSL 需要多个参数，但只提供 **一个参数** 时，解析器会执行 fallback：
-
-```text
-$$link(https://google.com)$$
-```
-
-`text` 会 fallback 为 `url`。  
-最终渲染效果等价于：
-
-```html
-<a href="https://google.com">https://google.com</a>
-```
-
-### 4. 参数数量过多
-
-当参数数量 **超过 DSL 定义数量** 时，额外参数会被 **合并到最后一个参数**。
-
-```text
-$$info(title | text | extra | more)$$
-```
-
-解析结果：
-
-```text
-title = "title"
-text = "textextramore"
-```
-
-### 5. `|` 分隔符解析规则
-
-`|` 只会在 **纯文本 token** 中被识别。  
-这意味着：
-
-```text
-$$link(url | $$bold(hello | world)$$)$$
-```
-
-内部的 `|` 不会影响外层参数解析。
-
-### 6. 空参数处理
-
-```text
-$$info(|hello)$$
-```
-
-解析结果：
-
-```text
-title = ""
-text = "hello"
-```
-
-是否允许空值取决于 DSL 类型本身。
-
-### 7. 未注册 DSL 类型
-
-如果解析器遇到未注册 DSL，整个 DSL 会被当作普通文本输出，不会进行任何渲染，避免解析器崩溃。
-
-### 8. URL 参数限制
-
-对于 `link` 这样的 DSL，URL **必须是纯文本 token**，不能嵌套 DSL。
-
----
-
-## 🛡️ 转义机制与边界保护 (Escape Guide)
-
-为了让 Parser 能够精确处理文本逻辑，引擎引入了转义机制。  
-当你想在内容中输出语法关键字本身时，必须使用反斜杠 `\`。
-
-### 1. 保护 DSL 闭合标记 `)`
-
-如果你想在参数内使用 `)` 并且不希望它提前触发 `)$$` 闭合，可以使用 `\)`：
-
-```text
-$$warning(报错啦 | 此函数的结尾包含一个转义括号： \)$$ )$$
-```
-
-渲染结果中的文本将保留 `)`。
-
-### 2. 保护管道符 `|`
-
-管道符 `|` 是多参数 DSL 的天然切割器。  
-如果标题或正文中正好需要展示 `|`，则必须转义为 `\|`：
-
-```text
-$$info(这是一道 \| 分割线 | 哇哦我是正文欸)$$
-```
-
-渲染结果中标题为：
-
-```text
-这是一道 | 分割线
-```
-
-### 3. 渲染真实的反斜杠 `\`
-
-在代码演示场景下，如果你需要向用户展示真实的反斜杠，需要使用双反斜杠 `\\`：
-
-```text
-$$info(路径说明 | 请访问 C:\\\\Users\\\\Admin 文件夹)$$
-```
-
-渲染结果类似：
-
-```text
-C:\Users\Admin
-```
-
-### 4. 保护块级结构 `@`
-
-在 `@text` 或 `@image` 这样的块级结构中，如果行首需要输出 `@type` 形式文本，可能导致结构误判，此时可以在行首使用 `\` 保护：
-
-```text
-@text
-\@image 这个符号现在只是一段纯文本了！
-\\@text 即使是双重转义，最后也会被降级还原。
-@end
-```
-
-### 5. 保护结构级闭合符
-
-如果正文中需要展示 `%end$$`、`*end$$`、`@end` 这些闭合标记本身，请避免将它们单独顶格放置在一行，否则可能触发结构闭合。  
-推荐：
-
-- 放在行内文本中
-- 加前缀文本
-- 或使用 Raw Code Block 展示
-
----
-
-## 🏗️ 块级架构语法指南 (Block-level Syntax)
-
-yumeLog 采用自研的 **块驱动架构 (Block-driven Architecture)**。  
-文章由多个独立的 `@type` 块组成，这种设计让静态页面也能拥有很强的组件化能力和解析效率。
-
-### 1. 基础结构 (Base Structure)
-
-每个块必须以 `@` 符号开始，并以 `@end` **顶格独立占行**闭合。
-
-### 2. 标准块清单 (Available Blocks)
-
-| 块指令 (@type) | 角色定位 | 内部语法要求 | 是否必选 |
-|:--|:--|:--|:--:|
-| **@meta** | 文章元数据 | **YAML**（定义 id, title, time 等） | **YES** |
-| **@text** | 富文本正文 | **DSL** + 纯文本（支持嵌套） | NO |
-| **@divider** | 逻辑分割线 | 留空即可 | NO |
-| **@image** | 多轨媒体块 | **YAML List**（支持容灾链接） | NO |
-
----
-
-### 文章元信息 (`@meta`)
-
-每篇文章 **必须** 以 `@meta` 开头，用于驱动 SEO、路由映射及页面布局。
-
-```text
-@meta
-layout: common
-time: 20260316
-lang: zh
-id: bangkok-life
-pin: true
-title: 曼谷的午后喵
-@end
-```
-
-字段说明：
-
-- `layout`：布局模板
-- `time`：日期，格式为 `YYYYMMDD`
-- `lang`：语言，如 `zh` / `en` / `ja`
-- `id`：唯一 ID，用于路由访问
-- `pin`：是否置顶
-- `title`：文章标题
-
----
-
-### 富文本容器 (`@text`)
-
-渲染引擎的核心容器。  
-内部支持所有 DSL 指令，负责承载主要文字内容。
-
-```text
-@text
-这是一段普通的文字。
-$$center($$bold(这是居中且加粗的文字喵！))$$
-@end
-```
-
----
-
-### 容灾图像块 (`@image`)
-
-专为图片高可用设计，支持定义主地址与热备地址。  
-由于该部分由 YAML 解析，请遵循标准 YAML 缩进规范：
-
-- `- `：创建一个对象组
-- `  `：两个空格，为当前对象组添加字段
-- `    `：四个空格，用于多行元素缩进
-
-```text
-@image
-- src: /images/main.webp
-  spareUrl: https://cdn.example.com/backup.webp
-  desc: 三花猫 Mīkè 的日常
-- desc: |
-    多行描述演示：
-    第一行
-    第二行
-@end
-```
-
----
-
-### 视觉分割线 (`@divider`)
-
-```text
-@divider
-@end
-```
-
----
-
-## Block-level 闭合规则总结
-
-### `@end`
-
-必须：
-
-- 顶格
-- 独占一整行
-- 前面不能有空格
-- 后面不能有额外字符
-
-### `%end$$`
-
-必须：
-
-- 顶格
-- 独占一整行
-- 前面不能有空格
-- 后面不能有额外字符
-
-### `*end$$`
-
-必须：
-
-- 顶格
-- 独占一整行
-- 前面不能有空格
-- 后面不能有额外字符
-
-### 示例总览
-
-合法：
-
-```text
-@end
-%end$$
-*end$$
-```
-
-非法：
-
-```text
- @end
-%end$$ xxx
-  *end$$
-```
-
----
-
-## 核心配置与自定义指南
-
-由于 **yumeLog 是纯前端静态架构（无后端）**，所有数据均通过仓库中的本地文件或远程 JSON/YAML 驱动。  
-如果需要修改内容，请严格按照以下说明操作。
-
-### 1. 添加博客文章
-
-**注意：** 要使用博客前，你必须先在 `/public/data/config/yamlUrl.json` 指向正确的远程目录及热备目录。
-
-```json
-{
-  "blog": {
-    "listUrl": "https://YOUR-BLOG-LIST-URL",
-    "url": "https://YOUR-BLOG-URL",
-    "spareUrl": "/blog/",
-    "spareListUrl": "/blog/list.json"
-  },
-  "main": {
-    "listUrl": "/data/main/list.json",
-    "url": "/data/main/"
-  }
-}
-```
-
-操作步骤：
-
-1. 在博客目录创建新的 YAML 文件（例如 `20260106.yaml`）
-2. 按照项目定义的 `blocks` 结构编写文章内容
-3. **手动修改 `list.json`**，将新的文章文件名添加进去，否则文章不会被系统加载
-
-```json
-[
-  "20251201.yaml",
-  "20260106.yaml"
-]
-```
-
----
-
-### 2. I18N 多语言管理
-
-**文件位置：** `/public/data/config/i18nLang.json`
-
-默认支持中文、English、日本語。  
-如果不需要某个语言，**直接从 JSON 中删除即可**，对应选项会自动从前端消失。
-
-```json
-[
-  {
-    "label": "中文",
-    "value": "zh"
-  },
-  {
-    "label": "English",
-    "value": "en"
-  }
-]
-```
-
----
-
-### 3. 修改主题
-
-**文件位置：** `/public/data/config/colorData.json`
-
-**强制要求：**
-
-- 背景图片必须严格按照 `background0.xxx` 的顺序命名并放入 `/public/` 目录
-- 每张背景图必须有对应主题色，否则系统无法工作
-
-```json
-{
-  "background0": "#C7B0C0",
-  "background1": "#9E8A95",
-  "background2": "#BF948E"
-}
-```
-
----
-
-### 4. 修改网页标题
-
-**文件位置：** `/public/data/main/webTitle.json`
-
-用于控制浏览器标签页标题以及部分全局显示名称。
-
-```json
-{
-  "home": {
-    "zh": "YumeLOG的页面",
-    "en": "YumeLOG Pages",
-    "ja": "YumeLOG - ホーム",
-    "other": "YumeLOG Pages"
-  },
-  "blog": {
-    "zh": "YumeLOG的博客",
-    "en": "YumeLOG's Blog",
-    "ja": "YumeLOGのブログ",
-    "other": "YumeLOG's Blog"
-  }
-}
-```
-
----
-
-### 5. 修改首页招呼语
-
-**文件位置：** `/public/data/main/title.yaml`
-
-用于控制主页顶部欢迎语与简短介绍。
-
-```yaml
-title:
-  - type: "zh"
-    content: "天气真好啊，我们去散步吧"
-  - type: "en"
-    content: "How are you? I am fine."
-  - type: "ja"
-    content: "元気いいね、何かいいことでもあったのかい？"
-  - type: "other"
-    content: "Sorry Unknown Language!"
-```
-
----
-
-### 6. 修改照片墙
-
-**文件位置：** `/public/data/config/neko.yaml`
-
-用于管理照片墙展示图片及描述内容（例如猫猫照片或摄影作品）。
-
-```yaml
-img:
-  - imgError: /cat/猫咪图片1.webp
-    img: https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E6%A9%98%E7%8C%AB.webp
-    imgName: 猫咪图片1
-  - imgError: /cat/猫咪图片2.webp
-    img: https://raw.githubusercontent.com/chiba233/newMainpage/master/public/cat/%E5%A5%B6%E5%AD%90.webp
-    imgName: 猫咪图片2
-```
-
----
-
-### 7. 修改个人详细简介
-
-**文件位置：** `/public/data/config/introduction.yaml`
-
-用于展示完整个人介绍信息。
-
-```yaml
-introduction:
-  - type: "zh"
-    content: |
-      这是基础信息，你可以访问 /public/main/introduction.yaml 进行修改
-  - type: "en"
-    content: |
-      This is the basic information.
-      You can access /public/main/introduction.yaml to modify it.
-  - type: "ja"
-    content: |
-      これは基本情報(きほんじょうほう)です。
-      /public/main/introduction.yaml にアクセスして編集できます。
-  - type: "other"
-    content: |
-      This is the basic information.
-      You can access /public/main/introduction.yaml to modify it.
-```
-
----
-
-### 8. 修改纪念日时间线
-
-**文件位置：** `/public/data/config/fromNow.yaml`
-
-用于配置纪念日与时间线展示内容，系统会自动计算时间差。
-
-```yaml
-fromNow:
-  - time: "19700101"
-    photo: ""
-    names:
-      - type: "zh"
-        content: "测试数据"
-      - type: "en"
-        content: "Test Data"
-      - type: "ja"
-        content: "テストデータ"
-      - type: "other"
-        content: "Test Data"
-
-  - time: "20260101"
-    photo: ""
-    names:
-      - type: "zh"
-        content: ""
-      - type: "en"
-        content: ""
-      - type: "ja"
-        content: ""
-      - type: "other"
-        content: ""
-```
-
----
-
-## 📜 License
-
-本项目采用 **MIT License** 开源。
-
-你可以自由地：
-
-- 使用
-- 修改
-- 分发
-- 用于商业项目
-
-但必须保留原作者的版权声明。
+MIT

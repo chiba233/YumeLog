@@ -1,4 +1,5 @@
-import { BLOCK_TYPES, BlockType, RICH_TYPES, RichType, TagHandlerMap } from "../../d";
+import type { BlockType, RichType, TagHandler, TagHandlerMap, TextToken } from "./types";
+import { BLOCK_TYPES, RICH_TYPES } from "./types";
 import {
   buildLabeledInlineBlock,
   buildPlainRawBlock,
@@ -9,6 +10,19 @@ import {
 } from "./builders";
 import { unescapeInline } from "./escape";
 import { createToken } from "@/components/ts/dsl/BlogRichText/createToken";
+
+type TitledLabelKey = "labelInfo" | "labelWarning" | "collapseClickToExpand";
+
+const createTitledTagHandler = (
+  type: "info" | "warning" | "collapse",
+  labelKey: TitledLabelKey,
+): TagHandler => ({
+  inline: (tokens: TextToken[]) => buildLabeledInlineBlock(type, tokens, labelKey),
+  raw: (arg: string | undefined, content: string) =>
+    buildPlainRawBlock(type, arg, content, labelKey),
+  block: (arg: string | undefined, content: TextToken[]) =>
+    buildRichBlock(type, arg, content, labelKey),
+});
 
 export const TAG_HANDLERS: Partial<TagHandlerMap> = {
   link: {
@@ -25,23 +39,9 @@ export const TAG_HANDLERS: Partial<TagHandlerMap> = {
     },
   },
 
-  info: {
-    inline: (tokens) => buildLabeledInlineBlock("info", tokens, "labelInfo"),
-    raw: (arg, content) => buildPlainRawBlock("info", arg, content, "labelInfo"),
-    block: (arg, content) => buildRichBlock("info", arg, content, "labelInfo"),
-  },
-
-  warning: {
-    inline: (tokens) => buildLabeledInlineBlock("warning", tokens, "labelWarning"),
-    raw: (arg, content) => buildPlainRawBlock("warning", arg, content, "labelWarning"),
-    block: (arg, content) => buildRichBlock("warning", arg, content, "labelWarning"),
-  },
-
-  collapse: {
-    inline: (tokens) => buildLabeledInlineBlock("collapse", tokens, "collapseClickToExpand"),
-    raw: (arg, content) => buildPlainRawBlock("collapse", arg, content, "collapseClickToExpand"),
-    block: (arg, content) => buildRichBlock("collapse", arg, content, "collapseClickToExpand"),
-  },
+  info: createTitledTagHandler("info", "labelInfo"),
+  warning: createTitledTagHandler("warning", "labelWarning"),
+  collapse: createTitledTagHandler("collapse", "collapseClickToExpand"),
 
   "raw-code": {
     raw: (arg, content) => {

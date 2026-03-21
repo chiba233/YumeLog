@@ -1,4 +1,4 @@
-import { RichType, TextToken, TitledBlockType } from "../../d";
+import type { RichType, TextToken, TitledBlockType } from "./types";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { readEscapedSequence, unescapeInline } from "./escape";
 import { ESCAPE_CHAR, TAG_DIVIDER } from "./constants";
@@ -10,6 +10,8 @@ type CommonI18nKeys = keyof typeof commonI18n;
 type I18nMap = Record<string, string>;
 const ALLOWED_LANGS = ["typescript", "bash", "json", "yaml", "vue", "html", "text"] as const;
 type SupportedLang = (typeof ALLOWED_LANGS)[number];
+const ALLOWED_LANG_SET = new Set<string>(ALLOWED_LANGS);
+const TS_ALIAS_SET = new Set(["js", "javascript", "ts", "typescript"]);
 
 const createTextToken = (value: string): TextToken => createToken({ type: "text", value });
 
@@ -109,13 +111,12 @@ export const buildLabeledInlineBlock = (
 };
 
 export const normalizeLang = (codeLang?: string): SupportedLang => {
-  const tsAliases = ["js", "javascript", "ts", "typescript"];
   if (!codeLang) return "typescript";
   const normalized = codeLang.trim().toLowerCase();
-  if (tsAliases.includes(normalized)) {
+  if (TS_ALIAS_SET.has(normalized)) {
     return "typescript";
   }
-  if (!(ALLOWED_LANGS as unknown as string[]).includes(normalized)) {
+  if (!ALLOWED_LANG_SET.has(normalized)) {
     const unsupportedCodeLanguage = commonI18n.unsupportedCodeLanguage as I18nMap;
     const unsupportedCodeLanguageMsg = (
       unsupportedCodeLanguage[lang.value] || unsupportedCodeLanguage.en

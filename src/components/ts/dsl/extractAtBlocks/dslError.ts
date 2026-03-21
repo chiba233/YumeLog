@@ -1,6 +1,8 @@
 export type DSLErrorCode =
   | "dslNestedBlockNotAllowed"
   | "dslBlockNotClosed"
+  | "dslUnexpectedBlockEnd"
+  | "dslMaxDepthExceeded"
   | "dslIsolatedProperty"
   | "dslFormatError"
   | "dslUnrecognizedLine";

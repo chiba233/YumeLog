@@ -19,7 +19,7 @@
       </template>
       <div class="catMainCard">
         <n-image-group>
-          <div v-for="item in nekoImg" :key="item.imgName" class="catImgDIV">
+          <div v-for="item in nekoImg" :key="item.temp_id" class="catImgDIV">
             <figure>
               <n-image
                 :alt="item.imgName"
@@ -266,7 +266,7 @@ const { openModal } = useRouteModal({
 type I18nMap = Record<string, string>;
 const handleContactClick = async (item: PlatformConfig): Promise<void> => {
   if (item.type === "link") {
-    const url = socialLinks.value[item.id as keyof typeof socialLinks.value];
+    const url = socialLinks.value[item.id];
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     } else {

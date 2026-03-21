@@ -1,5 +1,6 @@
 import { useStorage } from "@vueuse/core";
-import dayjs, { Dayjs } from "dayjs";
+import type { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import "dayjs/locale/ja";
 import "dayjs/locale/zh-cn";
 import "dayjs/locale/en-au";
@@ -8,7 +9,7 @@ import "dayjs/locale/th";
 import { ref, type Ref, watch } from "vue";
 import relativeTime from "dayjs/plugin/relativeTime";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import { SelectOption } from "../d.ts";
+import type { SelectOption } from "../d.ts";
 
 dayjs.extend(buddhistEra);
 dayjs.extend(localizedFormat);

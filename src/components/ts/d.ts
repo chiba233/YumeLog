@@ -1,4 +1,5 @@
-import { ComputedRef, Ref } from "vue";
+import type { ComputedRef, Ref } from "vue";
+import type { TextToken } from "./dsl/BlogRichText/types";
 
 /** * ----------------------------------------------------------------
  * 基础工具与抽象
@@ -15,117 +16,59 @@ export interface SelectOption {
   label: string;
   value: string;
 }
-export interface CommonI18nBlock<T = string> {
-  type: string;
-  content?: T;
+
+export type LocaleTextMap = Record<string, string>;
+
+export interface CommonI18nBlock<TContent = string, TType extends string = string> {
+  type: TType;
+  content?: TContent;
+  temp_id: string;
 }
 // 抽象所有“块”结构的基类，减少重复定义 type 和 content
-export interface BaseBlock<T = string> {
-  type: "image" | "text" | "divider";
-  content?: T;
+export interface BaseBlock<TType extends string, TContent = undefined> {
+  type: TType;
+  content?: TContent;
 }
 // 基础元数据
 export interface BaseMetadata {
   time: string;
   pin?: string;
-  [key: string]: unknown;
 }
 
 /**
  * ----------------------------------------------------------------
- * 博客与富文本系统
+ * 博客与文章模型
  * ----------------------------------------------------------------
  */
 
-export interface ParseStackNode {
-  tag: RichType;
-  tokens: TextToken[];
-}
-
-export interface ParseContext {
-  text: string;
-  depthLimit: number;
-  silent: boolean;
-  root: TextToken[];
-  stack: ParseStackNode[];
-  buffer: string;
-  i: number;
-}
-
-export interface TagStartInfo {
-  tag: string;
-  tagOpenPos: number;
-  tagNameEnd: number;
-  inlineContentStart: number;
-}
-
-export interface ComplexTagParseResult {
-  handled: boolean;
-  nextIndex: number;
-  token?: TextToken;
-  fallbackText?: string;
-  error?: {
-    key: "richTextBlockNotClosed" | "richTextRawNotClosed";
-    index: number;
-  };
-}
-export interface TagHead {
-  tag: string;
-  tagStart: number;
-  tagNameEnd: number;
-  argStart: number;
-}
-export const RICH_TYPES = [
-  "bold",
-  "thin",
-  "underline",
-  "strike",
-  "center",
-  "link",
-  "code",
-  "info",
-  "warning",
-  "raw-code",
-  "collapse",
-] as const;
-
-export const BLOCK_TYPES = ["info", "warning", "center", "raw-code", "collapse"] as const;
-export type RichType = (typeof RICH_TYPES)[number];
-export type BlockType = (typeof BLOCK_TYPES)[number];
-export const TITLED_BLOCK_TYPES = ["info", "warning", "collapse"] as const;
-export type TitledBlockType = (typeof TITLED_BLOCK_TYPES)[number];
-export type InlineParser = (tokens: TextToken[]) => TextToken;
-export type RawParser = (arg: string | undefined, content: string) => TextToken;
-export type BlockParser = (arg: string | undefined, content: TextToken[]) => TextToken;
-
-export interface TagHandler {
-  inline?: InlineParser;
-  raw?: RawParser;
-  block?: BlockParser;
-}
-
-export type TagHandlerMap = Partial<Record<RichType, TagHandler>>;
-
-// 递归定义的文本 Token
-export interface TextToken {
-  type: RichType | "text";
-  value: string | TextToken[];
-  codeLang?: string;
-  label?: string;
-  title?: string;
-  url?: string;
-  temp_id: string;
-}
 // 图片的结构
 export interface ImageContent {
   src: string;
   spareUrl?: string;
   desc?: string;
+  temp_id: string;
 }
-// 核心内容块
-export interface PostBlock extends BaseBlock<string | ImageContent[]> {
+
+export interface TextPostBlock extends BaseBlock<"text", string> {
+  content: string;
   tokens?: TextToken[];
+  temp_id: string;
 }
+
+export interface ImagePostBlock extends BaseBlock<"image", ImageContent[]> {
+  content: ImageContent[];
+  tokens?: TextToken[];
+  temp_id: string;
+}
+
+export interface DividerPostBlock extends BaseBlock<"divider", string> {
+  content?: string;
+  tokens?: TextToken[];
+  temp_id: string;
+}
+
+// 核心内容块
+export type PostBlock = TextPostBlock | ImagePostBlock | DividerPostBlock;
 // 原始文章结构
 export interface Post extends BaseMetadata {
   id?: string;
@@ -137,7 +80,8 @@ export interface Post extends BaseMetadata {
 // 处理后的文章（用于 UI 展示）
 export interface ProcessedPost extends Post {
   displayDescription: string;
-  imageBlocks: PostBlock[];
+  imageBlocks: ImagePostBlock[];
+  temp_id: string;
 }
 
 /**
@@ -162,6 +106,7 @@ export interface YamlNekoBlock {
   imgError: string;
   img: string;
   imgName: string;
+  temp_id: string;
 }
 export interface NekoYamlResponse {
   img: YamlNekoBlock[];
@@ -171,6 +116,7 @@ export interface YamlTimeBlock {
   time: string | number;
   photo?: string;
   names?: I18nBlock[];
+  temp_id: string;
 }
 export interface FromNowYamlResponse {
   fromNow: YamlTimeBlock[];
@@ -209,12 +155,12 @@ export interface PlatformConfig {
 }
 export interface SocialConfig {
   platforms: PlatformConfig[];
-  socialLinks: Record<string, string>;
+  socialLinks: Partial<Record<PlatformId, string>>;
 }
 
 // 网站所有者配置
 export interface PersonConfig {
-  author: Record<string, string>;
+  author: LocaleTextMap;
 }
 // 好友列表
 export interface Friend {
@@ -223,6 +169,7 @@ export interface Friend {
   url: string;
   icon: string;
   spare?: string;
+  temp_id: string;
 }
 export interface FriendsYamlResponse {
   friends: Friend[];
@@ -234,7 +181,7 @@ export interface FriendsYamlResponse {
  * ----------------------------------------------------------------
  */
 
-export type UserDataType = {
+export interface UserDataType {
   userName: string;
   iconId: number;
   plateId: number;
@@ -280,7 +227,7 @@ export type UserDataType = {
   totalExpertAchievement: number;
   totalMasterAchievement: number;
   totalReMasterAchievement: number;
-};
+}
 export interface MaiSection {
   titleKey: string;
   name: string;
@@ -309,3 +256,21 @@ export interface ModalOptions {
   onAllClosed?: () => void;
   onInvalidId?: (id: string) => Promise<void> | void;
 }
+
+export type {
+  BlockParser,
+  BlockType,
+  ComplexTagParseResult,
+  InlineParser,
+  ParseContext,
+  ParseStackNode,
+  RawParser,
+  RichType,
+  TagHandler,
+  TagHandlerMap,
+  TagHead,
+  TagStartInfo,
+  TextToken,
+  TitledBlockType,
+} from "./dsl/BlogRichText/types";
+export { BLOCK_TYPES, RICH_TYPES, TITLED_BLOCK_TYPES } from "./dsl/BlogRichText/types";

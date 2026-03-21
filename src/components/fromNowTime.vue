@@ -21,7 +21,7 @@
       @mouseleave="onLeave"
       @mousemove="onMove"
     >
-      <n-card :title="boxTitle" class="fromTimeCard" size="huge">
+      <n-card class="fromTimeCard" :title="boxTitle" size="huge">
         <template #header-extra>
           <n-button circle tertiary @click="showFromNowModal = false">
             <template #icon>
@@ -31,7 +31,7 @@
             </template>
           </n-button>
         </template>
-        <div v-for="item in fromNow" :key="item.time" class="timeCard themeText">
+        <div v-for="item in fromNow" :key="item.temp_id" class="timeCard themeText">
           <time :lang="lang">{{ formatDate(item.time) }}</time>
           <strong :lang="lang">{{ getName(item) }}</strong>
           <time :lang="lang">{{ formatTime(String(item.time)) }}</time>
@@ -41,7 +41,7 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 import { NButton, NCard, NIcon, NModal } from "naive-ui";
 import Clock from "../icons/clock.svg";
 import { computed, onMounted, ref } from "vue";
@@ -74,7 +74,7 @@ const fromNow = ref<YamlTimeBlock[]>([]);
 const { getSingle } = useContentStore();
 
 onMounted(async () => {
-  const res = await getSingle<FromNowYamlResponse>("main", "fromNow.yaml");
+  const res = await getSingle<FromNowYamlResponse>("main", "fromNow.dsl");
   if (res && res.fromNow) {
     fromNow.value = res.fromNow;
   }

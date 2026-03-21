@@ -37,7 +37,8 @@ import {
 } from "@/components/ts/global/useGlobalState.ts";
 import { getSlug, useRouteModal } from "@/components/ts/global/useRouteModal.ts";
 import RichTextRenderer from "@/components/blog/RichTextRenderer.vue";
-import { ImageContent, Post, PostBlock, ProcessedPost, TextToken } from "../ts/d.ts";
+import type { TextToken } from "../ts/dsl/BlogRichText/types";
+import { ImageContent, Post, PostBlock, ProcessedPost } from "../ts/d.ts";
 import { isSSR } from "../ts/global/useHead.ts";
 import LazyBlock from "@/components/blog/LazyBlock.vue";
 
@@ -47,7 +48,7 @@ const isHydrated = ref(false);
 let observer: IntersectionObserver | null = null;
 
 const getPostId = (post: ProcessedPost) => {
-  return getSlug(post) || post.time || post.title;
+  return getSlug(post) || post.temp_id;
 };
 
 const pendingVisibleIds = new Set<string>();
@@ -274,7 +275,7 @@ const renderDetailContent = (): VNodeChild => {
   const post = selectedPost.value as ProcessedPost | null;
   if (!post) return null;
 
-  const blocks = parsedBlocks.value || [];
+  const blocks: PostBlock[] = parsedBlocks.value;
 
   return h("div", { class: "postCardMain" }, [
     h("div", { class: "postCardMeta themeText" }, [
@@ -283,16 +284,19 @@ const renderDetailContent = (): VNodeChild => {
       h("span", { lang: lang.value }, formatTime(post.time)),
     ]),
 
-    blocks.map((block: PostBlock, a: number) => {
+    blocks.map((block: PostBlock) => {
       const ctx: PostRenderContext = { post };
-      const key = `${block.type}-${a}`;
       const isLazyText = block.type === "text" && typeof block.content === "string";
 
       if (!isLazyText) {
-        return h("div", { key, class: "postCardBody" }, renderInnerContent(block, ctx));
+        return h(
+          "div",
+          { key: block.temp_id, class: "postCardBody" },
+          renderInnerContent(block, ctx),
+        );
       }
 
-      return h("div", { key, class: "postCardBody" }, [
+      return h("div", { key: block.temp_id, class: "postCardBody" }, [
         h(
           LazyBlock,
           { block, ssr: isSSR },
@@ -313,7 +317,7 @@ const renderDetailContent = (): VNodeChild => {
   <div v-if="ssrHidePosts" class="post-container">
     <article
       v-for="(post, index) in processedPosts"
-      :key="getPostId(post)"
+      :key="post.temp_id"
       :data-id="getPostId(post)"
       class="post-card glass"
       @mouseenter="onEnter"
@@ -347,7 +351,7 @@ const renderDetailContent = (): VNodeChild => {
             <div v-if="post.imageBlocks.length > 0" class="post-image">
               <img
                 v-for="(img, i) in getPreviewImages(post)"
-                :key="img.src"
+                :key="img.temp_id"
                 :alt="img.desc"
                 :class="{ secondImg: i === 1, thirdImg: i === 2, fourthImg: i === 3 }"
                 :src="img.src"
@@ -406,7 +410,7 @@ const renderDetailContent = (): VNodeChild => {
 
   <article v-if="isSSR && selectedPost" class="sr-only-article">
     <h1 :lang="(selectedPost?.lang as string) || lang">{{ selectedPost.title }}</h1>
-    <time :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')" :lang="lang">
+    <time :lang="lang" :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')">
       {{ selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") }}
     </time>
     <component :is="renderDetailContent()" />
@@ -464,6 +468,7 @@ $border-radius: 16px;
   border-radius: $border-radius;
   overflow: hidden;
 }
+
 .sr-only-article {
   position: absolute;
   width: 1px;
@@ -475,6 +480,7 @@ $border-radius: 16px;
   white-space: nowrap;
   border-width: 0;
 }
+
 @keyframes skeleton-shimmer {
   0% {
     background-position: -200% 0;
@@ -483,6 +489,7 @@ $border-radius: 16px;
     background-position: 200% 0;
   }
 }
+
 .post-skeleton {
   display: flex;
   flex-direction: column;
@@ -497,6 +504,7 @@ $border-radius: 16px;
     width: 25rem;
     height: 210px;
   }
+
   .skeleton-title,
   .skeleton-meta,
   .skeleton-image,
@@ -511,21 +519,25 @@ $border-radius: 16px;
     animation: skeleton-shimmer 1.5s infinite linear;
     border-radius: 8px;
   }
+
   .skeleton-header {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 0.4rem;
     gap: 0.4rem;
+
     .skeleton-title {
       width: 70%;
       height: 1.25rem;
     }
+
     .skeleton-meta {
       width: 40%;
       height: 1rem;
     }
   }
+
   .skeleton-body {
     display: flex;
     gap: 0.5rem;
@@ -534,12 +546,14 @@ $border-radius: 16px;
       flex-direction: column;
       align-items: center;
     }
+
     .skeleton-image {
       width: 120px;
       height: 120px;
       flex-shrink: 0;
       border-radius: 12px;
     }
+
     .skeleton-description {
       display: flex;
       flex-direction: column;
@@ -547,17 +561,22 @@ $border-radius: 16px;
       width: 100%;
       gap: 0.5rem;
       justify-content: center;
+
       .skeleton-text-line {
         height: 0.8rem;
+
         &.line-1 {
           width: 100%;
         }
+
         &.line-2 {
           width: 95%;
         }
+
         &.line-3 {
           width: 90%;
         }
+
         &.line-4 {
           width: 40%;
         }
@@ -572,6 +591,7 @@ $border-radius: 16px;
   margin: 0;
   font-weight: bold;
 }
+
 .separator-icon {
   display: flex;
   align-items: center;
@@ -580,18 +600,22 @@ $border-radius: 16px;
   margin: 0.5rem 0;
   font-weight: bold;
 }
+
 .separator-icon::before,
 .separator-icon::after {
   content: "";
   flex: 1;
   height: 2px;
 }
+
 .separator-icon::before {
   background: linear-gradient(to right, transparent, rgba(var(--global-theme-rgb-deep), 0.6));
 }
+
 .separator-icon::after {
   background: linear-gradient(to right, rgba(var(--global-theme-rgb-deep), 0.6), transparent);
 }
+
 .separator-icon span {
   padding: 0 20px;
   font-size: 14px;
@@ -649,9 +673,11 @@ $border-radius: 16px;
   flex-direction: column;
   overflow: hidden;
   max-height: 99dvh !important;
+
   :deep(.n-card-header) {
     flex-shrink: 0;
   }
+
   max-width: 99%;
   @media (min-width: 1050px) {
     max-width: 75em !important;
@@ -891,6 +917,7 @@ $border-radius: 16px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         margin: 0 0.25rem;
       }
+
       .thirdImg,
       .secondImg,
       .fourthImg {
@@ -899,16 +926,19 @@ $border-radius: 16px;
           display: none;
         }
       }
+
       .thirdImg {
         @media (max-width: 450px) {
           display: none;
         }
       }
+
       .secondImg {
         @media (max-width: 300px) {
           display: none;
         }
       }
+
       .fourthImg {
         @media (max-width: 600px) {
           display: none;

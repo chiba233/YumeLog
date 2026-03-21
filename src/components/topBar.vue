@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import FromNowTime from "@/components/fromNowTime.vue";
 import I18NComponents from "@/components/i18nComponents.vue";
 import { nextTick, onMounted, ref, watch } from "vue";
@@ -66,7 +66,7 @@ const { onMove, onLeave, onEnter } = useCardGlow();
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .overlay {
   z-index: 2;
   left: 0.6em;

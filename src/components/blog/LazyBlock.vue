@@ -1,7 +1,12 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import {
+  getCachedBlockTokens,
+  setCachedBlockTokens,
+} from "@/components/ts/dsl/BlogRichText/blockTokenCache.ts";
 import { parseRichText } from "@/components/ts/dsl/BlogRichText/blogFormat.ts";
-import type { PostBlock, TextToken } from "../ts/d.ts";
+import type { TextToken } from "../ts/dsl/BlogRichText/types";
+import type { PostBlock } from "../ts/d.ts";
 
 interface Props {
   block?: PostBlock;
@@ -23,12 +28,32 @@ const shouldRenderContent = computed(() => {
   return props.ssr || isParsed.value;
 });
 
+const getBlockTextContent = (block?: PostBlock): string | null => {
+  if (!block || block.type !== "text" || typeof block.content !== "string") {
+    return null;
+  }
+
+  return block.content;
+};
+
+const getBlockCachedTokens = (block?: PostBlock): TextToken[] => {
+  return getCachedBlockTokens(block?.temp_id) ?? [];
+};
+
 const stopObserving = () => {
   observer?.disconnect();
   observer = null;
 };
 
 const resolveInitialState = (): { tokens: TextToken[]; parsed: boolean } => {
+  const cachedTokens = getBlockCachedTokens(props.block);
+  if (cachedTokens.length > 0) {
+    return {
+      tokens: cachedTokens,
+      parsed: true,
+    };
+  }
+
   if (Array.isArray(props.block?.tokens) && props.block.tokens.length > 0) {
     return {
       tokens: props.block.tokens,
@@ -43,9 +68,22 @@ const resolveInitialState = (): { tokens: TextToken[]; parsed: boolean } => {
     };
   }
 
-  try {
+  const content = getBlockTextContent(props.block);
+  if (!content) {
     return {
-      tokens: parseRichText(props.block!.content as string),
+      tokens: [],
+      parsed: false,
+    };
+  }
+
+  try {
+    const tokens = parseRichText(content);
+    if (props.block?.temp_id) {
+      setCachedBlockTokens(props.block.temp_id, tokens);
+    }
+
+    return {
+      tokens,
       parsed: true,
     };
   } catch (e) {
@@ -59,8 +97,26 @@ const resolveInitialState = (): { tokens: TextToken[]; parsed: boolean } => {
 const parseBlock = () => {
   if (isParsed.value) return;
 
+  const content = getBlockTextContent(props.block);
+  if (!content) {
+    localTokens.value = [];
+    isParsed.value = false;
+    return;
+  }
+
   try {
-    localTokens.value = parseRichText(props.block!.content as string);
+    const cachedTokens = getBlockCachedTokens(props.block);
+    if (cachedTokens.length > 0) {
+      localTokens.value = cachedTokens;
+      isParsed.value = true;
+      return;
+    }
+
+    const tokens = parseRichText(content);
+    localTokens.value = tokens;
+    if (props.block?.temp_id) {
+      setCachedBlockTokens(props.block.temp_id, tokens);
+    }
     isParsed.value = true;
   } catch (e) {
     console.error("Lazy Parse Error:", e);
@@ -133,8 +189,8 @@ onUnmounted(() => {
 <template>
   <div
     ref="container"
-    :style="{ '--lazy-height': `${estimatedHeight}px` }"
     class="lazy-block-wrapper"
+    :style="{ '--lazy-height': `${estimatedHeight}px` }"
   >
     <slot v-if="shouldRenderContent" :combined-tokens="localTokens" />
     <div v-else class="lazy-placeholder">
@@ -143,7 +199,7 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .lazy-block-wrapper {
   contain-intrinsic-size: 1px var(--lazy-height);
   width: 100%;

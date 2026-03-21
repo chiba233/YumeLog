@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node ./scripts/patch-vite-ssg.mjs",
     "dev": "vite",
     "host": "pnpm run dev --host",
+    "prebuild": "node ./scripts/patch-vite-ssg.mjs",
     "build": "vue-tsc --noEmit && vite-ssg build",
     "build:client": "vite build",
     "preview": "vite preview",

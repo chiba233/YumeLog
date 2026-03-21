@@ -131,7 +131,6 @@ import {
   NImagePreview,
   NModal,
 } from "naive-ui";
-import axios from "axios";
 import { useAsyncState, useStorage } from "@vueuse/core";
 import { lang } from "@/components/ts/global/setupLang.ts";
 import { globalColorDeep, themeColor } from "@/components/ts/global/useTheme.ts";
@@ -192,6 +191,7 @@ const maiStorage = useStorage<{ data: Partial<UserDataType>; updatedAt: number }
 
 const { state: data } = useAsyncState<Partial<UserDataType>>(async () => {
   const now = Date.now();
+
   if (
     Object.keys(maiStorage.value.data).length > 0 &&
     now - maiStorage.value.updatedAt < 86400000
@@ -200,10 +200,20 @@ const { state: data } = useAsyncState<Partial<UserDataType>>(async () => {
   }
 
   const url = await getMaiUrl();
-  return axios.get<UserDataType>(url).then((res) => {
-    maiStorage.value = { data: res.data, updatedAt: now };
-    return res.data;
-  });
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Request failed: ${res.status}`);
+  }
+
+  const raw: unknown = await res.json();
+  const json = raw as UserDataType;
+
+  maiStorage.value = {
+    data: json,
+    updatedAt: now,
+  };
+
+  return json;
 }, maiStorage.value.data);
 
 const iconMap: Record<PlatformId, string> = {

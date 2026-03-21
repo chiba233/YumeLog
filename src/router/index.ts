@@ -23,9 +23,14 @@ export const routes: RouteRecordRaw[] = [
   },
 ];
 
-const router = createRouter({
-  history: import.meta.env.SSR ? createMemoryHistory() : createWebHistory(),
-  routes,
-});
+export const createAppRouter = (
+  isSSR = Boolean(import.meta.env?.SSR || typeof window === "undefined"),
+) =>
+  createRouter({
+    history: isSSR ? createMemoryHistory() : createWebHistory(),
+    routes,
+  });
+
+const router = createAppRouter();
 
 export default router;

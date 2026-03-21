@@ -13,6 +13,22 @@ const normalizeTokens = (tokens: TextToken[]): unknown[] => {
   });
 };
 
+const createDeterministicDirtyText = (
+  seed: number,
+  parts: readonly string[],
+  length: number,
+): string => {
+  let state = seed >>> 0;
+  let output = "";
+
+  for (let i = 0; i < length; i++) {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    output += parts[state % parts.length];
+  }
+
+  return output;
+};
+
 const cases: Array<{ name: string; run: () => void }> = [
   {
     name: "基础 inline 富文本结构稳定",
@@ -103,7 +119,10 @@ const cases: Array<{ name: string; run: () => void }> = [
   {
     name: "不支持的 block 语法会退化回普通文本",
     run: () => {
-      assert.equal(stripRichText("$$center(hello)*\nworld\n*end$$"), "$$center(hello)*\nworld\n*end$$");
+      assert.equal(
+        stripRichText("$$center(hello)*\nworld\n*end$$"),
+        "$$center(hello)*\nworld\n*end$$",
+      );
     },
   },
   {
@@ -266,13 +285,19 @@ const cases: Array<{ name: string; run: () => void }> = [
   {
     name: "未知 block 语法会退化为普通文本",
     run: () => {
-      assert.equal(stripRichText("$$unknown(title)*\nhello\n*end$$"), "$$unknown(title)*\nhello\n*end$$");
+      assert.equal(
+        stripRichText("$$unknown(title)*\nhello\n*end$$"),
+        "$$unknown(title)*\nhello\n*end$$",
+      );
     },
   },
   {
     name: "未知 raw 语法会退化为普通文本",
     run: () => {
-      assert.equal(stripRichText("$$unknown(title)%\nhello\n%end$$"), "$$unknown(title)%\nhello\n%end$$");
+      assert.equal(
+        stripRichText("$$unknown(title)%\nhello\n%end$$"),
+        "$$unknown(title)%\nhello\n%end$$",
+      );
     },
   },
   {
@@ -404,7 +429,11 @@ const cases: Array<{ name: string; run: () => void }> = [
   {
     name: "thin underline strike code 这些 inline 标签都会生成对应 token",
     run: () => {
-      const tokens = parseRichText("$$thin(x)$$ $$underline(y)$$ $$strike(z)$$ $$code(k)$$", 50, true);
+      const tokens = parseRichText(
+        "$$thin(x)$$ $$underline(y)$$ $$strike(z)$$ $$code(k)$$",
+        50,
+        true,
+      );
 
       assert.deepEqual(normalizeTokens(tokens), [
         { type: "thin", value: [{ type: "text", value: "x" }] },
@@ -464,6 +493,124 @@ const cases: Array<{ name: string; run: () => void }> = [
       ]);
     },
   },
+  {
+    name: "一个坏标签后面跟一个好标签时后续结构仍能恢复",
+    run: () => {
+      const tokens = parseRichText("$$bold(bad) $$$$thin(good)$$", 50, true);
+
+      assert.deepEqual(normalizeTokens(tokens), [
+        { type: "text", value: "$$bold(bad) $$" },
+        {
+          type: "thin",
+          value: [{ type: "text", value: "good" }],
+        },
+      ]);
+    },
+  },
+  {
+    name: "转义字符和闭合符混用时不会吞掉后续合法标签",
+    run: () => {
+      const tokens = parseRichText("$$bold(a \\)$$ b)$$ $$thin(ok)$$", 50, true);
+
+      assert.deepEqual(normalizeTokens(tokens), [
+        {
+          type: "bold",
+          value: [{ type: "text", value: "a )$$ b" }],
+        },
+        { type: "text", value: " " },
+        {
+          type: "thin",
+          value: [{ type: "text", value: "ok" }],
+        },
+      ]);
+    },
+  },
+  {
+    name: "未闭合标签前缀后面跟合法 sibling 时仍能继续解析",
+    run: () => {
+      const tokens = parseRichText("$$bold(unclosed $$thin(ok)$$ $$underline(good)$$", 50, true);
+
+      assert.deepEqual(normalizeTokens(tokens), [
+        { type: "text", value: "$$bold(unclosed " },
+        {
+          type: "thin",
+          value: [{ type: "text", value: "ok" }],
+        },
+        { type: "text", value: " " },
+        {
+          type: "underline",
+          value: [{ type: "text", value: "good" }],
+        },
+      ]);
+    },
+  },
+  {
+    name: "raw block inline 混合边界下仍能保持顺序和结构",
+    run: () => {
+      const tokens = parseRichText(
+        "$$collapse(A)*\n$$raw-code(ts)%\nconst a = 1\n%end$$\n$$bold(x)$$\n*end$$",
+        50,
+        true,
+      );
+
+      assert.deepEqual(normalizeTokens(tokens), [
+        {
+          type: "collapse",
+          title: "A",
+          value: [
+            {
+              type: "raw-code",
+              codeLang: "typescript",
+              title: "Code:",
+              label: "",
+              value: "const a = 1",
+            },
+            {
+              type: "bold",
+              value: [{ type: "text", value: "x" }],
+            },
+            { type: "text", value: "\n" },
+          ],
+        },
+      ]);
+    },
+  },
+  {
+    name: "随机脏输入不会让 rich text 解析器崩溃",
+    run: () => {
+      const parts = [
+        "$$bold(",
+        "$$thin(",
+        "$$unknown(",
+        "$$collapse(T)*\n",
+        "$$raw-code(ts)%\n",
+        ")$$",
+        "*end$$",
+        "%end$$",
+        "\\)$$",
+        "\\%end$$",
+        "@text\n",
+        "@end\n",
+        "|",
+        "(",
+        ")",
+        "\n",
+        "hello",
+        "世界",
+        " ",
+      ] as const;
+
+      for (let seed = 1; seed <= 80; seed++) {
+        const source = createDeterministicDirtyText(seed, parts, 24);
+
+        assert.doesNotThrow(() => {
+          const tokens = parseRichText(source, 4, true);
+          assert.ok(Array.isArray(tokens));
+          assert.equal(typeof stripRichText(source), "string");
+        });
+      }
+    },
+  },
 ];
 
 let failed = false;
@@ -484,5 +631,3 @@ if (failed) {
 } else {
   console.log(`PASS ${cases.length} 个 Rich Text golden case`);
 }
-
-

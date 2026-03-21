@@ -3,7 +3,7 @@ import { useRoute, useRouter } from "vue-router";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/components/ts/global/setupLang.ts";
 import { $message } from "@/components/ts/global/msgUtils.ts";
-import { ModalOptions, Post } from "@/components/ts/d.ts";
+import type { ModalOptions, Post } from "@/components/ts/d.ts";
 
 export const useRouteModal = ({
   modals,

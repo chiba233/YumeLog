@@ -13,6 +13,8 @@ export interface YamlApiHooks {
   onConfigTypeError?: (payload: { type: string }) => void;
   onYamlLoadFailed?: (payload: { err: string }) => void;
   onDslError?: (error: DSLError) => void;
+  onStateChange?: (state: YamlApiState) => void;
+  sleep?: (ms: number) => Promise<void>;
   state?: YamlApiState;
 }
 
@@ -100,6 +102,10 @@ export const createYamlApi = (
   let cacheTime = 0;
 
   const state = hooks.state ?? createInitialState();
+  const notifyState = (): void => {
+    hooks.onStateChange?.(state);
+  };
+  const wait = hooks.sleep ?? sleep;
 
   const readJsonResource = async <T>(resourcePath: string): Promise<T> => {
     const text = await readTextResource(resourcePath);
@@ -189,23 +195,27 @@ export const createYamlApi = (
     try {
       const text = await readTextResource(resourcePath);
       state.yamlRetrying = false;
+      notifyState();
       return { ok: true, text };
     } catch (error: unknown) {
       const normalizedError = normalizeReadError(error);
 
       if (normalizedError.reason === "not-found") {
         state.yamlRetrying = false;
+        notifyState();
         return normalizedError;
       }
 
       if (retry <= 0) {
         state.yamlRetrying = false;
+        notifyState();
         return normalizedError;
       }
 
       state.yamlRetrying = true;
       state.faultTimes = retry;
-      await sleep(delay);
+      notifyState();
+      await wait(delay);
       return readTextWithRetry(resourcePath, retry - 1, delay * 2);
     }
   };
@@ -229,16 +239,19 @@ export const createYamlApi = (
     state.yamlLoadingFault = false;
     state.changeSpareUrl = false;
     state.faultTimes = 0;
+    notifyState();
 
     let listResult = await readTextWithRetry(listUrl, 2, 500);
 
     if (!listResult.ok && spareListUrl) {
       state.listPrimaryError = true;
       state.changeSpareUrl = true;
+      notifyState();
       listResult = await readTextWithRetry(spareListUrl, 3, 800);
 
       if (!listResult.ok) {
         state.listSpareError = true;
+        notifyState();
       }
     }
 
@@ -250,6 +263,7 @@ export const createYamlApi = (
       }
 
       state.yamlLoading = false;
+      notifyState();
       return [];
     }
 
@@ -268,6 +282,7 @@ export const createYamlApi = (
 
             if (!textResult.ok) {
               state.yamlLoadingFault = true;
+              notifyState();
               return null;
             }
 
@@ -294,12 +309,14 @@ export const createYamlApi = (
       });
 
       state.yamlLoading = false;
+      notifyState();
       return sorted;
     } catch (e: unknown) {
       const errMsg = e instanceof Error ? e.message : String(e);
       hooks.onYamlLoadFailed?.({ err: errMsg });
       state.serverError = true;
       state.yamlLoading = false;
+      notifyState();
       return [];
     }
   };
@@ -310,6 +327,7 @@ export const createYamlApi = (
   ): Promise<T | null> => {
     state.changeSpareUrl = false;
     state.notFoundError = false;
+    notifyState();
 
     const config = await getYamlConfig();
     const configItem = config[type];
@@ -325,12 +343,14 @@ export const createYamlApi = (
 
     if (!textResult.ok && spareUrl) {
       state.changeSpareUrl = true;
+      notifyState();
       textResult = await readTextWithRetry(joinResourcePath(spareUrl, fileName), 2, 500);
     }
 
     if (!textResult.ok) {
       if (textResult.reason === "not-found") {
         state.notFoundError = true;
+        notifyState();
       }
       return null;
     }

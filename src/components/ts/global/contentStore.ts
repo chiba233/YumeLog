@@ -1,22 +1,29 @@
 import { reactive } from "vue";
 import { loadAllPosts, loadSingleYaml } from "@/components/ts/getYaml";
-import { BaseMetadata, CacheEntry } from "@/components/ts/d.ts";
-
-const postsCache = reactive<Record<string, CacheEntry<BaseMetadata[]>>>({});
-const singleCache = reactive<Record<string, CacheEntry<unknown>>>({});
+import type { BaseMetadata, CacheEntry } from "@/components/ts/d.ts";
 
 const CACHE_TIMEOUT = 10 * 60 * 1000;
 
-export const useContentStore = () => {
+export interface ContentStoreDeps {
+  loadAllPosts: (type: string) => Promise<BaseMetadata[]>;
+  loadSingleYaml: (type: string, fileName: string) => Promise<object | null>;
+  now?: () => number;
+}
+
+export const createContentStore = (deps: ContentStoreDeps) => {
+  const postsCache = reactive<Record<string, CacheEntry<BaseMetadata[]>>>({});
+  const singleCache = reactive<Record<string, CacheEntry<unknown>>>({});
+  const getNow = deps.now ?? Date.now;
+
   const getPosts = async <T extends BaseMetadata>(type: string, force = false): Promise<T[]> => {
-    const now = Date.now();
+    const now = getNow();
     const cached = postsCache[type];
 
     if (!force && cached && now - cached.lastFetch < CACHE_TIMEOUT) {
       return cached.data as T[];
     }
 
-    const data = await loadAllPosts<T>(type);
+    const data = (await deps.loadAllPosts(type)) as T[];
 
     if (data && data.length > 0) {
       postsCache[type] = {
@@ -34,14 +41,14 @@ export const useContentStore = () => {
     force = false,
   ): Promise<T | null> => {
     const cacheKey = `${type}_${fileName}`;
-    const now = Date.now();
+    const now = getNow();
     const cached = singleCache[cacheKey];
 
     if (!force && cached && now - cached.lastFetch < CACHE_TIMEOUT) {
       return cached.data as T;
     }
 
-    const data = await loadSingleYaml<T>(type, fileName);
+    const data = (await deps.loadSingleYaml(type, fileName)) as T | null;
 
     if (data !== null) {
       singleCache[cacheKey] = {
@@ -57,3 +64,9 @@ export const useContentStore = () => {
     getSingle,
   };
 };
+
+export const useContentStore = () =>
+  createContentStore({
+    loadAllPosts,
+    loadSingleYaml,
+  });

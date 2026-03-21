@@ -160,6 +160,7 @@ Sitemap: ${siteOrigin}/sitemap.xml
     } as CSSOptions,
 
     build: {
+      cssMinify: "esbuild",
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {

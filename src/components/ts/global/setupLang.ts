@@ -1,19 +1,8 @@
 import { useStorage } from "@vueuse/core";
 import type { Dayjs } from "dayjs";
-import dayjs from "dayjs";
-import "dayjs/locale/ja";
-import "dayjs/locale/zh-cn";
-import "dayjs/locale/en-au";
-import buddhistEra from "dayjs/plugin/buddhistEra";
-import "dayjs/locale/th";
 import { ref, type Ref, watch } from "vue";
-import relativeTime from "dayjs/plugin/relativeTime";
-import localizedFormat from "dayjs/plugin/localizedFormat";
 import type { SelectOption } from "../d.ts";
-
-dayjs.extend(buddhistEra);
-dayjs.extend(localizedFormat);
-dayjs.extend(relativeTime);
+import { formatDateByLang, formatTimeByLang, resolvePreferredLang } from "./langCore.ts";
 
 export const langMap: Ref<SelectOption[]> = ref([]);
 
@@ -24,39 +13,19 @@ watch(
   langMap,
   (newMap) => {
     if (newMap.length === 0) return;
-    const validValues = newMap.map((item) => item.value);
-    if (!validValues.includes(lang.value)) {
-      lang.value = validValues.includes(rawLang)
-        ? rawLang
-        : validValues.includes("en")
-          ? "en"
-          : validValues[0];
+    const nextLang = resolvePreferredLang(newMap, lang.value, rawLang);
+    if (nextLang !== lang.value) {
+      lang.value = nextLang;
     }
   },
   { immediate: true },
 );
 
-const localeMap: Record<string, string> = {
-  zh: "zh-cn",
-  en: "en-au",
-  ja: "ja",
-  th: "th",
-};
-
 // 导出一个专门格式化时间的工具
 export const formatTime = (date?: string | number | Date | Dayjs): string => {
-  if (!date) return "error";
-  const locale = localeMap[lang.value] || localeMap.en;
-  dayjs.locale(locale);
-  return dayjs(date).fromNow();
+  return formatTimeByLang(lang.value, date);
 };
 
 export const formatDate = (date?: string | number | Date | Dayjs): string => {
-  if (!date) return "error";
-  const locale = localeMap[lang.value] || localeMap.en;
-  dayjs.locale(locale);
-  if (locale === "th") {
-    return dayjs(date).format("D MMMM BBBB - dddd");
-  }
-  return dayjs(date).format("LL - dddd");
+  return formatDateByLang(lang.value, date);
 };

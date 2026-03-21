@@ -22,75 +22,10 @@ export const listPrimaryError = ref(false);
 export const listSpareError = ref(false);
 export const yamlLoadingFault = ref(false);
 
-const state: YamlApiState = createYamlApiState();
-
-const syncStateToRefs = (): void => {
-  yamlLoading.value = state.yamlLoading;
-  yamlRetrying.value = state.yamlRetrying;
-  faultTimes.value = state.faultTimes;
-  changeSpareUrl.value = state.changeSpareUrl;
-  serverError.value = state.serverError;
-  notFoundError.value = state.notFoundError;
-  listPrimaryError.value = state.listPrimaryError;
-  listSpareError.value = state.listSpareError;
-  yamlLoadingFault.value = state.yamlLoadingFault;
-};
-
-const notifyDslError = (error: { code: string; params?: Record<string, string> }): void => {
-  const map = commonI18n[error.code as keyof typeof commonI18n] as I18nMap | undefined;
-  let message = map?.[lang.value] || map?.en || error.code;
-
-  for (const [key, value] of Object.entries(error.params ?? {})) {
-    message = message.replace(`{${key}}`, value);
-  }
-
-  $message.error(message, true, 3000);
-};
-
-const withNotify =
-  (template: I18nMap) =>
-  (payload: Record<string, string>): void => {
-    let message = template[lang.value] || template.en;
-
-    for (const [key, value] of Object.entries(payload)) {
-      message = message.replace(`{${key}}`, value);
-    }
-
-    $message.error(message, true, 3000);
-  };
-
-const api = createYamlApi(
-  async (resourcePath: string): Promise<string> => {
-    const res = await fetch(resourcePath);
-
-    if (!res.ok) {
-      throw new Error(`Failed to fetch: ${resourcePath} (${res.status})`);
-    }
-
-    return await res.text();
-  },
-  {
-    state,
-    onConfigLoadFailed(payload) {
-      syncStateToRefs();
-      withNotify(configLoadFailed)(payload);
-    },
-    onConfigTypeError(payload) {
-      syncStateToRefs();
-      withNotify(configTypeError)(payload);
-    },
-    onYamlLoadFailed(payload) {
-      syncStateToRefs();
-      withNotify(yamlLoadFailed)(payload);
-    },
-    onDslError(error) {
-      syncStateToRefs();
-      notifyDslError(error);
-    },
-  },
-);
-
-const wrapAsync = <TArgs extends unknown[], TResult>(fn: (...args: TArgs) => Promise<TResult>) => {
+const wrapAsync = <TArgs extends unknown[], TResult>(
+  fn: (...args: TArgs) => Promise<TResult>,
+  syncStateToRefs: () => void,
+) => {
   return async (...args: TArgs): Promise<TResult> => {
     try {
       return await fn(...args);
@@ -100,8 +35,142 @@ const wrapAsync = <TArgs extends unknown[], TResult>(fn: (...args: TArgs) => Pro
   };
 };
 
-export const getYamlConfig = wrapAsync(api.getYamlConfig);
-export const loadAllPosts = wrapAsync(api.loadAllPosts);
-export const loadSingleYaml = wrapAsync(api.loadSingleYaml);
+export interface YamlClientMessageLike {
+  error: (content: string, closable: boolean, duration: number) => unknown;
+}
+
+export interface YamlClientBindings {
+  state: YamlApiState;
+  syncStateToRefs: () => void;
+  getYamlConfig: () => Promise<unknown>;
+  loadAllPosts: <T extends object>(type: string) => Promise<T[]>;
+  loadSingleYaml: <T extends object>(type: string, fileName: string) => Promise<T | null>;
+}
+
+const createNotify =
+  (currentLang: { value: string }, messageApi: YamlClientMessageLike, template: I18nMap) =>
+  (payload: Record<string, string>): void => {
+    let message = template[currentLang.value] || template.en;
+
+    for (const [key, value] of Object.entries(payload)) {
+      message = message.replace(`{${key}}`, value);
+    }
+
+    messageApi.error(message, true, 3000);
+  };
+
+const createDslNotifier = (currentLang: { value: string }, messageApi: YamlClientMessageLike) => {
+  return (error: { code: string; params?: Record<string, string> }): void => {
+    const map = commonI18n[error.code as keyof typeof commonI18n] as I18nMap | undefined;
+    let message = map?.[currentLang.value] || map?.en || error.code;
+
+    for (const [key, value] of Object.entries(error.params ?? {})) {
+      message = message.replace(`{${key}}`, value);
+    }
+
+    messageApi.error(message, true, 3000);
+  };
+};
+
+export const createYamlClientBindings = (
+  readTextResource: (resourcePath: string) => Promise<string>,
+  deps: {
+    stateRefs?: Partial<{
+      yamlLoading: typeof yamlLoading;
+      yamlRetrying: typeof yamlRetrying;
+      faultTimes: typeof faultTimes;
+      changeSpareUrl: typeof changeSpareUrl;
+      serverError: typeof serverError;
+      notFoundError: typeof notFoundError;
+      listPrimaryError: typeof listPrimaryError;
+      listSpareError: typeof listSpareError;
+      yamlLoadingFault: typeof yamlLoadingFault;
+    }>;
+    currentLang?: { value: string };
+    messageApi?: YamlClientMessageLike;
+    state?: YamlApiState;
+    sleep?: (ms: number) => Promise<void>;
+  } = {},
+): YamlClientBindings => {
+  const state = deps.state ?? createYamlApiState();
+  const currentLang = deps.currentLang ?? lang;
+  const messageApi = deps.messageApi ?? $message;
+  const refs = {
+    yamlLoading,
+    yamlRetrying,
+    faultTimes,
+    changeSpareUrl,
+    serverError,
+    notFoundError,
+    listPrimaryError,
+    listSpareError,
+    yamlLoadingFault,
+    ...deps.stateRefs,
+  };
+
+  const syncStateToRefs = (): void => {
+    refs.yamlLoading.value = state.yamlLoading;
+    refs.yamlRetrying.value = state.yamlRetrying;
+    refs.faultTimes.value = state.faultTimes;
+    refs.changeSpareUrl.value = state.changeSpareUrl;
+    refs.serverError.value = state.serverError;
+    refs.notFoundError.value = state.notFoundError;
+    refs.listPrimaryError.value = state.listPrimaryError;
+    refs.listSpareError.value = state.listSpareError;
+    refs.yamlLoadingFault.value = state.yamlLoadingFault;
+  };
+
+  const api = createYamlApi(readTextResource, {
+    state,
+    onConfigLoadFailed(payload) {
+      syncStateToRefs();
+      createNotify(currentLang, messageApi, configLoadFailed)(payload);
+    },
+    onConfigTypeError(payload) {
+      syncStateToRefs();
+      createNotify(currentLang, messageApi, configTypeError)(payload);
+    },
+    onYamlLoadFailed(payload) {
+      syncStateToRefs();
+      createNotify(currentLang, messageApi, yamlLoadFailed)(payload);
+    },
+    onDslError(error) {
+      syncStateToRefs();
+      createDslNotifier(currentLang, messageApi)(error);
+    },
+    onStateChange() {
+      syncStateToRefs();
+    },
+    sleep: deps.sleep,
+  });
+
+  return {
+    state,
+    syncStateToRefs,
+    getYamlConfig: wrapAsync(api.getYamlConfig, syncStateToRefs),
+    loadAllPosts: wrapAsync(
+      api.loadAllPosts,
+      syncStateToRefs,
+    ) as YamlClientBindings["loadAllPosts"],
+    loadSingleYaml: wrapAsync(
+      api.loadSingleYaml,
+      syncStateToRefs,
+    ) as YamlClientBindings["loadSingleYaml"],
+  };
+};
+
+const clientBindings = createYamlClientBindings(async (resourcePath: string): Promise<string> => {
+  const res = await fetch(resourcePath);
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch: ${resourcePath} (${res.status})`);
+  }
+
+  return await res.text();
+});
+
+export const getYamlConfig = clientBindings.getYamlConfig;
+export const loadAllPosts = clientBindings.loadAllPosts;
+export const loadSingleYaml = clientBindings.loadSingleYaml;
 
 export * from "./getYaml.core";

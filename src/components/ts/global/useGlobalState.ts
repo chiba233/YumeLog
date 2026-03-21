@@ -2,7 +2,7 @@ import { computed, ref, shallowRef, watch } from "vue";
 import { lang } from "@/components/ts/global/setupLang.ts";
 import blogI18nData from "@/data/I18N/blogI18n.json";
 import { loadSingleYaml } from "@/components/ts/getYaml";
-import {
+import type {
   Friend,
   ImagePostBlock,
   NekoYamlResponse,
@@ -78,7 +78,7 @@ export const getDescriptionText = (blocks?: PostBlock[], targetLength = 160): st
   for (const block of blocks) {
     if (block.type === "text") {
       const content = block.content;
-      if (typeof content === "string" && content.trim().length > 0) {
+      if (content.trim().length > 0) {
         const strippedBlock = stripRichText(content);
         if (strippedBlock.length > 0) {
           result += (result ? " " : "") + strippedBlock;
@@ -108,7 +108,7 @@ const getProcessedPostTempId = (post: Post): string => {
 };
 
 const getCachedTokensForBlock = (block: PostBlock) => {
-  if (block.type !== "text" || typeof block.content !== "string") {
+  if (block.type !== "text") {
     return [];
   }
 
@@ -116,7 +116,7 @@ const getCachedTokensForBlock = (block: PostBlock) => {
 };
 
 const parseAndCacheBlockTokens = (block: PostBlock) => {
-  if (block.type !== "text" || typeof block.content !== "string") {
+  if (block.type !== "text") {
     return [];
   }
 
@@ -141,7 +141,7 @@ export const processedPosts = computed<ProcessedPost[]>(() => {
     let description = descriptionCache.get(cacheKey);
 
     if (description === undefined) {
-      description = getDescriptionText(blocks, 350);
+      description = getDescriptionText(blocks, 330);
       descriptionCache.set(cacheKey, description);
     }
 

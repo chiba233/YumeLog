@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {
   computed,
+  defineAsyncComponent,
   Directive,
   h,
   nextTick,
@@ -21,8 +22,7 @@ import {
   yamlRetrying,
 } from "@/components/ts/getYaml";
 import { formatDate, formatTime, lang } from "@/components/ts/global/setupLang.ts";
-import Cancel from "@/icons/cancel.svg";
-import { NAlert, NButton, NCard, NIcon, NImage, NModal } from "naive-ui";
+import { NIcon, NImage } from "naive-ui";
 import { useCardGlow } from "@/components/ts/global/animationCalculate.ts";
 import { $message } from "@/components/ts/global/msgUtils.ts";
 import { PushPinSharp } from "@vicons/material";
@@ -36,11 +36,14 @@ import {
   showModal,
 } from "@/components/ts/global/useGlobalState.ts";
 import { getSlug, useRouteModal } from "@/components/ts/global/useRouteModal.ts";
-import RichTextRenderer from "@/components/blog/RichTextRenderer.vue";
 import type { TextToken } from "../ts/dsl/BlogRichText/types";
 import { ImageContent, Post, PostBlock, ProcessedPost } from "../ts/d.ts";
 import { isSSR } from "../ts/global/useHead.ts";
 import LazyBlock from "@/components/blog/LazyBlock.vue";
+
+const RichTextRenderer = defineAsyncComponent(() => import("./RichTextRenderer.vue"));
+const BlogLoadingState = defineAsyncComponent(() => import("./BlogLoadingState.vue"));
+const BlogDetailModal = defineAsyncComponent(() => import("./BlogDetailModal.vue"));
 
 const hydrated = ref(false);
 const visibleIds = ref(new Set<string>());
@@ -311,6 +314,7 @@ const renderDetailContent = (): VNodeChild => {
     }),
   ]);
 };
+const selectedPostTyped = computed(() => selectedPost.value as ProcessedPost | null);
 </script>
 
 <template>
@@ -384,30 +388,18 @@ const renderDetailContent = (): VNodeChild => {
       </div>
     </article>
   </div>
-
-  <div v-if="yamlLoading && processedPosts.length === 0" class="loading-state">
-    <div class="loader">
-      <n-alert v-if="serverError" :title="blogDisplay.listFetchError" class="alert" type="error">
-        {{ blogDisplay.serverFault }}
-      </n-alert>
-      <n-alert
-        v-else-if="notFoundError"
-        :title="blogDisplay.notFoundError"
-        class="alert"
-        type="error"
-      >
-        {{ blogDisplay.notFoundError }}
-      </n-alert>
-      <n-alert v-else-if="yamlRetrying" class="alert" title="Warning" type="warning">
-        {{ blogDisplay.yamlRetrying }} {{ blogDisplay.retry }} {{ faultTimes }}
-      </n-alert>
-      <n-alert v-else-if="listSpareError" class="alert" title="Warning" type="warning">
-        {{ blogDisplay.listSpareError }}
-      </n-alert>
-      <p v-else :lang="lang">{{ blogDisplay.loading }}</p>
-    </div>
-  </div>
-
+  <BlogLoadingState
+    v-if="yamlLoading && processedPosts.length === 0"
+    :blog-display="blogDisplay"
+    :fault-times="faultTimes"
+    :lang="lang"
+    :list-spare-error="listSpareError"
+    :not-found-error="notFoundError"
+    :processed-posts-length="processedPosts.length"
+    :server-error="serverError"
+    :yaml-loading="yamlLoading"
+    :yaml-retrying="yamlRetrying"
+  />
   <article v-if="isSSR && selectedPost" class="sr-only-article">
     <h1 :lang="(selectedPost?.lang as string) || lang">{{ selectedPost.title }}</h1>
     <time :lang="lang" :datetime="selectedPost.time?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')">
@@ -415,40 +407,20 @@ const renderDetailContent = (): VNodeChild => {
     </time>
     <component :is="renderDetailContent()" />
   </article>
-
-  <n-modal
-    v-model:show="showModal"
-    :on-after-leave="handleModalFinishedLeaving"
-    to="#modal-target"
-    @mouseenter="onEnter"
-    @mouseleave="onLeave"
-    @mousemove="onMove"
-  >
-    <n-card
-      v-if="selectedPost"
-      v-a11y
-      :lang="(selectedPost?.lang as string) || lang"
-      class="postModel"
-      size="huge"
-    >
-      <template #header>
-        <h2 :lang="(selectedPost?.lang as string) || lang" class="postCardTitle">
-          {{ selectedPost.title }}
-        </h2>
-      </template>
-      <template #header-extra>
-        <n-button aria-label="Close" circle tertiary @click="closePortal">
-          <template #icon>
-            <n-icon size="20">
-              <Cancel />
-            </n-icon>
-          </template>
-        </n-button>
-      </template>
-
-      <component :is="renderDetailContent()" v-if="isHydrated" />
-    </n-card>
-  </n-modal>
+  <BlogDetailModal
+    v-if="showModal || isSSR"
+    :close-portal="closePortal"
+    :handle-modal-finished-leaving="handleModalFinishedLeaving"
+    :is-hydrated="isHydrated"
+    :on-enter="onEnter"
+    :on-leave="onLeave"
+    :on-move="onMove"
+    :render-detail-content="renderDetailContent"
+    :selected-post="selectedPostTyped"
+    :show="showModal"
+    :v-a11y="vA11y"
+    @update:show="showModal = $event"
+  />
 </template>
 
 <style lang="scss">
@@ -542,7 +514,7 @@ $border-radius: 16px;
     display: flex;
     gap: 0.5rem;
     flex: 1;
-    @media (max-width: 900px) {
+    @media (max-width: 899.98px) {
       flex-direction: column;
       align-items: center;
     }
@@ -583,13 +555,6 @@ $border-radius: 16px;
       }
     }
   }
-}
-
-.postCardTitle {
-  padding: 0;
-  font-size: 1.2rem;
-  margin: 0;
-  font-weight: bold;
 }
 
 .separator-icon {
@@ -664,88 +629,6 @@ $border-radius: 16px;
         text-align: center;
         display: block;
       }
-    }
-  }
-}
-
-.postModel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  max-height: 99dvh !important;
-
-  :deep(.n-card-header) {
-    flex-shrink: 0;
-  }
-
-  max-width: 99%;
-  @media (min-width: 1050px) {
-    max-width: 75em !important;
-  }
-  --mx: -100px;
-  --my: -100px;
-  --opacity: 0;
-  position: relative;
-  transition:
-    transform 0.2s,
-    background-color 0.3s;
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: radial-gradient(
-      400px circle at var(--mx) var(--my),
-      rgba(251, 238, 241, 0.12),
-      transparent 65%
-    );
-    opacity: var(--opacity);
-    transition: opacity 0.4s ease;
-    pointer-events: none;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 2px;
-    -webkit-mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-    mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-    -webkit-mask-clip: content-box, border-box;
-    mask-clip: content-box, border-box;
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    background: radial-gradient(
-      180px circle at var(--mx) var(--my),
-      rgba(251, 238, 241, 0.75),
-      rgba(251, 238, 241, 0.25) 30%,
-      transparent 70%
-    );
-
-    z-index: 2;
-    opacity: var(--opacity);
-    transition: opacity 0.4s ease;
-    pointer-events: none;
-  }
-
-  .postCardMain {
-    flex-direction: column;
-    min-height: 0;
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    font-size: 1.2rem;
-
-    .postCardMeta {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 0.5em;
-      margin-bottom: 0.5em;
-      font-size: 0.95rem;
-      font-weight: 500;
     }
   }
 }
@@ -895,7 +778,7 @@ $border-radius: 16px;
     overflow: hidden;
     flex: 1;
 
-    @media (max-width: 900px) {
+    @media (max-width: 899.98px) {
       flex-direction: column;
       align-items: center;
     }
@@ -953,7 +836,7 @@ $border-radius: 16px;
       align-items: center;
 
       &.expanded-text p {
-        @media (max-width: 900px) {
+        @media (max-width: 899.98px) {
           -webkit-line-clamp: 11;
           line-clamp: 11;
         }
@@ -975,7 +858,7 @@ $border-radius: 16px;
         overflow: hidden;
         letter-spacing: 0.02em;
         box-orient: vertical; //test values
-        @media (max-width: 900px) {
+        @media (max-width: 899.98px) {
           -webkit-line-clamp: 4;
           line-clamp: 4;
         }
@@ -993,58 +876,22 @@ $border-radius: 16px;
   white-space: pre-line;
 }
 
-.loading-state {
+.postCardMain {
+  flex-direction: column;
+  min-height: 0;
   display: flex;
+  width: 100%;
   justify-content: center;
-  align-items: center;
-  min-height: 50vh;
+  font-size: 1.2rem;
 
-  .loader {
+  .postCardMeta {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-
-    .n-alert {
-      --n-border: none !important;
-      --n-color: rgba(251, 238, 241, 0.4) !important;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      --n-title-text-color: rgb(31, 34, 37) !important;
-      --n-content-text-color: rgb(51, 54, 57) !important;
-      --n-padding: 13px !important;
-      --n-icon-color: #d03050 !important;
-      transition: all 0.3s var(--n-bezier);
-
-      &:hover {
-        background-color: rgba(251, 238, 241, 0.6) !important;
-      }
-    }
-
-    .alert {
-      margin-bottom: 0;
-    }
-
-    p {
-      text-align: center;
-      font-size: 3rem;
-      font-weight: 500;
-      color: var(--direct-font-color);
-      text-shadow: var(--direct-font-shadow);
-      opacity: 0.8;
-      animation: loading-pulse 1.5s infinite ease-in-out;
-    }
-  }
-}
-
-@keyframes loading-pulse {
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.9;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 0.5em;
+    font-size: 0.95rem;
+    font-weight: 500;
   }
 }
 </style>

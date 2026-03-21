@@ -13,14 +13,25 @@ import {
 } from "@/components/ts/global/useGlobalState.ts";
 import { lang } from "@/components/ts/global/setupLang.ts";
 import { getSlug } from "@/components/ts/global/useRouteModal.ts";
-import { PostBlock } from "@/components/ts/d.ts";
+import type { PostBlock } from "@/components/ts/d.ts";
 import { personRawData } from "@/components/ts/global/setupJson.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 
-export const isSSR = import.meta.env.SSR;
-const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
+export const isSSR = Boolean(import.meta.env?.SSR);
+const siteOrigin = isSSR
+  ? import.meta.env?.VITE_SSR_SITE_URL
+  : typeof window !== "undefined"
+    ? window.location.origin
+    : "";
 
-export const blogUseHead = () => {
+export interface BlogHeadDeps {
+  origin?: string;
+  ssr?: boolean;
+}
+
+export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: BlogHeadDeps = {}) => {
+  const effectiveOrigin = origin || "";
+
   const titleI18N = commonI18n.blogWelcome as Record<string, string>;
   const baseTitle = computed(() => globalWebTitleMap.value?.blog?.[lang.value] ?? "Blog");
   const getImageBlocks = (blocks?: PostBlock[]) => {
@@ -39,7 +50,7 @@ export const blogUseHead = () => {
     const post = selectedPost.value;
     const blocks = post.blocks ?? [];
     const slug = getSlug(post);
-    const url = `${siteOrigin}/blog/${slug}`;
+    const url = `${effectiveOrigin}/blog/${slug}`;
     const firstImg = getImageBlocks(blocks)?.[0]?.content?.[0]?.src ?? "";
     const desc = getDescriptionText(blocks).slice(0, 160);
     const published = post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
@@ -52,7 +63,7 @@ export const blogUseHead = () => {
       published,
     };
   });
-  useHead({
+  return {
     title: computed(() =>
       postContext.value ? `${postContext.value.post.title} - ${baseTitle.value}` : baseTitle.value,
     ),
@@ -60,12 +71,12 @@ export const blogUseHead = () => {
     link: computed(() => [
       {
         rel: "canonical",
-        href: postContext.value ? postContext.value.url : `${siteOrigin}/blog`,
+        href: postContext.value ? postContext.value.url : `${effectiveOrigin}/blog`,
       },
     ]),
 
     script: computed(() => {
-      if (!isSSR) return [];
+      if (!ssr) return [];
       if (postContext.value) {
         const ctx = postContext.value;
         return [
@@ -105,7 +116,7 @@ export const blogUseHead = () => {
             blogPost: posts.value.map((post) => ({
               "@type": "BlogPosting",
               headline: post.title,
-              url: `${siteOrigin}/blog/${getSlug(post)}`,
+              url: `${effectiveOrigin}/blog/${getSlug(post)}`,
               datePublished: post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
               author: {
                 "@type": "Person",
@@ -144,13 +155,13 @@ export const blogUseHead = () => {
             },
             {
               [p === "twitter" ? "name" : "property"]: `${p}:url`,
-              content: `${siteOrigin}/blog`,
+              content: `${effectiveOrigin}/blog`,
             },
           ]),
 
           {
             property: "og:image",
-            content: `${siteOrigin}/icon/icon.webp`,
+            content: `${effectiveOrigin}/icon/icon.webp`,
           },
 
           {
@@ -203,7 +214,11 @@ export const blogUseHead = () => {
         { property: "og:type", content: "article" },
       ];
     }),
-  });
+  };
+};
+
+export const blogUseHead = () => {
+  useHead(createBlogHeadEntries());
 };
 export const friendsUseHead = () => {
   const getAutoHostname = () => {

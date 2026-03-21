@@ -1,4 +1,7 @@
+// noinspection ES6PreferShortImport
+
 import assert from "node:assert/strict";
+import type { DSLTree } from "../src/components/ts/dsl/extractAtBlocks/parseDSL.ts";
 import { parseDSL } from "../src/components/ts/dsl/extractAtBlocks/parseDSL.ts";
 import { astToPost } from "../src/components/ts/dsl/extractAtBlocks/astToPost.ts";
 import { parseTypedDashObjectList } from "../src/components/ts/dsl/extractAtBlocks/parseDashList.ts";
@@ -17,18 +20,58 @@ const collectErrors = (run: (errors: DSLError[]) => void): DSLError[] => {
   return errors;
 };
 
+const createDeterministicDirtyText = (
+  seed: number,
+  parts: readonly string[],
+  length: number,
+): string => {
+  let state = seed >>> 0;
+  let output = "";
+
+  for (let i = 0; i < length; i++) {
+    state = (state * 1103515245 + 12345) >>> 0;
+    output += parts[state % parts.length];
+  }
+
+  return output;
+};
+
+const withSilencedConsoleError = (run: () => void): void => {
+  const original = console.error;
+  console.error = () => {};
+
+  try {
+    run();
+  } finally {
+    console.error = original;
+  }
+};
+
+const captureConsoleError = (run: () => void): string[] => {
+  const original = console.error;
+  const messages: string[] = [];
+  console.error = (...args: unknown[]) => {
+    messages.push(args.map((arg) => String(arg)).join(" "));
+  };
+
+  try {
+    run();
+  } finally {
+    console.error = original;
+  }
+
+  return messages;
+};
+
 const cases: Array<{ name: string; run: () => void }> = [
   {
     name: "parseDSL 能保留扁平博客块并裁掉块尾空行",
     run: () => {
-      const ast = parseDSL(
-        "@meta\ntime: 2024-01-01\n@end\n@text\nhello\nworld\n\n@end\n",
-        {
-          blockNames: ["meta", "text", "image", "divider"],
-          maxDepth: 1,
-          nestableBlocks: [],
-        },
-      );
+      const ast = parseDSL("@meta\ntime: 2024-01-01\n@end\n@text\nhello\nworld\n\n@end\n", {
+        blockNames: ["meta", "text", "image", "divider"],
+        maxDepth: 1,
+        nestableBlocks: [],
+      });
 
       assert.deepEqual(stripTempIds(ast), [
         {
@@ -317,15 +360,20 @@ const cases: Array<{ name: string; run: () => void }> = [
         ]);
       });
 
-      assert.deepEqual(errors, [{ code: "dslBlockNotClosed", params: { name: "text", line: "1" } }]);
+      assert.deepEqual(errors, [
+        { code: "dslBlockNotClosed", params: { name: "text", line: "1" } },
+      ]);
     },
   },
   {
     name: "parseDashList 能解析引号和多行字面量",
     run: () => {
-      const result = parseTypedDashObjectList<{ temp_id: string; title: string; body?: string; desc?: string }>(
-        "- title: \"Hello\"\n  body: |\n    line1\n      line2\n\n- title: 'World'\n  desc: done",
-      );
+      const result = parseTypedDashObjectList<{
+        temp_id: string;
+        title: string;
+        body?: string;
+        desc?: string;
+      }>("- title: \"Hello\"\n  body: |\n    line1\n      line2\n\n- title: 'World'\n  desc: done");
 
       assert.deepEqual(stripTempIds(result), [
         { title: "Hello", body: "line1\n  line2" },
@@ -391,6 +439,44 @@ const cases: Array<{ name: string; run: () => void }> = [
           { type: "text", content: "world" },
         ],
       });
+    },
+  },
+  {
+    name: "astToPost 的 meta 重复 key 会以后值覆盖并上报告警",
+    run: () => {
+      const ast = parseDSL("@meta\ntitle: first\ntitle: second\n@end", {
+        blockNames: ["meta"],
+        maxDepth: 1,
+        nestableBlocks: [],
+      });
+
+      const warnings = captureConsoleError(() => {
+        assert.deepEqual(stripTempIds(astToPost(ast)), {
+          blocks: [],
+          title: "second",
+        });
+      });
+
+      assert.deepEqual(warnings, ["[DSL Warning] Duplicate key: title"]);
+    },
+  },
+  {
+    name: "astToPost 的保留 meta key 会被忽略并上报告警",
+    run: () => {
+      const ast = parseDSL("@meta\nblocks: hacked\ntitle: ok\n@end", {
+        blockNames: ["meta"],
+        maxDepth: 1,
+        nestableBlocks: [],
+      });
+
+      const warnings = captureConsoleError(() => {
+        assert.deepEqual(stripTempIds(astToPost(ast)), {
+          blocks: [],
+          title: "ok",
+        });
+      });
+
+      assert.deepEqual(warnings, ["[DSL Warning] Reserved key: blocks"]);
     },
   },
   {
@@ -488,9 +574,7 @@ const cases: Array<{ name: string; run: () => void }> = [
         "- title: \"a\\\"b\"\n  desc: 'c\\'d'",
       );
 
-      assert.deepEqual(stripTempIds(result), [
-        { title: "a\"b", desc: "c\\'d" },
-      ]);
+      assert.deepEqual(stripTempIds(result), [{ title: 'a"b', desc: "c\\'d" }]);
     },
   },
   {
@@ -526,18 +610,188 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
+    name: "fromNow 单文件在一个坏 event 后仍能恢复后续正常 event",
+    run: () => {
+      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:fromNow.dsl"];
+      const errors = collectErrors((bucket) => {
+        const ast = parseDSL(
+          "@fromNow\n@event\ntime bad\n@names\n- type: en\n  content: broken\n@end\n@end\n@event\ntime: 20240101\n@names\n- type: en\n  content: good\n@end\n@end\n@end",
+          {
+            ...parser.syntax,
+            onError: (error) => bucket.push(error),
+          },
+        );
+
+        assert.deepEqual(stripTempIds(parser.parse(ast, (error) => bucket.push(error))), {
+          fromNow: [
+            {
+              time: "",
+              photo: "",
+              names: [{ type: "en", content: "broken" }],
+            },
+            {
+              time: "20240101",
+              photo: "",
+              names: [{ type: "en", content: "good" }],
+            },
+          ],
+        });
+      });
+
+      assert.deepEqual(errors, [
+        {
+          code: "dslUnrecognizedLine",
+          params: { raw: "time bad" },
+        },
+      ]);
+    },
+  },
+  {
+    name: "坏 block 后面跟正常文本和正常 inline 时块顺序仍能恢复",
+    run: () => {
+      const ast = parseDSL(
+        "@text\n@image\n- src: /a.webp\n@end\nhello $$bold(ok)$$\n@divider\n@end\nworld\n@end",
+        {
+          blockNames: ["meta", "text", "image", "divider"],
+          maxDepth: 2,
+          nestableBlocks: ["text"],
+        },
+      );
+
+      assert.deepEqual(stripTempIds(astToPost(ast)), {
+        blocks: [
+          { type: "image", content: [{ src: "/a.webp" }] },
+          { type: "text", content: "hello $$bold(ok)$$" },
+          { type: "divider", content: "" },
+          { type: "text", content: "world" },
+        ],
+      });
+    },
+  },
+  {
+    name: "深度限制触发后后续仍能正确解析 sibling 块",
+    run: () => {
+      const errors = collectErrors((bucket) => {
+        const ast = parseDSL(
+          "@fromNow\n@event\n@event\n@end\nafter\n@end\n@event\nok\n@end\n@end",
+          {
+            blockNames: ["fromNow", "event"],
+            maxDepth: 2,
+            nestableBlocks: ["fromNow", "event"],
+            onError: (error) => bucket.push(error),
+          },
+        );
+
+        assert.deepEqual(stripTempIds(ast), [
+          {
+            name: "fromNow",
+            content: "after",
+            children: [
+              {
+                name: "event",
+                content: "@event",
+                children: [],
+                chunks: [{ type: "text", value: "@event" }],
+                depth: 1,
+                lineStart: 2,
+                lineEnd: 4,
+              },
+            ],
+            chunks: [
+              {
+                type: "child",
+                node: {
+                  name: "event",
+                  content: "@event",
+                  children: [],
+                  chunks: [{ type: "text", value: "@event" }],
+                  depth: 1,
+                  lineStart: 2,
+                  lineEnd: 4,
+                },
+              },
+              { type: "text", value: "after" },
+            ],
+            depth: 0,
+            lineStart: 1,
+            lineEnd: 6,
+          },
+          {
+            name: "event",
+            content: "ok",
+            children: [],
+            chunks: [{ type: "text", value: "ok" }],
+            depth: 0,
+            lineStart: 7,
+            lineEnd: 9,
+          },
+        ]);
+      });
+
+      assert.deepEqual(errors, [
+        {
+          code: "dslMaxDepthExceeded",
+          params: { maxDepth: "2", name: "event", line: "3" },
+        },
+        {
+          code: "dslUnexpectedBlockEnd",
+          params: { line: "10" },
+        },
+      ]);
+    },
+  },
+  {
     name: "单文件解释器在根块不匹配时会直接抛错",
     run: () => {
       const parser = SINGLE_RESOURCE_DSL_PARSERS["main:title.dsl"];
+      const parseAsRuntime = parser.parse as (ast: DSLTree) => unknown;
       const wrongAst = parseDSL("@friends\n- type: en\n  content: Hello\n@end", {
         blockNames: ["friends"],
         maxDepth: 1,
         nestableBlocks: [],
       });
 
-      assert.throws(() => parser.parse(wrongAst), {
+      assert.throws(() => parseAsRuntime(wrongAst), {
         message: "Unsupported DSL resource root: expected title, got friends",
       });
+    },
+  },
+  {
+    name: "随机脏输入不会让块级 DSL 解析链路崩溃",
+    run: () => {
+      const parts = [
+        "@text\n",
+        "@meta\n",
+        "@image\n",
+        "@divider\n",
+        "@unknown\n",
+        "@end\n",
+        "\\@text\n",
+        "title: demo\n",
+        "time 20200101\n",
+        "- src: /a.webp\n",
+        "hello $$bold(x)$$\n",
+        "world\n",
+        "\n",
+      ] as const;
+
+      for (let seed = 1; seed <= 80; seed++) {
+        const source = createDeterministicDirtyText(seed, parts, 20);
+
+        withSilencedConsoleError(() => {
+          assert.doesNotThrow(() => {
+            const ast = parseDSL(source, {
+              blockNames: ["meta", "text", "image", "divider"],
+              maxDepth: 2,
+              nestableBlocks: ["text"],
+            });
+
+            assert.ok(Array.isArray(ast));
+            assert.doesNotThrow(() => astToPost(ast));
+            assert.doesNotThrow(() => parseTypedDashObjectList(source));
+          });
+        });
+      }
     },
   },
 ];
@@ -560,5 +814,3 @@ if (failed) {
 } else {
   console.log(`PASS ${cases.length} 个块级 DSL golden case`);
 }
-
-

@@ -9,10 +9,16 @@ const setupLangPath = path.join(srcRoot, "components", "ts", "global", "setupLan
 const msgUtilsPath = path.join(srcRoot, "components", "ts", "global", "msgUtils.ts");
 
 const resolveWithKnownExtensions = (basePath) => {
-  const candidates = [basePath, `${basePath}.ts`, `${basePath}.json`, `${basePath}.js`, path.join(basePath, "index.ts")];
+  const candidates = [
+    basePath,
+    `${basePath}.ts`,
+    `${basePath}.json`,
+    `${basePath}.js`,
+    path.join(basePath, "index.ts"),
+  ];
 
   for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) {
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
       return pathToFileURL(candidate).href;
     }
   }
@@ -32,9 +38,14 @@ registerHooks({
       }
     }
 
-    if ((specifier.startsWith("./") || specifier.startsWith("../")) && context.parentURL?.startsWith("file:")) {
+    if (
+      (specifier.startsWith("./") || specifier.startsWith("../")) &&
+      context.parentURL?.startsWith("file:")
+    ) {
       const parentPath = fileURLToPath(context.parentURL);
-      const resolved = resolveWithKnownExtensions(path.resolve(path.dirname(parentPath), specifier));
+      const resolved = resolveWithKnownExtensions(
+        path.resolve(path.dirname(parentPath), specifier),
+      );
       if (resolved) {
         return {
           shortCircuit: true,
@@ -57,7 +68,8 @@ registerHooks({
       return {
         format: "module",
         shortCircuit: true,
-        source: "export const lang = { value: \"en\" }; export const formatTime = () => \"\"; export const formatDate = () => \"\"; export const langMap = { value: [] };",
+        source:
+          'export const lang = { value: "en" }; export const formatTime = () => ""; export const formatDate = () => ""; export const langMap = { value: [] };',
       };
     }
 

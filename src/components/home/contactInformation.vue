@@ -191,7 +191,6 @@ const maiStorage = useStorage<{ data: Partial<UserDataType>; updatedAt: number }
 
 const { state: data } = useAsyncState<Partial<UserDataType>>(async () => {
   const now = Date.now();
-
   if (
     Object.keys(maiStorage.value.data).length > 0 &&
     now - maiStorage.value.updatedAt < 86400000
@@ -200,6 +199,7 @@ const { state: data } = useAsyncState<Partial<UserDataType>>(async () => {
   }
 
   const url = await getMaiUrl();
+
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`Request failed: ${res.status}`);

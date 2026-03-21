@@ -29,7 +29,7 @@ const shouldRenderContent = computed(() => {
 });
 
 const getBlockTextContent = (block?: PostBlock): string | null => {
-  if (!block || block.type !== "text" || typeof block.content !== "string") {
+  if (!block || block.type !== "text") {
     return null;
   }
 
@@ -133,10 +133,7 @@ const resetState = () => {
 };
 
 const estimatedHeight = computed(() => {
-  const content =
-    props.block?.type === "text" && typeof props.block.content === "string"
-      ? props.block.content
-      : "";
+  const content = props.block?.type === "text" && true ? props.block.content : "";
 
   const len = content.length;
 

@@ -13,7 +13,8 @@
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint . --fix",
     "test:dsl": "node --import ./tests/register-alias.mjs ./tests/run-dsl-tests.ts",
-    "test-build-dist": "npx serve dist -s"
+    "test-build-dist": "npx serve dist -s",
+    "postinstall": "node ./scripts/patch-vite-ssg.mjs"
   },
   "dependencies": {
     "@unhead/vue": "^2.1.12",

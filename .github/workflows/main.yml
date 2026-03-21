@@ -49,6 +49,9 @@ jobs:
       - name: Install deps
         run: pnpm install --no-frozen-lockfile
 
+      - name: Run DSL tests
+        run: pnpm run test:dsl
+
       - name: Build
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
@@ -67,8 +70,3 @@ jobs:
         with:
           name: site
           path: site.zip
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: dist

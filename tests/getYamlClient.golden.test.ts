@@ -2,8 +2,8 @@
 
 import assert from "node:assert/strict";
 import { ref } from "vue";
-import { createYamlClientBindings } from "../src/components/ts/getYaml/getYaml.client.ts";
-import { createYamlApiState } from "../src/components/ts/getYaml/getYaml.core.ts";
+import { createYamlClientBindings } from "../src/shared/lib/yaml/getYaml.client.ts";
+import { createYamlApiState } from "../src/shared/lib/yaml/getYaml.core.ts";
 
 const createStateRefs = () => ({
   yamlLoading: ref(false),
@@ -15,6 +15,10 @@ const createStateRefs = () => ({
   listPrimaryError: ref(false),
   listSpareError: ref(false),
   yamlLoadingFault: ref(false),
+  singleChangeSpareUrl: ref(false),
+  singleServerError: ref(false),
+  singleNotFoundError: ref(false),
+  singleYamlLoadFailed: ref(false),
 });
 
 const createClientHarness = (
@@ -25,7 +29,7 @@ const createClientHarness = (
   } = {},
 ) => {
   const fileMap = new Map(Object.entries(files));
-  const messages: string[] = [];
+  const messages: Array<{ level: "error" | "warning"; content: string }> = [];
   const refs = createStateRefs();
 
   const client = createYamlClientBindings(
@@ -41,7 +45,8 @@ const createClientHarness = (
       stateRefs: refs,
       currentLang: { value: options.currentLang ?? "en" },
       messageApi: {
-        error: (content) => messages.push(content),
+        error: (content) => messages.push({ level: "error", content }),
+        warning: (content) => messages.push({ level: "warning", content }),
       },
       sleep: options.sleep,
     },
@@ -71,6 +76,30 @@ const flushMicrotasks = async (times = 4): Promise<void> => {
   }
 };
 
+const getSingleI18nList = (
+  value: unknown,
+  key: string,
+  expectedCount: number,
+): Array<{ type: string; content?: string; temp_id: string }> => {
+  assert.equal(typeof value, "object");
+  assert.ok(value);
+  const record = value as Record<string, unknown>;
+  assert.ok(Object.prototype.hasOwnProperty.call(record, key));
+  const list = record[key];
+  assert.ok(Array.isArray(list));
+  assert.equal(list.length, expectedCount);
+
+  for (const entry of list) {
+    assert.equal(typeof entry, "object");
+    assert.ok(entry);
+    assert.equal(typeof (entry as { type?: unknown }).type, "string");
+    assert.equal(typeof (entry as { content?: unknown }).content, "string");
+    assert.equal(typeof (entry as { temp_id?: unknown }).temp_id, "string");
+  }
+
+  return list as Array<{ type: string; content?: string; temp_id: string }>;
+};
+
 const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
     name: "配置文件加载失败时会同步状态并提示 configLoadFailed",
@@ -80,7 +109,11 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       await assert.rejects(() => client.getYamlConfig());
 
       assert.deepEqual(messages, [
-        "[Config Load Failed]: Failed to load configuration file. Error: ENOENT /data/config/yamlUrl.json",
+        {
+          level: "error",
+          content:
+            "[Config Load Failed]: Failed to load configuration file. Error: ENOENT /data/config/yamlUrl.json",
+        },
       ]);
       assert.equal(refs.yamlLoading.value, false);
       assert.equal(refs.serverError.value, false);
@@ -97,7 +130,12 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       const result = await client.loadSingleYaml("missing", "title.dsl");
 
       assert.equal(result, null);
-      assert.deepEqual(messages, ["[Config Error]: Type 'missing' not found in YamlUrlConfig."]);
+      assert.deepEqual(messages, [
+        {
+          level: "error",
+          content: "[Config Error]: Type 'missing' not found in YamlUrlConfig.",
+        },
+      ]);
       assert.equal(refs.serverError.value, false);
       assert.equal(refs.notFoundError.value, false);
       assert.equal(refs.changeSpareUrl.value, false);
@@ -130,7 +168,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "单篇缺失时会切备用源并在最终失败后只置 notFoundError",
+    name: "单篇缺失时会走 single 独立状态并提示切备用源与彻底失败",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
         "/data/config/yamlUrl.json": JSON.stringify({
@@ -144,9 +182,125 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       const result = await client.loadSingleYaml("main", "title.dsl");
 
       assert.equal(result, null);
-      assert.deepEqual(messages, []);
-      assert.equal(refs.changeSpareUrl.value, true);
-      assert.equal(refs.notFoundError.value, true);
+      assert.deepEqual(messages, [
+        {
+          level: "warning",
+          content: "Primary resource failed, switching to spare source: main/title.dsl",
+        },
+        {
+          level: "error",
+          content: "Single resource load failed completely: main/title.dsl",
+        },
+      ]);
+      assert.equal(refs.changeSpareUrl.value, false);
+      assert.equal(refs.notFoundError.value, false);
+      assert.equal(refs.serverError.value, false);
+      assert.equal(refs.singleChangeSpareUrl.value, true);
+      assert.equal(refs.singleNotFoundError.value, true);
+      assert.equal(refs.singleServerError.value, false);
+      assert.equal(refs.singleYamlLoadFailed.value, true);
+    },
+  },
+  {
+    name: "单篇主源失败但备用源成功时只提示切备用源",
+    run: async () => {
+      const { client, refs, messages } = createClientHarness({
+        "/data/config/yamlUrl.json": JSON.stringify({
+          main: {
+            url: "/main",
+            spareUrl: "/spare-main",
+          },
+        }),
+        "/spare-main/title.dsl": '@title\n- type: "en"\n  content: "fallback ok"\n@end',
+      });
+
+      const result = await client.loadSingleYaml("main", "title.dsl");
+
+      getSingleI18nList(result, "title", 1);
+      assert.deepEqual(messages, [
+        {
+          level: "warning",
+          content: "Primary resource failed, switching to spare source: main/title.dsl",
+        },
+      ]);
+      assert.equal(refs.singleChangeSpareUrl.value, true);
+      assert.equal(refs.singleYamlLoadFailed.value, false);
+      assert.equal(refs.singleNotFoundError.value, false);
+      assert.equal(refs.singleServerError.value, false);
+      assert.equal(refs.changeSpareUrl.value, false);
+    },
+  },
+  {
+    name: "singleYamlFallback 会按当前语言输出 warning 文案并替换路径参数",
+    run: async () => {
+      const { client, messages, refs } = createClientHarness(
+        {
+          "/data/config/yamlUrl.json": JSON.stringify({
+            main: {
+              url: "/main",
+              spareUrl: "/spare-main",
+            },
+          }),
+          "/spare-main/title.dsl": '@title\n- type: "zh"\n  content: "ok"\n@end',
+        },
+        {
+          currentLang: "zh",
+        },
+      );
+
+      await client.loadSingleYaml("main", "title.dsl");
+
+      assert.deepEqual(messages, [
+        {
+          level: "warning",
+          content: "主资源加载失败，正在切换到备用源: main/title.dsl",
+        },
+      ]);
+      assert.equal(refs.singleChangeSpareUrl.value, true);
+      assert.equal(refs.singleYamlLoadFailed.value, false);
+      assert.equal(refs.singleNotFoundError.value, false);
+      assert.equal(refs.singleServerError.value, false);
+      assert.equal(refs.changeSpareUrl.value, false);
+      assert.equal(refs.notFoundError.value, false);
+      assert.equal(refs.serverError.value, false);
+    },
+  },
+  {
+    name: "singleYamlReadFailed 会按当前语言输出 error 文案并替换路径参数",
+    run: async () => {
+      const { client, messages, refs } = createClientHarness(
+        {
+          "/data/config/yamlUrl.json": JSON.stringify({
+            main: {
+              url: "/main",
+              spareUrl: "/spare-main",
+            },
+          }),
+        },
+        {
+          currentLang: "zh",
+        },
+      );
+
+      const result = await client.loadSingleYaml("main", "friends.dsl");
+
+      assert.equal(result, null);
+      assert.deepEqual(messages, [
+        {
+          level: "warning",
+          content: "主资源加载失败，正在切换到备用源: main/friends.dsl",
+        },
+        {
+          level: "error",
+          content: "单文件资源加载彻底失败: main/friends.dsl",
+        },
+      ]);
+      assert.equal(refs.singleChangeSpareUrl.value, true);
+      assert.equal(refs.singleYamlLoadFailed.value, true);
+      assert.equal(refs.singleNotFoundError.value, true);
+      assert.equal(refs.singleServerError.value, false);
+      assert.equal(refs.changeSpareUrl.value, false);
+      assert.equal(refs.notFoundError.value, false);
       assert.equal(refs.serverError.value, false);
     },
   },
@@ -172,7 +326,12 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         posts.map((post) => post.title),
         ["Bad"],
       );
-      assert.deepEqual(messages, ['[DSL Warning] Unrecognized line, skipped: "oops"']);
+      assert.deepEqual(messages, [
+        {
+          level: "error",
+          content: '[DSL Warning] Unrecognized line, skipped: "oops"',
+        },
+      ]);
       assert.equal(refs.yamlLoadingFault.value, true);
       assert.equal(refs.serverError.value, false);
       assert.equal(refs.notFoundError.value, false);
@@ -194,10 +353,60 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
 
       assert.equal(result, null);
       assert.deepEqual(messages, [
-        "YAML load failed: Error: Unsupported DSL resource: main:unknown.dsl",
+        {
+          level: "error",
+          content: "YAML load failed: Error: Unsupported DSL resource: main:unknown.dsl",
+        },
       ]);
       assert.equal(refs.notFoundError.value, false);
       assert.equal(refs.serverError.value, false);
+      assert.equal(refs.singleYamlLoadFailed.value, true);
+    },
+  },
+  {
+    name: "单篇网络错误不会污染列表状态，并会置上 singleServerError",
+    run: async () => {
+      const refs = createStateRefs();
+      const messages: Array<{ level: "error" | "warning"; content: string }> = [];
+      const client = createYamlClientBindings(
+        async (resourcePath) => {
+          if (resourcePath === "/data/config/yamlUrl.json") {
+            return JSON.stringify({
+              main: {
+                url: "/main",
+              },
+            });
+          }
+          if (resourcePath === "/main/friends.dsl") {
+            throw new Error("network fail");
+          }
+          throw new Error(`ENOENT ${resourcePath}`);
+        },
+        {
+          state: createYamlApiState(),
+          stateRefs: refs,
+          currentLang: { value: "en" },
+          messageApi: {
+            error: (content) => messages.push({ level: "error", content }),
+            warning: (content) => messages.push({ level: "warning", content }),
+          },
+        },
+      );
+
+      const result = await client.loadSingleYaml("main", "friends.dsl");
+
+      assert.equal(result, null);
+      assert.deepEqual(messages, [
+        {
+          level: "error",
+          content: "Single resource load failed completely: main/friends.dsl",
+        },
+      ]);
+      assert.equal(refs.singleServerError.value, true);
+      assert.equal(refs.singleNotFoundError.value, false);
+      assert.equal(refs.singleYamlLoadFailed.value, true);
+      assert.equal(refs.serverError.value, false);
+      assert.equal(refs.notFoundError.value, false);
     },
   },
   {
@@ -236,7 +445,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
           state: createYamlApiState(),
           stateRefs: refs,
           currentLang: { value: "en" },
-          messageApi: { error() {} },
+          messageApi: { error() {}, warning() {} },
         },
       );
 
@@ -299,7 +508,8 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
           stateRefs: refs,
           currentLang: { value: "en" },
           messageApi: {
-            error: (content) => messages.push(content),
+            error: (content) => messages.push({ level: "error", content }),
+            warning: (content) => messages.push({ level: "warning", content }),
           },
           sleep: async () => sleepDeferred.promise,
         },

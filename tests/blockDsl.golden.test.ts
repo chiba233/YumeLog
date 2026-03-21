@@ -1,12 +1,12 @@
 // noinspection ES6PreferShortImport
 
 import assert from "node:assert/strict";
-import type { DSLTree } from "../src/components/ts/dsl/extractAtBlocks/parseDSL.ts";
-import { parseDSL } from "../src/components/ts/dsl/extractAtBlocks/parseDSL.ts";
-import { astToPost } from "../src/components/ts/dsl/extractAtBlocks/astToPost.ts";
-import { parseTypedDashObjectList } from "../src/components/ts/dsl/extractAtBlocks/parseDashList.ts";
-import { SINGLE_RESOURCE_DSL_PARSERS } from "../src/components/ts/getYaml/singleResourceDSL.ts";
-import type { DSLError } from "../src/components/ts/dsl/extractAtBlocks/dslError.ts";
+import type { DSLTree } from "../src/shared/lib/dsl/extractAtBlocks/parseDSL.ts";
+import { parseDSL } from "../src/shared/lib/dsl/extractAtBlocks/parseDSL.ts";
+import { astToPost } from "../src/shared/lib/dsl/extractAtBlocks/astToPost.ts";
+import { parseTypedDashObjectList } from "../src/shared/lib/dsl/extractAtBlocks/parseDashList.ts";
+import { SINGLE_RESOURCE_DSL_PARSERS } from "../src/shared/lib/yaml/singleResourceDSL.ts";
+import type { DSLError } from "../src/shared/lib/dsl/extractAtBlocks/dslError.ts";
 
 const stripTempIds = <T>(value: T): T => {
   return JSON.parse(

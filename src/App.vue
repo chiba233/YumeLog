@@ -3,16 +3,16 @@ import { RouterView, useRoute, useRouter } from "vue-router";
 import { computed, onMounted, watch } from "vue";
 import { NButton, NIcon, NMessageProvider } from "naive-ui";
 import { Document28Regular, Home12Regular } from "@vicons/fluent";
-import MessageProvider from "@/components/MessageProvider.vue";
-import TopBar from "@/components/topBar.vue";
-import { lang } from "@/components/ts/global/setupLang.ts";
-import { themeColor } from "@/components/ts/global/useTheme.ts";
+import MessageProvider from "@/shared/components/MessageProvider.vue";
+import TopBar from "@/shared/components/topBar.vue";
+import { lang } from "@/shared/lib/app/setupLang.ts";
+import { themeColor } from "@/shared/lib/app/useTheme.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
-import { personRawData, socialRawData } from "@/components/ts/global/setupJson.ts";
-import ClientOnly from "@/components/ClientOnly.vue";
-import { useCardGlow } from "@/components/ts/global/animationCalculate.ts";
-import { changeSpareUrl, listPrimaryError } from "@/components/ts/getYaml";
-import { $message } from "./components/ts/global/msgUtils.ts";
+import { personRawData, socialRawData } from "@/shared/lib/app/setupJson.ts";
+import ClientOnly from "@/shared/components/ClientOnly.vue";
+import { useCardGlow } from "@/shared/lib/app/animationCalculate.ts";
+import { changeSpareUrl, listPrimaryError } from "@/shared/lib/yaml";
+import { $message } from "@/shared/lib/app/msgUtils.ts";
 import {
   blogDisplay,
   currentPostTitle,
@@ -21,10 +21,10 @@ import {
   showLineModel,
   showMaiModal,
   showWechatModel,
-} from "@/components/ts/global/useGlobalState.ts";
+} from "@/shared/lib/app/useGlobalState.ts";
 import { useHead } from "@unhead/vue";
 import webTitle from "@/data/I18N/webTitle.json";
-import { PersonConfig, SocialConfig } from "@/components/ts/d.ts";
+import { PersonConfig, SocialConfig } from "@/shared/types/social.ts";
 
 interface TitleEntry {
   [key: string]: string;

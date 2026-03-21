@@ -8,5 +8,7 @@ console.log("=== Yaml Client ===");
 await import("./getYamlClient.golden.test.ts");
 console.log("=== App Modules ===");
 await import("./appModules.golden.test.ts");
+console.log("=== Lazy Rendering ===");
+await import("./lazyRendering.golden.test.ts");
 console.log("=== Head + I18n ===");
 await import("./headAndI18n.golden.test.ts");

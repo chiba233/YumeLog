@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { parseRichText, stripRichText } from "../src/components/ts/dsl/BlogRichText/blogFormat.ts";
-import type { TextToken } from "../src/components/ts/dsl/BlogRichText/types.ts";
+import { parseRichText, stripRichText } from "../src/shared/lib/dsl/BlogRichText/blogFormat.ts";
+import type { TextToken } from "../src/shared/lib/dsl/BlogRichText/types.ts";
 
 const normalizeTokens = (tokens: TextToken[]): unknown[] => {
   return tokens.map((token) => {

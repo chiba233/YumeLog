@@ -1,16 +1,16 @@
-// noinspection ES6PreferShortImport
+// noinspection ES6PreferShortImport,JSUnusedGlobalSymbols
 
 import type { PluginOption } from "vite";
 import { CSSOptions, defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
 import svgLoader from "vite-svg-loader";
 import { fileURLToPath, URL } from "node:url";
-import { loadAllPosts } from "./src/components/ts/getYaml/getYaml.server";
+import { loadAllPosts } from "./src/shared/lib/yaml/getYaml.server";
 import * as sass from "sass";
 import fs from "node:fs";
 import Components from "unplugin-vue-components/vite";
 import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
-import { Post } from "./src/components/ts/d";
+import { Post } from "./src/shared/types/blog";
 
 let cachedPosts: Post[] | null = null;
 
@@ -52,11 +52,11 @@ export default defineConfig(({ mode, isSsrBuild }) => {
     resolve: {
       alias: [
         {
-          find: "@/components/ts/getYaml",
+          find: "@/shared/lib/yaml",
           replacement: resolveFromRoot(
             isSsrBuild === true
-              ? "./src/components/ts/getYaml/getYaml.server.ts"
-              : "./src/components/ts/getYaml/getYaml.client.ts",
+              ? "./src/shared/lib/yaml/getYaml.server.ts"
+              : "./src/shared/lib/yaml/getYaml.client.ts",
           ),
         },
         {

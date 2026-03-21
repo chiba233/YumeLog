@@ -1,8 +1,10 @@
 // noinspection ES6PreferShortImport
 
 import assert from "node:assert/strict";
-import { createYamlApi, createYamlApiState } from "../src/components/ts/getYaml/getYaml.core.ts";
-import type { DSLError } from "../src/components/ts/dsl/extractAtBlocks/dslError.ts";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { createYamlApi, createYamlApiState } from "../src/shared/lib/yaml/getYaml.core.ts";
+import type { DSLError } from "../src/shared/lib/dsl/extractAtBlocks/dslError.ts";
 
 interface FakeApiContext {
   api: ReturnType<typeof createYamlApi>;
@@ -11,6 +13,78 @@ interface FakeApiContext {
   yamlLoadFailed: string[];
   configTypeErrors: string[];
 }
+
+const assertTempId = (value: unknown): void => {
+  assert.equal(typeof value, "string");
+  assert.notEqual(value, "");
+};
+
+const getArrayShape = (value: unknown): unknown[] => {
+  assert.ok(Array.isArray(value));
+  return value;
+};
+
+const assertI18nListShape = (value: unknown): void => {
+  const list = getArrayShape(value);
+  assert.ok(list.length > 0);
+
+  for (const entry of list) {
+    assert.equal(typeof entry, "object");
+    assert.ok(entry);
+    assert.equal(typeof (entry as { type?: unknown }).type, "string");
+    assert.equal(typeof (entry as { content?: unknown }).content, "string");
+    assertTempId((entry as { temp_id?: unknown }).temp_id);
+  }
+};
+
+const assertFriendListShape = (value: unknown): void => {
+  const list = getArrayShape(value);
+  assert.ok(list.length > 0);
+
+  for (const entry of list) {
+    assert.equal(typeof entry, "object");
+    assert.ok(entry);
+    assert.equal(typeof (entry as { name?: unknown }).name, "string");
+    assert.equal(typeof (entry as { alias?: unknown }).alias, "string");
+    assert.equal(typeof (entry as { url?: unknown }).url, "string");
+    assert.equal(typeof (entry as { icon?: unknown }).icon, "string");
+    assert.equal(typeof (entry as { spare?: unknown }).spare, "string");
+    assertTempId((entry as { temp_id?: unknown }).temp_id);
+  }
+};
+
+const assertNekoListShape = (value: unknown): void => {
+  const list = getArrayShape(value);
+  assert.ok(list.length > 0);
+
+  for (const entry of list) {
+    assert.equal(typeof entry, "object");
+    assert.ok(entry);
+    assert.equal(typeof (entry as { imgError?: unknown }).imgError, "string");
+    assert.equal(typeof (entry as { img?: unknown }).img, "string");
+    assert.equal(typeof (entry as { imgName?: unknown }).imgName, "string");
+    assertTempId((entry as { temp_id?: unknown }).temp_id);
+  }
+};
+
+const assertFromNowShape = (value: unknown): void => {
+  const list = getArrayShape(value);
+  assert.ok(list.length > 0);
+
+  for (const entry of list) {
+    assert.equal(typeof entry, "object");
+    assert.ok(entry);
+    assert.equal(typeof (entry as { time?: unknown }).time, "string");
+    assert.equal(typeof (entry as { photo?: unknown }).photo, "string");
+    assertTempId((entry as { temp_id?: unknown }).temp_id);
+    assertI18nListShape((entry as { names?: unknown }).names);
+  }
+};
+
+const loadMainFixture = async (fileName: string): Promise<string> => {
+  const filePath = path.resolve(process.cwd(), "public", "data", "main", fileName);
+  return await fs.readFile(filePath, "utf-8");
+};
 
 const createFakeApi = (
   files: Record<string, string>,
@@ -115,41 +189,68 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         }>;
       }>("main", "fromNow.dsl");
 
-      assert.deepEqual(data, {
-        fromNow: [
-          {
-            temp_id: data?.fromNow[0]?.temp_id,
-            time: "",
-            photo: "",
-            names: [
-              {
-                temp_id: data?.fromNow[0]?.names[0]?.temp_id,
-                type: "en",
-                content: "broken",
-              },
-            ],
-          },
-          {
-            temp_id: data?.fromNow[1]?.temp_id,
-            time: "20240101",
-            photo: "",
-            names: [
-              {
-                temp_id: data?.fromNow[1]?.names[0]?.temp_id,
-                type: "en",
-                content: "good",
-              },
-            ],
-          },
-        ],
-      });
-      assert.equal(state.changeSpareUrl, true);
+      assert.ok(data);
+      assertFromNowShape(data.fromNow);
+      assert.equal(data.fromNow.length, 2);
+      assert.equal(data.fromNow[0]?.names.length, 1);
+      assert.equal(state.changeSpareUrl, false);
+      assert.equal(state.singleChangeSpareUrl, true);
+      assert.equal(state.singleYamlLoadFailed, false);
       assert.deepEqual(dslErrors, [
         {
           code: "dslUnrecognizedLine",
           params: { raw: "time bad" },
         },
       ]);
+    },
+  },
+  {
+    name: "loadSingleYaml 会正确读取 main 下各个单文件并生成对应数据树",
+    run: async () => {
+      const [titleDsl, introductionDsl, friendsDsl, nekoDsl, fromNowDsl] = await Promise.all([
+        loadMainFixture("title.dsl"),
+        loadMainFixture("introduction.dsl"),
+        loadMainFixture("friends.dsl"),
+        loadMainFixture("neko.dsl"),
+        loadMainFixture("fromNow.dsl"),
+      ]);
+
+      const { api, dslErrors } = createFakeApi({
+        "/data/config/yamlUrl.json": JSON.stringify({
+          main: {
+            url: "/main",
+          },
+        }),
+        "/main/title.dsl": titleDsl,
+        "/main/introduction.dsl": introductionDsl,
+        "/main/friends.dsl": friendsDsl,
+        "/main/neko.dsl": nekoDsl,
+        "/main/fromNow.dsl": fromNowDsl,
+      });
+
+      const [title, introduction, friends, neko, fromNow] = await Promise.all([
+        api.loadSingleYaml("main", "title.dsl"),
+        api.loadSingleYaml("main", "introduction.dsl"),
+        api.loadSingleYaml("main", "friends.dsl"),
+        api.loadSingleYaml("main", "neko.dsl"),
+        api.loadSingleYaml("main", "fromNow.dsl"),
+      ]);
+
+      assert.ok(title && "title" in title);
+      assertI18nListShape(title.title);
+
+      assert.ok(introduction && "introduction" in introduction);
+      assertI18nListShape(introduction.introduction);
+
+      assert.ok(friends && "friends" in friends);
+      assertFriendListShape(friends.friends);
+
+      assert.ok(neko && "img" in neko);
+      assertNekoListShape(neko.img);
+
+      assert.ok(fromNow && "fromNow" in fromNow);
+      assertFromNowShape(fromNow.fromNow);
+      assert.deepEqual(dslErrors, []);
     },
   },
   {

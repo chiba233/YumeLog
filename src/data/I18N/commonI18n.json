@@ -111,6 +111,20 @@
     "th": "การโหลด YAML ล้มเหลว: {err}",
     "other": "YAML load failed: {err}"
   },
+  "singleYamlFallback": {
+    "zh": "主资源加载失败，正在切换到备用源: {type}/{fileName}",
+    "en": "Primary resource failed, switching to spare source: {type}/{fileName}",
+    "ja": "メインリソースの読み込みに失敗したため、予備ソースに切り替えます: {type}/{fileName}",
+    "th": "โหลดทรัพยากรหลักไม่สำเร็จ กำลังสลับไปยังแหล่งสำรอง: {type}/{fileName}",
+    "other": "Primary resource failed, switching to spare source: {type}/{fileName}"
+  },
+  "singleYamlReadFailed": {
+    "zh": "单文件资源加载彻底失败: {type}/{fileName}",
+    "en": "Single resource load failed completely: {type}/{fileName}",
+    "ja": "単一リソースの読み込みに完全に失敗しました: {type}/{fileName}",
+    "th": "การโหลดทรัพยากรเดี่ยวล้มเหลวโดยสมบูรณ์: {type}/{fileName}",
+    "other": "Single resource load failed completely: {type}/{fileName}"
+  },
   "socialLinkNotFound": {
     "zh": "找不到 ID 为 {id} 的社交链接！",
     "en": "Cannot find social link with ID {id}!",

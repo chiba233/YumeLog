@@ -1,15 +1,15 @@
 // noinspection ES6PreferShortImport
 
 import assert from "node:assert/strict";
-import { createContentStore } from "../src/components/ts/global/contentStore.ts";
+import { createContentStore } from "../src/shared/lib/app/contentStore.ts";
 import {
   formatDateByLang,
   formatTimeByLang,
   resolveLocale,
   resolvePreferredLang,
-} from "../src/components/ts/global/langCore.ts";
-import { createAppRouter, routes } from "../src/router/index.ts";
-import type { SelectOption } from "../src/components/ts/d.ts";
+} from "../src/shared/lib/app/langCore.ts";
+import { createAppRouter, routes } from "../src/app/router/index.ts";
+import type { SelectOption } from "../src/shared/types/common.ts";
 
 const langOptions = (values: string[]): SelectOption[] =>
   values.map((value) => ({ label: value, value }));

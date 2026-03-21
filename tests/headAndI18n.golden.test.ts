@@ -1,16 +1,19 @@
+// noinspection ES6PreferShortImport
+
 import assert from "node:assert/strict";
 import { ref } from "vue";
-import { createYamlTextState } from "../src/components/ts/global/useYamlI18n.ts";
-import { createBlogHeadEntries } from "../src/components/ts/global/useHead.ts";
-import { lang } from "../src/components/ts/global/setupLang.ts";
+import { createYamlTextState } from "../src/shared/lib/app/useYamlI18n.ts";
+import { createBlogHeadEntries } from "../src/shared/lib/app/useHead.ts";
+import { lang } from "../src/shared/lib/app/setupLang.ts";
 import {
   globalWebTitleMap,
   posts,
   selectedPost,
   showModal,
-} from "../src/components/ts/global/useGlobalState.ts";
-import { personRawData } from "../src/components/ts/global/setupJson.ts";
-import type { Post } from "../src/components/ts/d.ts";
+} from "../src/shared/lib/app/useGlobalState.ts";
+import { personRawData } from "../src/shared/lib/app/setupJson.ts";
+import type { Post } from "../src/shared/types/blog.ts";
+import type { CommonI18nBlock } from "../src/shared/types/common.ts";
 
 const captureConsoleError = async (run: () => Promise<void> | void): Promise<string[]> => {
   const original = console.error;
@@ -51,12 +54,17 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         registerServerPrefetch: false,
         currentLang,
         message: { error: (msg) => messages.push(msg) },
-        getSingle: async () => ({
-          title: [
-            { temp_id: "1", type: "en", content: "Hello" },
-            { temp_id: "2", type: "zh", content: "你好" },
-          ],
-        }),
+        getSingle: async <T extends object>(
+          _type: string,
+          _fileName: string,
+          _force?: boolean,
+        ): Promise<T | null> =>
+          ({
+            title: [
+              { temp_id: "1", type: "en", content: "Hello" },
+              { temp_id: "2", type: "zh", content: "你好" },
+            ] satisfies CommonI18nBlock[],
+          }) as unknown as T,
       });
 
       await state.loadData();
@@ -79,7 +87,11 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         registerServerPrefetch: false,
         currentLang: ref("en"),
         message: { error: (msg) => messages.push(msg) },
-        getSingle: async () => {
+        getSingle: async <T extends object>(
+          _type: string,
+          _fileName: string,
+          _force?: boolean,
+        ): Promise<T | null> => {
           throw new Error("boom");
         },
       });

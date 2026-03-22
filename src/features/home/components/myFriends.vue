@@ -24,12 +24,12 @@
 
         <div class="friendsContent">
           <n-avatar
-            :fallback-src="friend.spare"
+            :fallback-src="sanitizeAssetUrl(friend.spare)"
             :img-props="{
               alt: lang === 'zh' ? friend.name : friend.alias,
             }"
             :size="100"
-            :src="friend.icon || friend.spare"
+            :src="sanitizeAssetUrl(friend.icon) || sanitizeAssetUrl(friend.spare)"
             bordered
             lazy
             round
@@ -54,20 +54,26 @@ import commonI18n from "@/data/I18N/commonI18n.json";
 import { FriendsYamlResponse } from "@/shared/types/yaml.ts";
 import { friends, friendsTitle } from "@/shared/lib/app/useGlobalState.ts";
 import { friendsUseHead } from "@/shared/lib/app/useHead.ts";
+import { MAIN_CONTENT_RESOURCES } from "@/shared/lib/app/mainContentResources.ts";
+import { sanitizeAssetUrl } from "@/shared/lib/app/siteOrigin.ts";
 
 type I18nMap = Record<string, string>;
 
 const { onMove, onLeave, onEnter } = useCardGlow();
 const { getSingle } = useContentStore();
+const friendsResource = MAIN_CONTENT_RESOURCES.friends;
 const loadFriendsData = async () => {
   try {
-    const rawData = await getSingle<FriendsYamlResponse>("main", "friends.dsl");
+    const rawData = await getSingle<FriendsYamlResponse>(friendsResource.type, friendsResource.fileName);
     if (rawData && rawData.friends) {
       friends.value = rawData.friends;
     }
   } catch {
     const yamlEntry = commonI18n.yamlLoadFailed as I18nMap;
-    const yamlMsg = (yamlEntry[lang.value] || yamlEntry.en).replace("{err}", "friends.dsl");
+    const yamlMsg = (yamlEntry[lang.value] || yamlEntry.en).replace(
+      "{err}",
+      friendsResource.fileName,
+    );
     $message.error(yamlMsg, true, 3000);
   }
 };

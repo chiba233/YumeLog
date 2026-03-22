@@ -7,6 +7,7 @@ import { astToPost } from "../src/shared/lib/dsl/extractAtBlocks/astToPost.ts";
 import { parseTypedDashObjectList } from "../src/shared/lib/dsl/extractAtBlocks/parseDashList.ts";
 import { SINGLE_RESOURCE_DSL_PARSERS } from "../src/shared/lib/yaml/singleResourceDSL.ts";
 import type { DSLError } from "../src/shared/lib/dsl/extractAtBlocks/dslError.ts";
+import { runGoldenCases } from "./testHarness";
 
 const stripTempIds = <T>(value: T): T => {
   return JSON.parse(
@@ -796,21 +797,4 @@ const cases: Array<{ name: string; run: () => void }> = [
   },
 ];
 
-let failed = false;
-
-for (const testCase of cases) {
-  try {
-    testCase.run();
-    console.log(`PASS ${testCase.name}`);
-  } catch (error) {
-    failed = true;
-    console.error(`FAIL ${testCase.name}`);
-    console.error(error);
-  }
-}
-
-if (failed) {
-  process.exitCode = 1;
-} else {
-  console.log(`PASS ${cases.length} 个块级 DSL golden case`);
-}
+await runGoldenCases("Block DSL", "块级 DSL golden case", cases);

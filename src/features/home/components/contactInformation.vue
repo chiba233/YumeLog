@@ -23,8 +23,8 @@
             <figure>
               <n-image
                 :alt="item.imgName"
-                :fallback-src="item.imgError"
-                :src="item.img"
+                :fallback-src="sanitizeAssetUrl(item.imgError)"
+                :src="sanitizeAssetUrl(item.img)"
                 lazy
                 width="160"
               ></n-image>
@@ -153,6 +153,7 @@ import { PlatformConfig, PlatformId } from "@/shared/types/social.ts";
 import { UserDataType } from "@/shared/types/external.ts";
 import { headLinks } from "@/shared/lib/app/useHead.ts";
 import { useHead } from "@unhead/vue";
+import { sanitizeAssetUrl } from "@/shared/lib/app/siteOrigin.ts";
 
 const { onMove, onLeave, onEnter } = useCardGlow();
 const syncContactWidth = () => {

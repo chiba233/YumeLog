@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import { ref } from "vue";
 import { createYamlClientBindings } from "../src/shared/lib/yaml/getYaml.client.ts";
 import { createYamlApiState } from "../src/shared/lib/yaml/getYaml.core.ts";
+import { MAIN_CONTENT_RESOURCES } from "../src/shared/lib/app/mainContentResources.ts";
+import { runGoldenCases } from "./testHarness";
 
 const createStateRefs = () => ({
   yamlLoading: ref(false),
@@ -100,6 +102,9 @@ const getSingleI18nList = (
   return list as Array<{ type: string; content?: string; temp_id: string }>;
 };
 
+const titleResource = MAIN_CONTENT_RESOURCES.title;
+const friendsResource = MAIN_CONTENT_RESOURCES.friends;
+
 const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
     name: "配置文件加载失败时会同步状态并提示 configLoadFailed",
@@ -127,7 +132,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         "/data/config/yamlUrl.json": JSON.stringify({}),
       });
 
-      const result = await client.loadSingleYaml("missing", "title.dsl");
+      const result = await client.loadSingleYaml("missing", titleResource.fileName);
 
       assert.equal(result, null);
       assert.deepEqual(messages, [
@@ -179,17 +184,17 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         }),
       });
 
-      const result = await client.loadSingleYaml("main", "title.dsl");
+      const result = await client.loadSingleYaml(titleResource.type, titleResource.fileName);
 
       assert.equal(result, null);
       assert.deepEqual(messages, [
         {
           level: "warning",
-          content: "Primary resource failed, switching to spare source: main/title.dsl",
+          content: `Primary resource failed, switching to spare source: ${titleResource.type}/${titleResource.fileName}`,
         },
         {
           level: "error",
-          content: "Single resource load failed completely: main/title.dsl",
+          content: `Single resource load failed completely: ${titleResource.type}/${titleResource.fileName}`,
         },
       ]);
       assert.equal(refs.changeSpareUrl.value, false);
@@ -211,16 +216,16 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
             spareUrl: "/spare-main",
           },
         }),
-        "/spare-main/title.dsl": '@title\n- type: "en"\n  content: "fallback ok"\n@end',
+        [`/spare-main/${titleResource.fileName}`]: "@title\n- type: \"en\"\n  content: \"fallback ok\"\n@end",
       });
 
-      const result = await client.loadSingleYaml("main", "title.dsl");
+      const result = await client.loadSingleYaml(titleResource.type, titleResource.fileName);
 
       getSingleI18nList(result, "title", 1);
       assert.deepEqual(messages, [
         {
           level: "warning",
-          content: "Primary resource failed, switching to spare source: main/title.dsl",
+          content: `Primary resource failed, switching to spare source: ${titleResource.type}/${titleResource.fileName}`,
         },
       ]);
       assert.equal(refs.singleChangeSpareUrl.value, true);
@@ -241,19 +246,19 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
               spareUrl: "/spare-main",
             },
           }),
-          "/spare-main/title.dsl": '@title\n- type: "zh"\n  content: "ok"\n@end',
+          [`/spare-main/${titleResource.fileName}`]: "@title\n- type: \"zh\"\n  content: \"ok\"\n@end",
         },
         {
           currentLang: "zh",
         },
       );
 
-      await client.loadSingleYaml("main", "title.dsl");
+      await client.loadSingleYaml(titleResource.type, titleResource.fileName);
 
       assert.deepEqual(messages, [
         {
           level: "warning",
-          content: "主资源加载失败，正在切换到备用源: main/title.dsl",
+          content: `主资源加载失败，正在切换到备用源: ${titleResource.type}/${titleResource.fileName}`,
         },
       ]);
       assert.equal(refs.singleChangeSpareUrl.value, true);
@@ -282,17 +287,17 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         },
       );
 
-      const result = await client.loadSingleYaml("main", "friends.dsl");
+      const result = await client.loadSingleYaml(friendsResource.type, friendsResource.fileName);
 
       assert.equal(result, null);
       assert.deepEqual(messages, [
         {
           level: "warning",
-          content: "主资源加载失败，正在切换到备用源: main/friends.dsl",
+          content: `主资源加载失败，正在切换到备用源: ${friendsResource.type}/${friendsResource.fileName}`,
         },
         {
           level: "error",
-          content: "单文件资源加载彻底失败: main/friends.dsl",
+          content: `单文件资源加载彻底失败: ${friendsResource.type}/${friendsResource.fileName}`,
         },
       ]);
       assert.equal(refs.singleChangeSpareUrl.value, true);
@@ -393,13 +398,13 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         },
       );
 
-      const result = await client.loadSingleYaml("main", "friends.dsl");
+      const result = await client.loadSingleYaml(friendsResource.type, friendsResource.fileName);
 
       assert.equal(result, null);
       assert.deepEqual(messages, [
         {
           level: "error",
-          content: "Single resource load failed completely: main/friends.dsl",
+          content: `Single resource load failed completely: ${friendsResource.type}/${friendsResource.fileName}`,
         },
       ]);
       assert.equal(refs.singleServerError.value, true);
@@ -533,21 +538,4 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   },
 ];
 
-let failed = false;
-
-for (const testCase of cases) {
-  try {
-    await testCase.run();
-    console.log(`PASS ${testCase.name}`);
-  } catch (error) {
-    failed = true;
-    console.error(`FAIL ${testCase.name}`);
-    console.error(error);
-  }
-}
-
-if (failed) {
-  process.exitCode = 1;
-} else {
-  console.log(`PASS ${cases.length} 个 Yaml client golden case`);
-}
+await runGoldenCases("Yaml Client", " Yaml client golden case", cases);

@@ -14,6 +14,9 @@ import {
 import { personRawData } from "../src/shared/lib/app/setupJson.ts";
 import type { Post } from "../src/shared/types/blog.ts";
 import type { CommonI18nBlock } from "../src/shared/types/common.ts";
+import { MAIN_CONTENT_RESOURCES } from "../src/shared/lib/app/mainContentResources.ts";
+import { resolveSiteOrigin, sanitizeAssetUrl } from "../src/shared/lib/app/siteOrigin.ts";
+import { runGoldenCases } from "./testHarness";
 
 const captureConsoleError = async (run: () => Promise<void> | void): Promise<string[]> => {
   const original = console.error;
@@ -40,6 +43,8 @@ const resetHeadState = (): void => {
   personRawData.value = null;
 };
 
+const titleResource = MAIN_CONTENT_RESOURCES.title;
+
 const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
     name: "useYamlI18n 会在缺少当前语言时回退 en 并在语言切换后更新文本",
@@ -47,9 +52,9 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       const currentLang = ref("ja");
       const messages: string[] = [];
       const state = createYamlTextState({
-        type: "main",
-        fileName: "title.dsl",
-        keyName: "title",
+        type: titleResource.type,
+        fileName: titleResource.fileName,
+        keyName: titleResource.keyName,
         ssr: true,
         registerServerPrefetch: false,
         currentLang,
@@ -80,9 +85,9 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     run: async () => {
       const messages: string[] = [];
       const state = createYamlTextState({
-        type: "main",
-        fileName: "title.dsl",
-        keyName: "title",
+        type: titleResource.type,
+        fileName: titleResource.fileName,
+        keyName: titleResource.keyName,
         ssr: true,
         registerServerPrefetch: false,
         currentLang: ref("en"),
@@ -102,7 +107,10 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
 
       assert.equal(state.text.value, "...");
       assert.deepEqual(messages, []);
-      assert.equal(errors[0], "[YAML Load Error] main/title.dsl: Error: boom");
+      assert.equal(
+        errors[0],
+        `[YAML Load Error] ${titleResource.type}/${titleResource.fileName}: Error: boom`,
+      );
     },
   },
   {
@@ -185,23 +193,89 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       resetHeadState();
     },
   },
+  {
+    name: "站点域名为 localhost 或空值时不应把编译地址写进 SSR head",
+    run: () => {
+      assert.equal(
+        resolveSiteOrigin({
+          ssr: true,
+          ssrOrigin: "http://localhost:5173",
+          browserOrigin: "",
+        }),
+        "",
+      );
+
+      const head = createBlogHeadEntries({ origin: "", ssr: true });
+
+      assert.deepEqual(head.link.value, []);
+      assert.equal(head.meta.value.some((item) => item.content === "http://localhost:5173"), false);
+      assert.equal(
+        head.meta.value.some(
+          (item) => item.property === "og:url" || item.name === "twitter:url",
+        ),
+        false,
+      );
+    },
+  },
+  {
+    name: "本地文件图片路径不应进入博客 SEO head",
+    run: () => {
+      resetHeadState();
+      lang.value = "en";
+      globalWebTitleMap.value = {
+        blog: { en: "Blog" },
+        home: { en: "Home" },
+      };
+      posts.value = [
+        {
+          id: "unsafe-image",
+          title: "Unsafe Image",
+          time: "20240102",
+          blocks: [
+            {
+              type: "image",
+              content: [{ src: "file:///tmp/secret.webp", temp_id: "i1" }],
+              temp_id: "b1",
+            },
+          ],
+        },
+      ];
+      selectedPost.value = posts.value[0] ?? null;
+      showModal.value = true;
+
+      const head = createBlogHeadEntries({ origin: "https://example.com", ssr: true });
+      const safeAssetSamples = [
+        "https://cdn.example.com/cover.webp",
+        "http://cdn.example.com/cover.webp",
+        "/cat/cover.webp",
+      ];
+      const unsafeAssetSamples = [
+        "C:\\Users\\name\\Desktop\\secret.webp",
+        "\\\\server\\share\\secret.webp",
+        "file:///tmp/secret.webp",
+        "secret.webp",
+      ];
+
+      for (const safePath of safeAssetSamples) {
+        assert.equal(sanitizeAssetUrl(safePath), safePath);
+      }
+      for (const unsafePath of unsafeAssetSamples) {
+        assert.equal(sanitizeAssetUrl(unsafePath), "");
+      }
+      assert.equal(
+        head.meta.value.some(
+          (item) => item.property === "og:image" || item.name === "twitter:image",
+        ),
+        false,
+      );
+      const scriptHtml = head.script.value[0]?.innerHTML ?? "";
+      for (const unsafePath of unsafeAssetSamples) {
+        assert.ok(!scriptHtml.includes(unsafePath));
+      }
+
+      resetHeadState();
+    },
+  },
 ];
 
-let failed = false;
-
-for (const testCase of cases) {
-  try {
-    await testCase.run();
-    console.log(`PASS ${testCase.name}`);
-  } catch (error) {
-    failed = true;
-    console.error(`FAIL ${testCase.name}`);
-    console.error(error);
-  }
-}
-
-if (failed) {
-  process.exitCode = 1;
-} else {
-  console.log(`PASS ${cases.length} 个 Head + I18n golden case`);
-}
+await runGoldenCases("Head + I18n", " Head + I18n golden case", cases);

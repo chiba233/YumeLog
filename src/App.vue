@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView, useRoute, useRouter } from "vue-router";
-import { computed, onMounted, watch } from "vue";
+import { computed, onMounted, onServerPrefetch, watch } from "vue";
 import { NButton, NIcon, NMessageProvider } from "naive-ui";
 import { Document28Regular, Home12Regular } from "@vicons/fluent";
 import MessageProvider from "@/shared/components/MessageProvider.vue";
@@ -25,6 +25,7 @@ import {
 import { useHead } from "@unhead/vue";
 import webTitle from "@/data/I18N/webTitle.json";
 import { PersonConfig, SocialConfig } from "@/shared/types/social.ts";
+import { loadPublicJson } from "@/shared/lib/app/publicData.ts";
 
 interface TitleEntry {
   [key: string]: string;
@@ -79,7 +80,9 @@ useHead({
     },
     {
       property: "og:site_name",
-      content: computed(() => globalWebTitleMap.value["home"]?.[lang.value] || "Your Brand"),
+      content: computed(
+        () => globalWebTitleMap.value["home"]?.[lang.value] || globalWebTitleMap.value["home"]?.en || "",
+      ),
     },
     {
       property: "og:locale",
@@ -91,38 +94,35 @@ useHead({
 type ColorData = Record<string, string>;
 const { onMove, onLeave, onEnter } = useCardGlow();
 const router = useRouter();
-const base = import.meta.env.SSR ? import.meta.env.VITE_SITE_URL : "";
 
 const initData = async () => {
   try {
-    const fetchTasks: Promise<Response>[] = [
-      fetch(`${base}/data/main/webTitle.json`),
-      fetch(`${base}/data/config/socialLinks.json`),
-      fetch(`${base}/data/main/person.json`),
-    ];
+    const titleTask =
+      loadPublicJson<Record<string, Record<string, string>>>("data/main/webTitle.json");
+    const socialTask = loadPublicJson<SocialConfig>("data/config/socialLinks.json");
+    const personTask = loadPublicJson<PersonConfig>("data/main/person.json");
+    const colorTask: Promise<ColorData | null> = import.meta.env.SSR
+      ? Promise.resolve(null)
+      : loadPublicJson<ColorData>("data/config/colorData.json");
 
-    if (!import.meta.env.SSR) {
-      fetchTasks.push(fetch(`${base}/data/config/colorData.json`));
+    const [titleData, socialData, personData, colorData] = await Promise.all([
+      titleTask,
+      socialTask,
+      personTask,
+      colorTask,
+    ] as const);
+
+    if (socialData) {
+      socialRawData.value = socialData;
+    }
+    if (personData) {
+      personRawData.value = personData;
+    }
+    if (titleData) {
+      globalWebTitleMap.value = titleData;
     }
 
-    const results = await Promise.all(fetchTasks);
-    const titleRes = results[0];
-    const socialRes = results[1];
-    const personRes = results[2];
-    const colorRes = results[3];
-
-    if (socialRes?.ok) {
-      socialRawData.value = (await socialRes.json()) as SocialConfig;
-    }
-    if (personRes?.ok) {
-      personRawData.value = (await personRes.json()) as PersonConfig;
-    }
-    if (titleRes?.ok) {
-      globalWebTitleMap.value = (await titleRes.json()) as Record<string, Record<string, string>>;
-    }
-
-    if (!import.meta.env.SSR && colorRes?.ok) {
-      const colorData = (await colorRes.json()) as ColorData;
+    if (!import.meta.env.SSR && colorData) {
       const keys = Object.keys(colorData);
       if (keys.length > 0) {
         const randomIndex = Math.floor(Math.random() * keys.length);
@@ -152,7 +152,9 @@ const applyThemeToDOM = (index: number, color: string) => {
 };
 
 if (import.meta.env.SSR) {
-  void initData();
+  onServerPrefetch(async () => {
+    await initData();
+  });
 }
 
 onMounted(async () => {
@@ -193,7 +195,9 @@ watch(
             <a href="/" class="seo-link-wrapper" @click.prevent="goTo('home')">
               <n-button :color="themeColor" class="bottomButton" round>
                 <template #icon>
-                  <n-icon size="23"><Home12Regular /></n-icon>
+                  <n-icon size="23">
+                    <Home12Regular />
+                  </n-icon>
                 </template>
                 <span :lang="lang" class="commonText">{{ homeLabel[lang] || homeLabel.en }}</span>
               </n-button>
@@ -202,7 +206,9 @@ watch(
             <a href="/blog" class="seo-link-wrapper" @click.prevent="goTo('blog')">
               <n-button :color="themeColor" class="bottomButton" round>
                 <template #icon>
-                  <n-icon size="23"><Document28Regular /></n-icon>
+                  <n-icon size="23">
+                    <Document28Regular />
+                  </n-icon>
                 </template>
                 <span :lang="lang" class="commonText">{{ blogLabel[lang] || blogLabel.en }}</span>
               </n-button>
@@ -219,6 +225,7 @@ figure {
   margin: 0;
   padding: 0;
 }
+
 .seo-link-wrapper {
   text-decoration: none;
   display: contents;
@@ -252,9 +259,11 @@ figure {
   backdrop-filter: saturate(150%) blur(25px);
   max-height: 99dvh;
   max-width: 99%;
+
   .n-card-header {
     padding: 1em 1.3em 0.5em !important;
   }
+
   .n-card-header__main {
     color: var(--global-theme-color-deep) !important;
     font-weight: bold;
@@ -262,28 +271,34 @@ figure {
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
   }
+
   .n-card-header__main {
     text-align: center;
   }
+
   .n-card__content {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
+
   .n-button {
     --n-color: rgba(var(--global-theme-rgb-deep), 0.1);
+
     &:focus,
     &:active,
     &:hover {
-      --n-color: rgba(var(--global-theme-rgb-deep), 0.25) !important ;
+      --n-color: rgba(var(--global-theme-rgb-deep), 0.25) !important;
     }
 
     svg {
       color: var(--global-theme-color-deep) !important;
     }
   }
+
   @media (max-width: 500px) {
     max-width: 98% !important;
   }
+
   .n-card-content {
     flex: 1;
     overflow-y: auto !important;
@@ -292,11 +307,13 @@ figure {
     display: block;
     min-height: 0;
     scrollbar-gutter: stable both-edges;
+
     .n-collapse-item__header-main {
       color: var(--global-theme-color-deep) !important;
       font-weight: 500;
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
+
       .n-base-icon {
         svg {
           color: var(--global-theme-color-deep) !important;
@@ -305,6 +322,7 @@ figure {
         }
       }
     }
+
     &::-webkit-scrollbar {
       width: 6px !important;
       display: block !important;

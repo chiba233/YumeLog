@@ -41,6 +41,7 @@ import type { TextToken } from "@/shared/lib/dsl/BlogRichText/types";
 import { ImageContent, Post, PostBlock, ProcessedPost } from "@/shared/types/blog.ts";
 import { isSSR } from "@/shared/lib/app/useHead.ts";
 import LazyBlock from "@/features/blog/components/LazyBlock.vue";
+import { sanitizeAssetUrl } from "@/shared/lib/app/siteOrigin.ts";
 
 const hydrated = ref(false);
 const visibleIds = ref(new Set<string>());
@@ -113,9 +114,17 @@ const isVisible = (post: ProcessedPost, index: number) => {
 const ssrHidePosts = computed(() => !(isSSR && selectedPost.value));
 const { onMove, onLeave, onEnter } = useCardGlow();
 const router = useRouter();
+const resolveDisplayImage = (img: ImageContent, useSpare = changeSpareUrl.value): string => {
+  const primary = sanitizeAssetUrl(img.src);
+  const spare = sanitizeAssetUrl(img.spareUrl);
+
+  if (useSpare && spare) return spare;
+  return primary || spare;
+};
 const handleImgError = (e: Event, spareUrl?: string) => {
   const target = e.target as HTMLImageElement;
-  if (spareUrl) target.src = spareUrl;
+  const safeSpareUrl = sanitizeAssetUrl(spareUrl);
+  if (safeSpareUrl) target.src = safeSpareUrl;
 };
 const handleModalFinishedLeaving = () => {
   if (!showModal.value) {
@@ -177,7 +186,7 @@ const getPreviewImages = (post: ProcessedPost): ImageContent[] => {
   return blocks
     .flatMap((block) =>
       Array.isArray(block.content)
-        ? block.content.filter((img): img is ImageContent => !!img?.src)
+        ? block.content.filter((img): img is ImageContent => !!resolveDisplayImage(img, false))
         : [],
     )
     .slice(0, 4);
@@ -208,44 +217,49 @@ const PostsRenderers: Record<string, PostsRenderer> = {
     return h(
       "div",
       { class: "postCardImage" },
-      block.content.map((img: ImageContent) =>
-        h("div", { key: img.src, class: "postCardNImage" }, [
-          isHydrated.value
-            ? h(NImage, {
-                alt: img.desc,
-                src: changeSpareUrl.value && img.spareUrl ? img.spareUrl : img.src,
-                lazy: true,
-                class: "postCardImg",
-                width: 120,
-              })
-            : h("div", { class: "n-image", style: { width: "120px" } }, [
-                h("img", {
-                  src: img.src,
-                  alt: img.desc,
-                  class: "postCardImg",
-                  style: {
-                    width: "120px",
-                    borderRadius: "8px",
-                    objectFit: "cover",
-                  },
-                  onError: (e: Event) => handleImgError(e, img.spareUrl),
-                }),
-              ]),
+      block.content.flatMap((img: ImageContent) => {
+        const displaySrc = resolveDisplayImage(img);
+        if (!displaySrc) return [];
 
-          img.desc &&
-            h("div", { class: "postCardImageDesc" }, [
-              h(
-                "span",
-                {
-                  lang: ctx.post.lang || lang.value,
-                  class: "themeText",
-                  style: { display: "block", textAlign: "center" },
-                },
-                img.desc,
-              ),
-            ]),
-        ]),
-      ),
+        return [
+          h("div", { key: img.temp_id, class: "postCardNImage" }, [
+            isHydrated.value
+              ? h(NImage, {
+                  alt: img.desc,
+                  src: displaySrc,
+                  lazy: true,
+                  class: "postCardImg",
+                  width: 120,
+                })
+              : h("div", { class: "n-image", style: { width: "120px" } }, [
+                  h("img", {
+                    src: displaySrc,
+                    alt: img.desc,
+                    class: "postCardImg",
+                    style: {
+                      width: "120px",
+                      borderRadius: "8px",
+                      objectFit: "cover",
+                    },
+                    onError: (e: Event) => handleImgError(e, img.spareUrl),
+                  }),
+                ]),
+
+            img.desc &&
+              h("div", { class: "postCardImageDesc" }, [
+                h(
+                  "span",
+                  {
+                    lang: ctx.post.lang || lang.value,
+                    class: "themeText",
+                    style: { display: "block", textAlign: "center" },
+                  },
+                  img.desc,
+                ),
+              ]),
+          ]),
+        ];
+      }),
     );
   },
 
@@ -354,7 +368,7 @@ const renderDetailContent = (): VNodeChild => {
                 :key="img.temp_id"
                 :alt="img.desc"
                 :class="{ secondImg: i === 1, thirdImg: i === 2, fourthImg: i === 3 }"
-                :src="img.src"
+                :src="resolveDisplayImage(img, false)"
                 loading="lazy"
                 @error="(e) => handleImgError(e, img.spareUrl)"
               />

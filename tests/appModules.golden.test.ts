@@ -10,9 +10,12 @@ import {
 } from "../src/shared/lib/app/langCore.ts";
 import { createAppRouter, routes } from "../src/app/router/index.ts";
 import type { SelectOption } from "../src/shared/types/common.ts";
+import { MAIN_CONTENT_RESOURCES } from "../src/shared/lib/app/mainContentResources.ts";
+import { runGoldenCases } from "./testHarness";
 
 const langOptions = (values: string[]): SelectOption[] =>
   values.map((value) => ({ label: value, value }));
+const titleResource = MAIN_CONTENT_RESOURCES.title;
 
 const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
@@ -81,10 +84,19 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
 
       const empty = await store.getPosts<{ time: string; title: string }>("blog");
       const loaded = await store.getPosts<{ time: string; title: string }>("blog");
-      const singleA = await store.getSingle<{ seq: number }>("main", "title.dsl");
-      const singleB = await store.getSingle<{ seq: number }>("main", "title.dsl");
+      const singleA = await store.getSingle<{ seq: number }>(
+        titleResource.type,
+        titleResource.fileName,
+      );
+      const singleB = await store.getSingle<{ seq: number }>(
+        titleResource.type,
+        titleResource.fileName,
+      );
       now += 601_000;
-      const singleC = await store.getSingle<{ seq: number }>("main", "title.dsl");
+      const singleC = await store.getSingle<{ seq: number }>(
+        titleResource.type,
+        titleResource.fileName,
+      );
 
       assert.deepEqual(empty, []);
       assert.equal(loaded[0]?.title, "loaded");
@@ -130,21 +142,4 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   },
 ];
 
-let failed = false;
-
-for (const testCase of cases) {
-  try {
-    await testCase.run();
-    console.log(`PASS ${testCase.name}`);
-  } catch (error) {
-    failed = true;
-    console.error(`FAIL ${testCase.name}`);
-    console.error(error);
-  }
-}
-
-if (failed) {
-  process.exitCode = 1;
-} else {
-  console.log(`PASS ${cases.length} 个 App module golden case`);
-}
+await runGoldenCases("App Modules", " App module golden case", cases);

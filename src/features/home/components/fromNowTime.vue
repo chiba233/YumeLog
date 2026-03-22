@@ -53,6 +53,7 @@ import { useContentStore } from "@/shared/lib/app/contentStore.ts";
 import { useCardGlow } from "@/shared/lib/app/animationCalculate.ts";
 import { useRouteModal } from "@/shared/lib/app/useRouteModal.ts";
 import { FromNowLanguageConfig, FromNowYamlResponse, YamlTimeBlock } from "@/shared/types/yaml.ts";
+import { MAIN_CONTENT_RESOURCES } from "@/shared/lib/app/mainContentResources.ts";
 
 const showFromNowModal = ref(false);
 const { openModal } = useRouteModal({
@@ -72,9 +73,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 const fromNow = ref<YamlTimeBlock[]>([]);
 const { getSingle } = useContentStore();
+const fromNowResource = MAIN_CONTENT_RESOURCES.fromNow;
 
 onMounted(async () => {
-  const res = await getSingle<FromNowYamlResponse>("main", "fromNow.dsl");
+  const res = await getSingle<FromNowYamlResponse>(fromNowResource.type, fromNowResource.fileName);
   if (res && res.fromNow) {
     fromNow.value = res.fromNow;
   }

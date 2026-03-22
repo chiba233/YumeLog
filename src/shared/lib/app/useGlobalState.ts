@@ -4,6 +4,7 @@ import blogI18nData from "@/data/I18N/blogI18n.json";
 import { loadSingleYaml } from "@/shared/lib/yaml";
 import type { ImagePostBlock, Post, PostBlock, ProcessedPost } from "@/shared/types/blog.ts";
 import type { Friend, NekoYamlResponse, YamlNekoBlock } from "@/shared/types/yaml.ts";
+import { MAIN_CONTENT_RESOURCES } from "@/shared/lib/app/mainContentResources.ts";
 import {
   getCachedBlockTokens,
   setCachedBlockTokens,
@@ -48,7 +49,8 @@ export const loadCat = async (): Promise<void> => {
 
   catLoadingPromise = (async () => {
     try {
-      const res = await loadSingleYaml<NekoYamlResponse>("main", "neko.dsl");
+      const nekoResource = MAIN_CONTENT_RESOURCES.neko;
+      const res = await loadSingleYaml<NekoYamlResponse>(nekoResource.type, nekoResource.fileName);
 
       if (res && Array.isArray(res.img)) {
         nekoImg.value = res.img.map(

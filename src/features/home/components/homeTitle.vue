@@ -23,19 +23,34 @@ import { useYamlText } from "@/shared/lib/app/useYamlI18n.ts";
 import { useHead } from "@unhead/vue";
 import { lang } from "@/shared/lib/app/setupLang.ts";
 import { personRawData } from "@/shared/lib/app/setupJson.ts";
+import { MAIN_CONTENT_RESOURCES } from "@/shared/lib/app/mainContentResources.ts";
+import { resolveSiteOrigin, toAbsoluteSiteUrl } from "@/shared/lib/app/siteOrigin.ts";
 
-const displayTitle = useYamlText("main", "title.dsl", "title");
-const siteOrigin = import.meta.env.SSR ? import.meta.env.VITE_SSR_SITE_URL : window.location.origin;
+const displayTitle = useYamlText(
+  MAIN_CONTENT_RESOURCES.title.type,
+  MAIN_CONTENT_RESOURCES.title.fileName,
+  MAIN_CONTENT_RESOURCES.title.keyName,
+);
+const siteOrigin = resolveSiteOrigin({
+  ssr: Boolean(import.meta.env.SSR),
+  ssrOrigin: import.meta.env.VITE_SSR_SITE_URL,
+  browserOrigin: typeof window !== "undefined" ? window.location.origin : "",
+});
+const homeOgImage = toAbsoluteSiteUrl(siteOrigin, "/icon/icon.webp");
 useHead(() => ({
   meta: [
     {
       property: "og:title",
       content: displayTitle.value.slice(0, 160),
     },
-    {
-      property: "og:image",
-      content: `${siteOrigin}/icon/icon.webp`,
-    },
+    ...(homeOgImage
+      ? [
+        {
+          property: "og:image",
+          content: homeOgImage,
+        },
+      ]
+      : []),
   ],
 }));
 </script>

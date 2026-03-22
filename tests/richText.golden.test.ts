@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { parseRichText, stripRichText } from "../src/shared/lib/dsl/BlogRichText/blogFormat.ts";
 import type { TextToken } from "../src/shared/lib/dsl/BlogRichText/types.ts";
+import { runGoldenCases } from "./testHarness";
 
 const normalizeTokens = (tokens: TextToken[]): unknown[] => {
   return tokens.map((token) => {
@@ -613,21 +614,4 @@ const cases: Array<{ name: string; run: () => void }> = [
   },
 ];
 
-let failed = false;
-
-for (const testCase of cases) {
-  try {
-    testCase.run();
-    console.log(`PASS ${testCase.name}`);
-  } catch (error) {
-    failed = true;
-    console.error(`FAIL ${testCase.name}`);
-    console.error(error);
-  }
-}
-
-if (failed) {
-  process.exitCode = 1;
-} else {
-  console.log(`PASS ${cases.length} 个 Rich Text golden case`);
-}
+await runGoldenCases("Rich Text DSL", " Rich Text golden case", cases);

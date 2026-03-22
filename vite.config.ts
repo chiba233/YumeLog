@@ -11,19 +11,9 @@ import fs from "node:fs";
 import Components from "unplugin-vue-components/vite";
 import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
 import { Post } from "./src/shared/types/blog";
+import { getPostSlug } from "./src/shared/lib/app/postSlug";
 
 let cachedPosts: Post[] | null = null;
-
-const getSlug = (post: Post): string | null => {
-  if (post.id) return post.id;
-  if (post.title) {
-    return post.title
-      .trim()
-      .replace(/[\/\\?#]/g, "")
-      .replace(/\s+/g, "-");
-  }
-  return null;
-};
 
 const getPosts = async (): Promise<Post[]> => {
   if (!cachedPosts) {
@@ -74,7 +64,7 @@ export default defineConfig(({ mode, isSsrBuild }) => {
         const staticPaths = paths.filter((p) => !p.includes(":"));
         const posts = await getPosts();
         const postRoutes = posts
-          .map((p) => getSlug(p))
+          .map((p) => getPostSlug(p))
           .filter(Boolean)
           .map((slug) => `/blog/${slug}/`);
 
@@ -111,7 +101,7 @@ export default defineConfig(({ mode, isSsrBuild }) => {
           { url: "/blog/", lastmod: "" },
           ...posts
             .map((p) => {
-              const slug = getSlug(p);
+              const slug = getPostSlug(p);
               if (!slug) return null;
               return {
                 url: `/blog/${slug}/`,
@@ -161,7 +151,7 @@ Sitemap: ${siteOrigin}/sitemap.xml
 
     build: {
       cssMinify: "esbuild",
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 1300,
       rollupOptions: {
         output: {
           manualChunks(id) {

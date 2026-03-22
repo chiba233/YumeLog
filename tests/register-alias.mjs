@@ -5,8 +5,8 @@ import fs from "node:fs";
 
 const workspaceRoot = process.cwd();
 const srcRoot = path.join(workspaceRoot, "src");
-const setupLangPath = path.join(srcRoot, "components", "ts", "global", "setupLang.ts");
-const msgUtilsPath = path.join(srcRoot, "components", "ts", "global", "msgUtils.ts");
+const setupLangPath = path.join(srcRoot, "shared", "lib", "app", "setupLang.ts");
+const msgUtilsPath = path.join(srcRoot, "shared", "lib", "app", "msgUtils.ts");
 
 const resolveWithKnownExtensions = (basePath) => {
   const candidates = [
@@ -93,3 +93,4 @@ registerHooks({
     return nextLoad(url, context);
   },
 });
+

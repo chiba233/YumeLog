@@ -14,8 +14,13 @@ import { useYamlText } from "@/shared/lib/app/useYamlI18n.ts";
 import { useHead } from "@unhead/vue";
 import { computed } from "vue";
 import { lang } from "@/shared/lib/app/setupLang.ts";
+import { MAIN_CONTENT_RESOURCES } from "@/shared/lib/app/mainContentResources.ts";
 
-const displayContent = useYamlText("main", "introduction.dsl", "introduction");
+const displayContent = useYamlText(
+  MAIN_CONTENT_RESOURCES.introduction.type,
+  MAIN_CONTENT_RESOURCES.introduction.fileName,
+  MAIN_CONTENT_RESOURCES.introduction.keyName,
+);
 
 useHead({
   meta: [

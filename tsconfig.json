@@ -15,19 +15,10 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "lib": [
-      "esnext",
-      "dom",
-      "dom.iterable"
-    ],
-    "types": [
-      "vite/client",
-      "node"
-    ],
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": ["vite/client", "node"],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     }
   },
   "include": [

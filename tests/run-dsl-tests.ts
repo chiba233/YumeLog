@@ -1,3 +1,5 @@
+export {};
+
 console.log("=== Rich Text DSL ===");
 await import("./richText.golden.test.ts");
 console.log("=== Block DSL ===");
@@ -12,3 +14,5 @@ console.log("=== Lazy Rendering ===");
 await import("./lazyRendering.golden.test.ts");
 console.log("=== Head + I18n ===");
 await import("./headAndI18n.golden.test.ts");
+console.log("=== Local Public Data ===");
+await import("./localPublicData.golden.test.ts");

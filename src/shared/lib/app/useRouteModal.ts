@@ -4,7 +4,7 @@ import commonI18n from "@/data/I18N/commonI18n.json";
 import { lang } from "@/shared/lib/app/setupLang.ts";
 import { $message } from "@/shared/lib/app/msgUtils.ts";
 import type { ModalOptions } from "@/shared/types/routing.ts";
-import type { Post } from "@/shared/types/blog.ts";
+import { getPostSlug } from "@/shared/lib/app/postSlug.ts";
 
 export const useRouteModal = ({
   modals,
@@ -198,9 +198,4 @@ export const useRouteModal = ({
   };
 };
 
-export const getSlug = (post?: Post | null) =>
-  post?.id ??
-  post?.title
-    ?.trim()
-    .replace(/[\/\\?#]/g, "")
-    .replace(/\s+/g, "-");
+export const getSlug = getPostSlug;

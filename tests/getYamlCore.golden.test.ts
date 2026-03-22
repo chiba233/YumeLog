@@ -5,6 +5,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { createYamlApi, createYamlApiState } from "../src/shared/lib/yaml/getYaml.core.ts";
 import type { DSLError } from "../src/shared/lib/dsl/extractAtBlocks/dslError.ts";
+import { MAIN_CONTENT_RESOURCES } from "../src/shared/lib/app/mainContentResources.ts";
+import { assertFromNowShape, MAIN_RESOURCE_ASSERTIONS } from "./mainResourceAssertions.ts";
+import { runGoldenCases } from "./testHarness";
 
 interface FakeApiContext {
   api: ReturnType<typeof createYamlApi>;
@@ -13,73 +16,6 @@ interface FakeApiContext {
   yamlLoadFailed: string[];
   configTypeErrors: string[];
 }
-
-const assertTempId = (value: unknown): void => {
-  assert.equal(typeof value, "string");
-  assert.notEqual(value, "");
-};
-
-const getArrayShape = (value: unknown): unknown[] => {
-  assert.ok(Array.isArray(value));
-  return value;
-};
-
-const assertI18nListShape = (value: unknown): void => {
-  const list = getArrayShape(value);
-  assert.ok(list.length > 0);
-
-  for (const entry of list) {
-    assert.equal(typeof entry, "object");
-    assert.ok(entry);
-    assert.equal(typeof (entry as { type?: unknown }).type, "string");
-    assert.equal(typeof (entry as { content?: unknown }).content, "string");
-    assertTempId((entry as { temp_id?: unknown }).temp_id);
-  }
-};
-
-const assertFriendListShape = (value: unknown): void => {
-  const list = getArrayShape(value);
-  assert.ok(list.length > 0);
-
-  for (const entry of list) {
-    assert.equal(typeof entry, "object");
-    assert.ok(entry);
-    assert.equal(typeof (entry as { name?: unknown }).name, "string");
-    assert.equal(typeof (entry as { alias?: unknown }).alias, "string");
-    assert.equal(typeof (entry as { url?: unknown }).url, "string");
-    assert.equal(typeof (entry as { icon?: unknown }).icon, "string");
-    assert.equal(typeof (entry as { spare?: unknown }).spare, "string");
-    assertTempId((entry as { temp_id?: unknown }).temp_id);
-  }
-};
-
-const assertNekoListShape = (value: unknown): void => {
-  const list = getArrayShape(value);
-  assert.ok(list.length > 0);
-
-  for (const entry of list) {
-    assert.equal(typeof entry, "object");
-    assert.ok(entry);
-    assert.equal(typeof (entry as { imgError?: unknown }).imgError, "string");
-    assert.equal(typeof (entry as { img?: unknown }).img, "string");
-    assert.equal(typeof (entry as { imgName?: unknown }).imgName, "string");
-    assertTempId((entry as { temp_id?: unknown }).temp_id);
-  }
-};
-
-const assertFromNowShape = (value: unknown): void => {
-  const list = getArrayShape(value);
-  assert.ok(list.length > 0);
-
-  for (const entry of list) {
-    assert.equal(typeof entry, "object");
-    assert.ok(entry);
-    assert.equal(typeof (entry as { time?: unknown }).time, "string");
-    assert.equal(typeof (entry as { photo?: unknown }).photo, "string");
-    assertTempId((entry as { temp_id?: unknown }).temp_id);
-    assertI18nListShape((entry as { names?: unknown }).names);
-  }
-};
 
 const loadMainFixture = async (fileName: string): Promise<string> => {
   const filePath = path.resolve(process.cwd(), "public", "data", "main", fileName);
@@ -207,13 +143,14 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
     name: "loadSingleYaml 会正确读取 main 下各个单文件并生成对应数据树",
     run: async () => {
-      const [titleDsl, introductionDsl, friendsDsl, nekoDsl, fromNowDsl] = await Promise.all([
-        loadMainFixture("title.dsl"),
-        loadMainFixture("introduction.dsl"),
-        loadMainFixture("friends.dsl"),
-        loadMainFixture("neko.dsl"),
-        loadMainFixture("fromNow.dsl"),
-      ]);
+      const mainFixtures = Object.fromEntries(
+        await Promise.all(
+          Object.values(MAIN_CONTENT_RESOURCES).map(async (resource) => [
+            resource.fileName,
+            await loadMainFixture(resource.fileName),
+          ]),
+        ),
+      ) as Record<keyof typeof MAIN_RESOURCE_ASSERTIONS, string>;
 
       const { api, dslErrors } = createFakeApi({
         "/data/config/yamlUrl.json": JSON.stringify({
@@ -221,35 +158,18 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
             url: "/main",
           },
         }),
-        "/main/title.dsl": titleDsl,
-        "/main/introduction.dsl": introductionDsl,
-        "/main/friends.dsl": friendsDsl,
-        "/main/neko.dsl": nekoDsl,
-        "/main/fromNow.dsl": fromNowDsl,
+        ...Object.fromEntries(
+          Object.entries(mainFixtures).map(([fileName, content]) => [`/main/${fileName}`, content]),
+        ),
       });
 
-      const [title, introduction, friends, neko, fromNow] = await Promise.all([
-        api.loadSingleYaml("main", "title.dsl"),
-        api.loadSingleYaml("main", "introduction.dsl"),
-        api.loadSingleYaml("main", "friends.dsl"),
-        api.loadSingleYaml("main", "neko.dsl"),
-        api.loadSingleYaml("main", "fromNow.dsl"),
-      ]);
+      await Promise.all(
+        Object.entries(MAIN_RESOURCE_ASSERTIONS).map(async ([fileName, assertResource]) => {
+          const result = await api.loadSingleYaml("main", fileName);
+          assertResource(result);
+        }),
+      );
 
-      assert.ok(title && "title" in title);
-      assertI18nListShape(title.title);
-
-      assert.ok(introduction && "introduction" in introduction);
-      assertI18nListShape(introduction.introduction);
-
-      assert.ok(friends && "friends" in friends);
-      assertFriendListShape(friends.friends);
-
-      assert.ok(neko && "img" in neko);
-      assertNekoListShape(neko.img);
-
-      assert.ok(fromNow && "fromNow" in fromNow);
-      assertFromNowShape(fromNow.fromNow);
       assert.deepEqual(dslErrors, []);
     },
   },
@@ -306,21 +226,4 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   },
 ];
 
-let failed = false;
-
-for (const testCase of cases) {
-  try {
-    await testCase.run();
-    console.log(`PASS ${testCase.name}`);
-  } catch (error) {
-    failed = true;
-    console.error(`FAIL ${testCase.name}`);
-    console.error(error);
-  }
-}
-
-if (failed) {
-  process.exitCode = 1;
-} else {
-  console.log(`PASS ${cases.length} 个 Yaml API golden case`);
-}
+await runGoldenCases("Yaml API DSL", " Yaml API golden case", cases);

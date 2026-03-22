@@ -16,13 +16,18 @@ import { getSlug } from "@/shared/lib/app/useRouteModal.ts";
 import type { PostBlock } from "@/shared/types/blog.ts";
 import { personRawData } from "@/shared/lib/app/setupJson.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
+import {
+  resolveSiteOrigin,
+  sanitizeAssetUrl,
+  toAbsoluteSiteUrl,
+} from "@/shared/lib/app/siteOrigin.ts";
 
 export const isSSR = Boolean(import.meta.env?.SSR);
-const siteOrigin = isSSR
-  ? import.meta.env?.VITE_SSR_SITE_URL
-  : typeof window !== "undefined"
-    ? window.location.origin
-    : "";
+const siteOrigin = resolveSiteOrigin({
+  ssr: isSSR,
+  ssrOrigin: import.meta.env?.VITE_SSR_SITE_URL,
+  browserOrigin: typeof window !== "undefined" ? window.location.origin : "",
+});
 
 export interface BlogHeadDeps {
   origin?: string;
@@ -31,6 +36,8 @@ export interface BlogHeadDeps {
 
 export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: BlogHeadDeps = {}) => {
   const effectiveOrigin = origin || "";
+  const blogListUrl = toAbsoluteSiteUrl(effectiveOrigin, "/blog");
+  const defaultOgImage = toAbsoluteSiteUrl(effectiveOrigin, "/icon/icon.webp");
 
   const titleI18N = commonI18n.blogWelcome as Record<string, string>;
   const baseTitle = computed(() => globalWebTitleMap.value?.blog?.[lang.value] ?? "Blog");
@@ -50,8 +57,8 @@ export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: Blog
     const post = selectedPost.value;
     const blocks = post.blocks ?? [];
     const slug = getSlug(post);
-    const url = `${effectiveOrigin}/blog/${slug}`;
-    const firstImg = getImageBlocks(blocks)?.[0]?.content?.[0]?.src ?? "";
+    const url = slug ? toAbsoluteSiteUrl(effectiveOrigin, `/blog/${slug}`) : "";
+    const firstImg = sanitizeAssetUrl(getImageBlocks(blocks)?.[0]?.content?.[0]?.src);
     const desc = getDescriptionText(blocks).slice(0, 160);
     const published = post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
     return {
@@ -68,12 +75,10 @@ export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: Blog
       postContext.value ? `${postContext.value.post.title} - ${baseTitle.value}` : baseTitle.value,
     ),
 
-    link: computed(() => [
-      {
-        rel: "canonical",
-        href: postContext.value ? postContext.value.url : `${effectiveOrigin}/blog`,
-      },
-    ]),
+    link: computed(() => {
+      const href = postContext.value ? postContext.value.url : blogListUrl;
+      return href ? [{ rel: "canonical", href }] : [];
+    }),
 
     script: computed(() => {
       if (!ssr) return [];
@@ -84,12 +89,11 @@ export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: Blog
             type: "application/ld+json",
             innerHTML: JSON.stringify({
               "@context": "https://schema.org",
-              "@id": ctx.url,
-              url: ctx.url,
+              ...(ctx.url ? { "@id": ctx.url, url: ctx.url } : {}),
               "@type": "BlogPosting",
               headline: ctx.post.title,
               datePublished: ctx.published,
-              image: ctx.firstImg,
+              ...(ctx.firstImg ? { image: ctx.firstImg } : {}),
               author: {
                 "@type": "Person",
                 name: personRawData.value?.author[lang.value] ?? personRawData.value?.author?.en,
@@ -100,7 +104,7 @@ export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: Blog
               },
               mainEntityOfPage: {
                 "@type": "WebPage",
-                "@id": ctx.url,
+                ...(ctx.url ? { "@id": ctx.url } : {}),
               },
             }),
           },
@@ -116,7 +120,9 @@ export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: Blog
             blogPost: posts.value.map((post) => ({
               "@type": "BlogPosting",
               headline: post.title,
-              url: `${effectiveOrigin}/blog/${getSlug(post)}`,
+              ...(getSlug(post)
+                ? { url: toAbsoluteSiteUrl(effectiveOrigin, `/blog/${getSlug(post)}`) }
+                : {}),
               datePublished: post.time?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
               author: {
                 "@type": "Person",
@@ -153,16 +159,24 @@ export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: Blog
               [p === "twitter" ? "name" : "property"]: `${p}:description`,
               content: desc,
             },
-            {
-              [p === "twitter" ? "name" : "property"]: `${p}:url`,
-              content: `${effectiveOrigin}/blog`,
-            },
+            ...(blogListUrl
+              ? [
+                {
+                  [p === "twitter" ? "name" : "property"]: `${p}:url`,
+                  content: blogListUrl,
+                },
+              ]
+              : []),
           ]),
 
-          {
-            property: "og:image",
-            content: `${effectiveOrigin}/icon/icon.webp`,
-          },
+          ...(defaultOgImage
+            ? [
+              {
+                property: "og:image",
+                content: defaultOgImage,
+              },
+            ]
+            : []),
 
           {
             property: "og:site_name",
@@ -189,14 +203,22 @@ export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: Blog
             [p === "twitter" ? "name" : "property"]: `${p}:description`,
             content: ctx.desc,
           },
-          {
-            [p === "twitter" ? "name" : "property"]: `${p}:image`,
-            content: ctx.firstImg,
-          },
-          {
-            [p === "twitter" ? "name" : "property"]: `${p}:url`,
-            content: ctx.url,
-          },
+          ...(ctx.firstImg
+            ? [
+              {
+                [p === "twitter" ? "name" : "property"]: `${p}:image`,
+                content: ctx.firstImg,
+              },
+            ]
+            : []),
+          ...(ctx.url
+            ? [
+              {
+                [p === "twitter" ? "name" : "property"]: `${p}:url`,
+                content: ctx.url,
+              },
+            ]
+            : []),
         ]),
 
         { name: "twitter:card", content: "summary_large_image" },
@@ -221,20 +243,12 @@ export const blogUseHead = () => {
   useHead(createBlogHeadEntries());
 };
 export const friendsUseHead = () => {
-  const getAutoHostname = () => {
-    if (import.meta.env.SSR) {
-      if (import.meta.env.VITE_SITE_URL) {
-        return import.meta.env.VITE_SITE_URL.replace(/\/+$/, "");
-      }
-      return "localhost:14514";
-    }
-    return window.location.origin;
-  };
-  const baseOrigin = getAutoHostname();
+  const baseOrigin = siteOrigin;
   const toAbsolute = (path: string) => {
-    if (!path) return "";
-    if (/^https?:\/\//.test(path)) return path;
-    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    const safePath = sanitizeAssetUrl(path);
+    if (!safePath) return "";
+    if (/^https?:\/\//.test(safePath)) return safePath;
+    const cleanPath = safePath.startsWith("/") ? safePath : `/${safePath}`;
     return `${baseOrigin}${cleanPath}`;
   };
   useHead({
@@ -246,7 +260,7 @@ export const friendsUseHead = () => {
           return JSON.stringify({
             "@context": "https://schema.org",
             "@type": "ItemList",
-            "@id": `${baseOrigin}#friends-list`,
+            ...(baseOrigin ? { "@id": `${baseOrigin}#friends-list` } : {}),
             name: friendsTitle.value.title,
             numberOfItems: friends.value?.length || 0,
             itemListElement: (friends.value || []).map((f, index) => ({
@@ -276,14 +290,18 @@ export const headLinks = computed(() => {
     }));
   return [
     ...social,
-    {
-      rel: "canonical",
-      href: `${siteOrigin}`,
-      title: "Home",
-    },
-    {
-      property: "og:url",
-      content: siteOrigin,
-    },
+    ...(siteOrigin
+      ? [
+        {
+          rel: "canonical",
+          href: siteOrigin,
+          title: "Home",
+        },
+        {
+          property: "og:url",
+          content: siteOrigin,
+        },
+      ]
+      : []),
   ];
 });

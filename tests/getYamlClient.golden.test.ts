@@ -1,4 +1,4 @@
-// noinspection ES6PreferShortImport
+// noinspection ES6PreferShortImport,DuplicatedCode
 
 import assert from "node:assert/strict";
 import { ref } from "vue";
@@ -216,7 +216,8 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
             spareUrl: "/spare-main",
           },
         }),
-        [`/spare-main/${titleResource.fileName}`]: "@title\n- type: \"en\"\n  content: \"fallback ok\"\n@end",
+        [`/spare-main/${titleResource.fileName}`]:
+          '@title\n- type: "en"\n  content: "fallback ok"\n@end',
       });
 
       const result = await client.loadSingleYaml(titleResource.type, titleResource.fileName);
@@ -246,7 +247,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
               spareUrl: "/spare-main",
             },
           }),
-          [`/spare-main/${titleResource.fileName}`]: "@title\n- type: \"zh\"\n  content: \"ok\"\n@end",
+          [`/spare-main/${titleResource.fileName}`]: '@title\n- type: "zh"\n  content: "ok"\n@end',
         },
         {
           currentLang: "zh",
@@ -418,7 +419,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "加载进行中时 yamlLoading 会置 true，结束后恢复 false",
     run: async () => {
       const listDeferred = createDeferred<string>();
-      const { client, refs } = createClientHarness({
+      const { refs } = createClientHarness({
         "/data/config/yamlUrl.json": JSON.stringify({
           blog: {
             listUrl: "/blog/list.json",
@@ -470,7 +471,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     run: async () => {
       const sleepDeferred = createDeferred<void>();
       let attempts = 0;
-      const { client, refs, messages } = createClientHarness(
+      const { refs, messages } = createClientHarness(
         {
           "/data/config/yamlUrl.json": JSON.stringify({
             blog: {

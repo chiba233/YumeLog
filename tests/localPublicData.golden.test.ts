@@ -76,7 +76,9 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       const spareBasePath = yamlUrl.blog.spareUrl;
 
       if (!hasValue(spareListPath) || !hasValue(spareBasePath)) {
-        console.warn("[Test Warning] blog spare source is not configured; skip local spare validation.");
+        console.warn(
+          "[Test Warning] blog spare source is not configured; skip local spare validation.",
+        );
         return;
       }
 

@@ -81,7 +81,10 @@ useHead({
     {
       property: "og:site_name",
       content: computed(
-        () => globalWebTitleMap.value["home"]?.[lang.value] || globalWebTitleMap.value["home"]?.en || "",
+        () =>
+          globalWebTitleMap.value["home"]?.[lang.value] ||
+          globalWebTitleMap.value["home"]?.en ||
+          "",
       ),
     },
     {

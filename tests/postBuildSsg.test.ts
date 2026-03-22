@@ -16,13 +16,15 @@ const readDistHtml = async (relativePath: string): Promise<string> => {
 const assertNoDefaultPlaceholder = (html: string, pageLabel: string): void => {
   assert.ok(!html.includes(">...<"), `${pageLabel} should not render placeholder "..."`);
   assert.ok(!html.includes("Your Brand"), `${pageLabel} should not contain fallback brand text`);
-  assert.ok(!html.includes("<h1 aria-hidden=\"false\" class=\"sr-only\"></h1>"), `${pageLabel} should not contain an empty sr-only h1`);
+  assert.ok(
+    !html.includes('<h1 aria-hidden="false" class="sr-only"></h1>'),
+    `${pageLabel} should not contain an empty sr-only h1`,
+  );
 };
 
 const collectPotentialUrlValues = (html: string): string[] => {
   const values = new Set<string>();
-  const attributePattern =
-    /<(?:img|meta|link)\b[^>]*\b(?:src|href|content)=["']([^"'<>]+)["']/gi;
+  const attributePattern = /<(?:img|meta|link)\b[^>]*\b(?:src|href|content)=["']([^"'<>]+)["']/gi;
   const jsonImagePattern = /"image":"([^"]+)"/gi;
 
   for (const match of html.matchAll(attributePattern)) {
@@ -58,7 +60,11 @@ const extractSiteOrigin = (robotsTxt: string, sitemapXml: string): string => {
 
   assert.ok(robotsOrigin, "robots.txt should expose a sitemap origin");
   assert.ok(sitemapOrigin, "sitemap.xml should expose a site origin");
-  assert.equal(robotsOrigin, sitemapOrigin, "robots.txt and sitemap.xml should share the same origin");
+  assert.equal(
+    robotsOrigin,
+    sitemapOrigin,
+    "robots.txt and sitemap.xml should share the same origin",
+  );
 
   return robotsOrigin;
 };
@@ -90,9 +96,11 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       await Promise.all(
         posts.map(async (post) => {
           const slug = getPostSlug(post);
-          assert.ok(slug, `post slug should exist for "${post.title ?? "unknown"}"`);
+          if (!slug) {
+            assert.fail(`post slug should exist for "${post.title ?? "unknown"}"`);
+          }
 
-          const articleHtml = await readDistHtml(path.join("blog", slug!, "index.html"));
+          const articleHtml = await readDistHtml(path.join("blog", slug, "index.html"));
           assertNoDefaultPlaceholder(articleHtml, `blog/${slug}`);
           assert.match(articleHtml, new RegExp(`<title>${escapeRegExp(post.title ?? "")}`));
           assert.ok(
@@ -119,19 +127,18 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       const siteOrigin = extractSiteOrigin(robotsTxt, sitemapXml);
 
       assert.match(robotsTxt, /User-agent:\s*\*/);
-      assert.match(
-        robotsTxt,
-        new RegExp(`Sitemap:\\s*${escapeRegExp(siteOrigin)}/sitemap\\.xml`),
-      );
+      assert.match(robotsTxt, new RegExp(`Sitemap:\\s*${escapeRegExp(siteOrigin)}/sitemap\\.xml`));
       assert.match(sitemapXml, new RegExp(`<loc>${escapeRegExp(siteOrigin)}/</loc>`));
       assert.match(sitemapXml, new RegExp(`<loc>${escapeRegExp(siteOrigin)}/blog/</loc>`));
 
       for (const post of posts) {
         const slug = getPostSlug(post);
-        assert.ok(slug, `post slug should exist for "${post.title ?? "unknown"}"`);
+        if (!slug) {
+          assert.fail(`post slug should exist for "${post.title ?? "unknown"}"`);
+        }
         assert.match(
           sitemapXml,
-          new RegExp(`<loc>${escapeRegExp(siteOrigin)}/blog/${escapeRegExp(slug!)}/</loc>`),
+          new RegExp(`<loc>${escapeRegExp(siteOrigin)}/blog/${escapeRegExp(slug)}/</loc>`),
         );
       }
     },

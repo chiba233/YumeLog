@@ -1,9 +1,6 @@
 const normalizePublicPath = (resourcePath: string): string => resourcePath.replace(/^\/+/, "");
 const shouldUseNodePublicRead = (): boolean =>
   Boolean(import.meta.env?.SSR) || typeof window === "undefined";
-const importNodeModule = new Function("specifier", "return import(specifier)") as <T>(
-  specifier: string,
-) => Promise<T>;
 
 export const resolvePublicResourceUrl = (resourcePath: string): string => {
   const normalizedPath = normalizePublicPath(resourcePath);
@@ -16,8 +13,8 @@ export const loadPublicText = async (resourcePath: string): Promise<string> => {
 
   if (shouldUseNodePublicRead()) {
     const [{ readFile }, pathModule] = await Promise.all([
-      importNodeModule<typeof import("node:fs/promises")>("node:fs/promises"),
-      importNodeModule<typeof import("node:path")>("node:path"),
+      import("node:fs/promises"),
+      import("node:path"),
     ]);
     const filePath = pathModule.join(process.cwd(), "public", normalizedPath);
     return await readFile(filePath, "utf8");

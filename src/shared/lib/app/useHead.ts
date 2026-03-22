@@ -161,21 +161,21 @@ export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: Blog
             },
             ...(blogListUrl
               ? [
-                {
-                  [p === "twitter" ? "name" : "property"]: `${p}:url`,
-                  content: blogListUrl,
-                },
-              ]
+                  {
+                    [p === "twitter" ? "name" : "property"]: `${p}:url`,
+                    content: blogListUrl,
+                  },
+                ]
               : []),
           ]),
 
           ...(defaultOgImage
             ? [
-              {
-                property: "og:image",
-                content: defaultOgImage,
-              },
-            ]
+                {
+                  property: "og:image",
+                  content: defaultOgImage,
+                },
+              ]
             : []),
 
           {
@@ -205,19 +205,19 @@ export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: Blog
           },
           ...(ctx.firstImg
             ? [
-              {
-                [p === "twitter" ? "name" : "property"]: `${p}:image`,
-                content: ctx.firstImg,
-              },
-            ]
+                {
+                  [p === "twitter" ? "name" : "property"]: `${p}:image`,
+                  content: ctx.firstImg,
+                },
+              ]
             : []),
           ...(ctx.url
             ? [
-              {
-                [p === "twitter" ? "name" : "property"]: `${p}:url`,
-                content: ctx.url,
-              },
-            ]
+                {
+                  [p === "twitter" ? "name" : "property"]: `${p}:url`,
+                  content: ctx.url,
+                },
+              ]
             : []),
         ]),
 
@@ -292,16 +292,16 @@ export const headLinks = computed(() => {
     ...social,
     ...(siteOrigin
       ? [
-        {
-          rel: "canonical",
-          href: siteOrigin,
-          title: "Home",
-        },
-        {
-          property: "og:url",
-          content: siteOrigin,
-        },
-      ]
+          {
+            rel: "canonical",
+            href: siteOrigin,
+            title: "Home",
+          },
+          {
+            property: "og:url",
+            content: siteOrigin,
+          },
+        ]
       : []),
   ];
 });

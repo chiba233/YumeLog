@@ -1,7 +1,7 @@
 import type { BlockType } from "./types";
 import { BLOCK_TYPES_SET } from "./handlers";
 
-export const isBlockTag = (tag: string): boolean => {
+export const isBlockTag = (tag: string): tag is BlockType => {
   return BLOCK_TYPES_SET.has(tag as BlockType);
 };
 

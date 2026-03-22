@@ -64,7 +64,10 @@ const { getSingle } = useContentStore();
 const friendsResource = MAIN_CONTENT_RESOURCES.friends;
 const loadFriendsData = async () => {
   try {
-    const rawData = await getSingle<FriendsYamlResponse>(friendsResource.type, friendsResource.fileName);
+    const rawData = await getSingle<FriendsYamlResponse>(
+      friendsResource.type,
+      friendsResource.fileName,
+    );
     if (rawData && rawData.friends) {
       friends.value = rawData.friends;
     }

@@ -45,11 +45,11 @@ useHead(() => ({
     },
     ...(homeOgImage
       ? [
-        {
-          property: "og:image",
-          content: homeOgImage,
-        },
-      ]
+          {
+            property: "og:image",
+            content: homeOgImage,
+          },
+        ]
       : []),
   ],
 }));

@@ -1,4 +1,4 @@
-// noinspection ES6PreferShortImport
+// noinspection ES6PreferShortImport,HttpUrlsUsage
 
 import assert from "node:assert/strict";
 import { ref } from "vue";
@@ -208,11 +208,12 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       const head = createBlogHeadEntries({ origin: "", ssr: true });
 
       assert.deepEqual(head.link.value, []);
-      assert.equal(head.meta.value.some((item) => item.content === "http://localhost:5173"), false);
       assert.equal(
-        head.meta.value.some(
-          (item) => item.property === "og:url" || item.name === "twitter:url",
-        ),
+        head.meta.value.some((item) => item.content === "http://localhost:5173"),
+        false,
+      );
+      assert.equal(
+        head.meta.value.some((item) => item.property === "og:url" || item.name === "twitter:url"),
         false,
       );
     },

@@ -10,9 +10,13 @@ import type { DSLError } from "../src/shared/lib/dsl/extractAtBlocks/dslError.ts
 import { runGoldenCases } from "./testHarness";
 
 const stripTempIds = <T>(value: T): T => {
-  return JSON.parse(
-    JSON.stringify(value, (key, currentValue) => (key === "temp_id" ? undefined : currentValue)),
-  ) as T;
+  const parsed: unknown = JSON.parse(
+    JSON.stringify(value, (key, currentValue: unknown) =>
+      key === "temp_id" ? undefined : currentValue,
+    ),
+  );
+
+  return parsed as T;
 };
 
 const collectErrors = (run: (errors: DSLError[]) => void): DSLError[] => {

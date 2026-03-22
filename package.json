@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "pnpm run test:dsl",
     "predev": "node ./scripts/patch-vite-ssg.mjs",
     "dev": "vite",
     "host": "pnpm run dev --host",

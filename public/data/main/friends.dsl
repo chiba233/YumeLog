@@ -7,5 +7,6 @@
 - name: "来骗来偷袭"
   alias: "Rick Roll"
   url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  icon: "/rickroll.webp"
   spare: "/rickroll.webp"
 @end

@@ -16,10 +16,48 @@ export default tseslint.config(
       "components.d.ts",
     ],
   },
-  ...tseslint.configs.recommendedTypeChecked,
-  pluginVue.configs["flat/recommended"],
+
+  // JavaScript / MJS / CJS
   {
-    files: ["**/*.{ts,tsx,vue}"],
+    files: ["**/*.{js,mjs,cjs}"],
+    extends: [...tseslint.configs.recommended],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+    },
+    plugins: {
+      prettier: prettierPlugin,
+    },
+    rules: {
+      "prettier/prettier": "warn",
+    },
+  },
+
+  // TypeScript / TSX
+  {
+    files: ["**/*.{ts,tsx}"],
+    extends: [...tseslint.configs.recommendedTypeChecked],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      parser: tseslint.parser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    plugins: {
+      prettier: prettierPlugin,
+    },
+    rules: {
+      "prettier/prettier": "warn",
+    },
+  },
+
+  // Vue SFC
+  {
+    files: ["**/*.vue"],
+    extends: [...pluginVue.configs["flat/recommended"], ...tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",

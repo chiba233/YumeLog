@@ -15,7 +15,7 @@
     "preview": "vite preview",
     "build-only": "pnpm run test:dsl && vite-ssg build && pnpm run test:ssg-dist",
     "type-check": "vue-tsc --noEmit",
-    "lint": "eslint . --fix",
+    "lint": "eslint . --ext .ts,.tsx,.vue,.js,.mjs,.cjs --fix --cache",
     "test:dsl": "node --import ./tests/register-alias.mjs ./tests/run-dsl-tests.ts",
     "test:ssg-dist": "node --import ./tests/register-alias.mjs ./tests/postBuildSsg.test.ts",
     "test-build-dist": "npx serve dist -s",

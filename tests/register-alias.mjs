@@ -77,7 +77,40 @@ registerHooks({
       return {
         format: "module",
         shortCircuit: true,
-        source: "export const $message = { error() {}, warning() {}, success() {} };",
+        source: `
+          const state = globalThis.__codexTestMessageState ??= {
+            errors: [],
+            warnings: [],
+            successes: [],
+            infos: [],
+            loadings: [],
+          };
+          export const __messageState = state;
+          export const resetTestMessages = () => {
+            state.errors.length = 0;
+            state.warnings.length = 0;
+            state.successes.length = 0;
+            state.infos.length = 0;
+            state.loadings.length = 0;
+          };
+          export const $message = {
+            error(content, closable, duration) {
+              state.errors.push({ content, closable, duration });
+            },
+            warning(content, closable, duration) {
+              state.warnings.push({ content, closable, duration });
+            },
+            success(content, closable, duration) {
+              state.successes.push({ content, closable, duration });
+            },
+            info(content, closable, duration) {
+              state.infos.push({ content, closable, duration });
+            },
+            loading(content, closable, duration) {
+              state.loadings.push({ content, closable, duration });
+            },
+          };
+        `,
       };
     }
 

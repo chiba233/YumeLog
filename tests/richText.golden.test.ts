@@ -7,6 +7,42 @@ import type { TextToken } from "../src/shared/lib/dsl/BlogRichText/types.ts";
 import { formatDateByLang } from "../src/shared/lib/app/langCore.ts";
 import { runGoldenCases } from "./testHarness";
 
+type CapturedMessage = {
+  content: string;
+  closable: boolean;
+  duration: number;
+};
+
+type CapturedMessageState = {
+  errors: CapturedMessage[];
+  warnings: CapturedMessage[];
+  successes: CapturedMessage[];
+  infos: CapturedMessage[];
+  loadings: CapturedMessage[];
+};
+
+declare global {
+  var __codexTestMessageState: CapturedMessageState | undefined;
+}
+
+const getCapturedMessageState = (): CapturedMessageState => {
+  const state = globalThis.__codexTestMessageState;
+  if (!state) {
+    throw new Error("Captured message state is not initialized");
+  }
+
+  return state;
+};
+
+const resetCapturedMessages = () => {
+  const state = getCapturedMessageState();
+  state.errors.length = 0;
+  state.warnings.length = 0;
+  state.successes.length = 0;
+  state.infos.length = 0;
+  state.loadings.length = 0;
+};
+
 const normalizeTokens = (tokens: TextToken[]): unknown[] => {
   return tokens.map((token) => {
     const { temp_id: _tempId, value, ...rest } = token;
@@ -577,6 +613,43 @@ const cases: Array<{ name: string; run: () => void }> = [
     name: "[Inline/Boundary] 未闭合 inline 标签 -> 应当退化为普通文本",
     run: () => {
       assert.equal(stripRichText("$$bold(hello"), "$$bold(hello");
+    },
+  },
+  {
+    name: "[Inline/Boundary] 带参数未闭合 inline 标签 -> 应当完整退化为原始文本",
+    run: () => {
+      assert.equal(
+        stripRichText("$$link(https://example.com | Example"),
+        "$$link(https://example.com | Example",
+      );
+    },
+  },
+  {
+    name: "[Inline/Boundary] 已入栈后未闭合 inline 标签 -> 应当保留原始开头片段再拼接已解析内容",
+    run: () => {
+      assert.equal(
+        stripRichText("$$link(https://example.com | before $$bold(ok)$$ tail"),
+        "$$link(https://example.com | before ok tail",
+      );
+    },
+  },
+  {
+    name: "[Inline/Error] 未闭合 inline 标签 -> 应当上报 inline 错误并带上下文",
+    run: () => {
+      resetCapturedMessages();
+
+      parseRichText("line1\n$$bold(hello", 50, false);
+
+      const messageState = getCapturedMessageState();
+
+      assert.equal(messageState.errors.length, 1);
+      assert.equal(messageState.errors[0]?.closable, true);
+      assert.equal(messageState.errors[0]?.duration, 5000);
+      assert.match(
+        messageState.errors[0]?.content ?? "",
+        /^\[RichText Error\] \(L2:C1\) Inline tag not closed:/,
+      );
+      assert.match(messageState.errors[0]?.content ?? "", />>>\$\$bold\(<<< hello$/);
     },
   },
   {

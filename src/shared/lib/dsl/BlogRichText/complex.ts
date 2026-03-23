@@ -58,7 +58,11 @@ export const tryParseComplexTag = (
         handled: true,
         nextIndex: contentStart,
         fallbackText: text.slice(tagOpenPos, contentStart),
-        error: { key: "richTextBlockNotClosed", index: tagOpenPos },
+        error: {
+          key: "richTextBlockNotClosed",
+          index: tagOpenPos,
+          length: contentStart - tagOpenPos,
+        },
       };
     }
 
@@ -91,7 +95,11 @@ export const tryParseComplexTag = (
       handled: true,
       nextIndex: contentStart,
       fallbackText: text.slice(tagOpenPos, contentStart),
-      error: { key: "richTextRawNotClosed", index: tagOpenPos },
+      error: {
+        key: "richTextRawNotClosed",
+        index: tagOpenPos,
+        length: contentStart - tagOpenPos,
+      },
     };
   }
 

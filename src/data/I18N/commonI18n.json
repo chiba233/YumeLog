@@ -84,25 +84,25 @@
     "other": "Page routing failed, please try again later"
   },
   "richTextDepthLimit": {
-    "zh": "[RichText] 在索引 {i} 处达到最大深度限制 ({depthLimit})。嵌套将被展平。",
-    "en": "[RichText] Max depth limit ({depthLimit}) reached at index {i}. Nesting will be flattened.",
-    "ja": "[RichText] インデックス {i} で最大深度制限 ({depthLimit}) に達しました。ネストは平坦化されます。",
-    "th": "[RichText] ถึงขีดจำกัดความลึกสูงสุด ({depthLimit}) ที่ดัชนี {i} การซ้อนทับจะถูกทำให้แบนราบ",
-    "other": "[RichText] Max depth limit ({depthLimit}) reached at index {i}. Nesting will be flattened."
+    "zh": "[RichText Error] (L{line}:C{column}) 嵌套过深: {context}",
+    "en": "[RichText Error] (L{line}:C{column}) Nesting too deep: {context}",
+    "ja": "[RichText Error] (L{line}:C{column}) ネストが深すぎます: {context}",
+    "th": "[RichText Error] (L{line}:C{column}) การซ้อนทับลึกเกินไป: {context}",
+    "other": "[RichText Error] (L{line}:C{column}) Nesting too deep: {context}"
   },
   "richTextUnexpectedClose": {
-    "zh": "[RichText] 在索引 {i} 处发现意外的闭合标签 ')$$'。未找到匹配的起始标签。",
-    "en": "[RichText] Unexpected closing tag ')$$' at index {i}. No matching opening tag found.",
-    "ja": "[RichText] インデックス {i} で予期しない閉じタグ ')$$' が見つかりました。対応する開始タグがありません。",
-    "th": "[RichText] พบแท็กปิดที่ไม่คาดคิด ')$$' ที่ดัชนี {i} ไม่พบแท็กเปิดที่ตรงกัน",
-    "other": "[RichText] Unexpected closing tag ')$$' at index {i}. No matching opening tag found."
+    "zh": "[RichText Error] (L{line}:C{column}) 意外闭合: {context}",
+    "en": "[RichText Error] (L{line}:C{column}) Unexpected close: {context}",
+    "ja": "[RichText Error] (L{line}:C{column}) 予期しない閉じタグ: {context}",
+    "th": "[RichText Error] (L{line}:C{column}) แท็กปิดที่ไม่คาดคิด: {context}",
+    "other": "[RichText Error] (L{line}:C{column}) Unexpected close: {context}"
   },
   "richTextUnknownTag": {
-    "zh": "[RichText] 在索引 {i} 处发现未知标签 '{tag}'。为了兼容性，内容将被展平。",
-    "en": "[RichText] Unknown tag '{tag}' at index {i}. Flattening content for compatibility.",
-    "ja": "[RichText] インデックス {i} で不明なタグ '{tag}' が見つかりました。互換性のためコンテンツを平坦化します。",
-    "th": "[RichText] พบแท็กที่ไม่รู้จัก '{tag}' ที่ดัชนี {i} เนื้อหาจะถูกทำให้แบนราบเพื่อความเข้ากันได้",
-    "other": "[RichText] Unknown tag '{tag}' at index {i}. Flattening content for compatibility."
+    "zh": "[RichText Error] (L{line}:C{column}) 未知标签 '{tag}': {context}",
+    "en": "[RichText Error] (L{line}:C{column}) Unknown tag '{tag}': {context}",
+    "ja": "[RichText Error] (L{line}:C{column}) 不明なタグ '{tag}': {context}",
+    "th": "[RichText Error] (L{line}:C{column}) แท็กที่ไม่รู้จัก '{tag}': {context}",
+    "other": "[RichText Error] (L{line}:C{column}) Unknown tag '{tag}': {context}"
   },
   "yamlLoadFailed": {
     "zh": "YAML加载失败: {err}",
@@ -161,11 +161,11 @@
     "other": "[Config Error]: Type '{type}' not found in YamlUrlConfig."
   },
   "richTextRawNotClosed": {
-    "zh": "原始块未正确关闭。{i}'",
-    "en": "Raw block not closed! {i}'",
-    "ja": "rawブロックが閉じられていません! {i}'",
-    "th": "บล็อก raw ยังไม่ได้ปิด! {i}'",
-    "other": "Raw block not closed! {i}'"
+    "zh": "[RichText Error] (L{line}:C{column}) Raw 块未闭合: {context}",
+    "en": "[RichText Error] (L{line}:C{column}) Raw block not closed: {context}",
+    "ja": "[RichText Error] (L{line}:C{column}) raw ブロックが閉じられていません: {context}",
+    "th": "[RichText Error] (L{line}:C{column}) บล็อก raw ยังไม่ได้ปิด: {context}",
+    "other": "[RichText Error] (L{line}:C{column}) Raw block not closed: {context}"
   },
   "unsupportedCodeLanguage": {
     "zh": "不支持的代码语言：'{language}'。",
@@ -231,11 +231,18 @@
     "other": "[DSL Error] DSL nesting exceeded max depth {maxDepth}; block \"{name}\" is at line {line}"
   },
   "richTextBlockNotClosed": {
-    "zh": "[RichText Error] 富文本 Block 标签未闭合（位置 {i}）",
-    "en": "[RichText Error] Block tag not closed at position {i}",
-    "ja": "[RichText Error] ブロックタグが閉じられていません（位置 {i}）",
-    "th": "[RichText Error] แท็กบล็อกยังไม่ได้ปิด (ตำแหน่ง {i})",
-    "other": "[RichText Error] Block tag not closed at position {i}"
+    "zh": "[RichText Error] (L{line}:C{column}) Block 块未闭合: {context}",
+    "en": "[RichText Error] (L{line}:C{column}) Block tag not closed: {context}",
+    "ja": "[RichText Error] (L{line}:C{column}) ブロックタグが閉じられていません: {context}",
+    "th": "[RichText Error] (L{line}:C{column}) แท็กบล็อกยังไม่ได้ปิด: {context}",
+    "other": "[RichText Error] (L{line}:C{column}) Block tag not closed: {context}"
+  },
+  "richTextInlineNotClosed": {
+    "zh": "[RichText Error] (L{line}:C{column}) Inline 标签未闭合: {context}",
+    "en": "[RichText Error] (L{line}:C{column}) Inline tag not closed: {context}",
+    "ja": "[RichText Error] (L{line}:C{column}) インラインタグが閉じられていません: {context}",
+    "th": "[RichText Error] (L{line}:C{column}) แท็ก inline ยังไม่ได้ปิด: {context}",
+    "other": "[RichText Error] (L{line}:C{column}) Inline tag not closed: {context}"
   },
   "collapseClickToExpand": {
     "zh": "点击展开内容",

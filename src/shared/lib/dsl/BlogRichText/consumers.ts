@@ -28,7 +28,14 @@ export const tryConsumeDepthLimitedTag = (ctx: ParseContext, info: TagStartInfo)
   if (ctx.stack.length < ctx.depthLimit) return false;
 
   if (ctx.stack.length === ctx.depthLimit) {
-    emitI18nError("richTextDepthLimit", { depthLimit: ctx.depthLimit, i: ctx.i }, ctx.silent);
+    emitI18nError(
+      "richTextDepthLimit",
+      { depthLimit: ctx.depthLimit, i: ctx.i },
+      ctx.silent,
+      ctx.text,
+      ctx.i,
+      info.inlineContentStart - info.tagOpenPos,
+    );
   }
 
   const tagInfo = getTagCloserType(ctx.text, info.tagNameEnd + 1);
@@ -106,7 +113,14 @@ export const tryConsumeComplexTag = (
   if (!result.handled) return false;
 
   if (result.error) {
-    emitI18nError(result.error.key, { i: result.error.index }, ctx.silent);
+    emitI18nError(
+      result.error.key,
+      { i: result.error.index },
+      ctx.silent,
+      ctx.text,
+      result.error.index,
+      result.error.length,
+    );
   }
 
   if (result.fallbackText) {
@@ -128,6 +142,14 @@ export const tryConsumeInlineTag = (
   inlineEnd: number,
 ): boolean => {
   if (inlineEnd === -1) {
+    emitI18nError(
+      "richTextInlineNotClosed",
+      { i: info.tagOpenPos },
+      ctx.silent,
+      ctx.text,
+      info.tagOpenPos,
+      info.inlineContentStart - info.tagOpenPos,
+    );
     ctx.buffer += ctx.text.slice(ctx.i, info.inlineContentStart);
     ctx.i = info.inlineContentStart;
     return true;
@@ -137,6 +159,8 @@ export const tryConsumeInlineTag = (
     tag: info.tag,
     richType: isRichType(info.tag) ? info.tag : null,
     tokens: [],
+    openPos: info.tagOpenPos,
+    openLen: info.inlineContentStart - info.tagOpenPos,
   });
   ctx.i = info.inlineContentStart;
   return true;
@@ -161,7 +185,14 @@ export const tryConsumeTagStart = (
 
 export const finalizeClosedNode = (ctx: ParseContext, node: ParseStackNode) => {
   if (!node.richType) {
-    emitI18nError("richTextUnknownTag", { tag: node.tag, i: ctx.i }, ctx.silent);
+    emitI18nError(
+      "richTextUnknownTag",
+      { tag: node.tag, i: node.openPos },
+      ctx.silent,
+      ctx.text,
+      node.openPos,
+      node.openLen,
+    );
 
     node.tokens.forEach((t) => {
       if (t.type === "text" && typeof t.value === "string") {
@@ -189,7 +220,14 @@ export const tryConsumeTagClose = (ctx: ParseContext): boolean => {
   if (!ctx.text.startsWith(END_TAG, ctx.i)) return false;
 
   if (ctx.stack.length === 0) {
-    emitI18nError("richTextUnexpectedClose", { i: ctx.i }, ctx.silent);
+    emitI18nError(
+      "richTextUnexpectedClose",
+      { i: ctx.i },
+      ctx.silent,
+      ctx.text,
+      ctx.i,
+      END_TAG.length,
+    );
     ctx.buffer += END_TAG;
     ctx.i += END_TAG.length;
     return true;

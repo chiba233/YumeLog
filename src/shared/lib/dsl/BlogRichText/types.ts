@@ -36,6 +36,8 @@ export interface ParseStackNode {
   tag: RichTagName;
   richType: RichType | null;
   tokens: TextToken[];
+  openPos: number;
+  openLen: number;
 }
 
 export interface ParseContext {
@@ -63,6 +65,7 @@ export interface ComplexTagParseResult {
   error?: {
     key: "richTextBlockNotClosed" | "richTextRawNotClosed";
     index: number;
+    length?: number;
   };
 }
 

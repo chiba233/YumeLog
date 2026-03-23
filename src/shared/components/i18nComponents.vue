@@ -1,11 +1,12 @@
 <template>
   <n-popselect
+    v-if="canUsePopSelectOptions"
     v-model:value="lang"
     :menu-props="{
       class: 'custom-i18n-menu',
       style: { '--dynamic-theme-color': themeColor },
     }"
-    :options="i18nLang"
+    :options="popSelectOptions"
     trigger="click"
   >
     <n-button
@@ -19,21 +20,40 @@
           <LangIcon />
         </n-icon>
       </template>
-      <a v-if="i18nLang.length > 0" :lang="lang" class="commonText">
-        {{ i18nLang.find((it) => it.value === lang)?.label }}</a
-      >
+      <span v-if="selectedLangLabel" :lang="lang" class="selectLangSpan commonText">{{
+        selectedLangLabel
+      }}</span>
     </n-button>
   </n-popselect>
+  <n-button
+    v-else
+    :color="themeColor"
+    :style="{ '--dynamic-width': props.btnWidth }"
+    class="buttonI18 sync-btn"
+    round
+  >
+    <template #icon>
+      <n-icon size="20">
+        <LangIcon />
+      </n-icon>
+    </template>
+    <span v-if="selectedLangLabel" :lang="lang" class="selectLangSpan commonText">{{
+      selectedLangLabel
+    }}</span>
+  </n-button>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, shallowRef, watchEffect } from "vue";
-import { lang } from "@/shared/lib/app/setupLang.ts";
+import { computed, onMounted, onServerPrefetch, shallowRef, watchEffect } from "vue";
+import { lang, langMap } from "@/shared/lib/app/setupLang.ts";
 import { themeColor, useTheme } from "@/shared/lib/app/useTheme.ts";
-import { NButton, NIcon, NPopselect, type SelectOption } from "naive-ui";
+import { NButton, NIcon, NPopselect } from "naive-ui";
 import LangIcon from "@/icons/langIcon.svg";
 import { $message } from "@/shared/lib/app/msgUtils.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
+import { loadPublicJson } from "@/shared/lib/app/publicData.ts";
+import type { SelectOption } from "@/shared/types/common.ts";
+import type { SelectMixedOption } from "naive-ui/es/select/src/interface";
 
 type I18nMap = Record<string, string>;
 const configLoadFailed = commonI18n.configLoadFailed as I18nMap;
@@ -45,23 +65,54 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   btnWidth: "auto",
 });
+const isSsr = import.meta.env.SSR;
+const canUsePopSelectOptions = !isSsr;
 const i18nLang = shallowRef<SelectOption[]>([]);
+const popSelectOptions = computed<SelectMixedOption[]>(() =>
+  i18nLang.value.map(({ label, value }) => ({ label, value })),
+);
+const selectedLangLabel = computed(
+  () => i18nLang.value.find((it) => it.value === lang.value)?.label,
+);
 
-onMounted(async () => {
-  if (!import.meta.env.SSR) {
-    await fetch("/data/config/i18nLang.json")
-      .then((res) => res.json())
-      .then((langData: SelectOption[]) => {
-        i18nLang.value = langData;
-      })
-      .catch((err) => {
-        $message.error(`I18n - ${configLoadFailed[lang.value]}: ${err}`, true, 4000);
-      });
+const getConfigLoadFailedMessage = (): string =>
+  configLoadFailed[lang.value] ?? configLoadFailed.en;
+const formatError = (err: unknown): string => (err instanceof Error ? err.message : String(err));
+
+const assignI18nLang = (langData: SelectOption[]): void => {
+  i18nLang.value = langData;
+  langMap.value = langData;
+};
+
+const loadI18nLang = async (): Promise<void> => {
+  if (i18nLang.value.length > 0) return;
+
+  try {
+    const langData = await loadPublicJson<SelectOption[]>("data/config/i18nLang.json");
+    if (!langData) {
+      throw new Error("I18n language config is empty");
+    }
+
+    assignI18nLang(langData);
+  } catch (err) {
+    const message = `I18n - ${getConfigLoadFailedMessage()}: ${formatError(err)}`;
+    if (isSsr) {
+      console.error(message);
+      return;
+    }
+
+    $message.error(message, true, 4000);
   }
+};
+
+onServerPrefetch(loadI18nLang);
+
+onMounted(() => {
+  void loadI18nLang();
 });
 
 watchEffect(() => {
-  if (import.meta.env.SSR) return;
+  if (isSsr) return;
   document.documentElement.lang = lang.value;
 });
 </script>
@@ -183,12 +234,13 @@ watchEffect(() => {
       margin-left: 6px !important;
     }
   }
+}
 
-  a {
-    white-space: nowrap;
-    @media (max-width: 300px) {
-      display: none;
-    }
+.selectLangSpan {
+  display: inline-block;
+  white-space: nowrap;
+  @media (max-width: 300px) {
+    display: none;
   }
 }
 </style>

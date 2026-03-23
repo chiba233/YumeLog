@@ -12,7 +12,7 @@
           <Clock></Clock>
         </n-icon>
       </template>
-      <a :lang="lang" class="commonText">{{ buttonTitle }}</a>
+      <span :lang="lang" class="commonText selectFromNowSpan">{{ buttonTitle }}</span>
     </n-button>
     <n-modal
       v-model:show="showFromNowModal"
@@ -178,12 +178,13 @@ const buttonTitle = computed(() => {
       margin-left: 6px !important;
     }
   }
+}
 
-  a {
-    white-space: nowrap;
-    @media (max-width: 300px) {
-      display: none;
-    }
+.selectFromNowSpan {
+  display: inline-block;
+  white-space: nowrap;
+  @media (max-width: 300px) {
+    display: none;
   }
 }
 

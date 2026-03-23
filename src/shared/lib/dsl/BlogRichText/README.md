@@ -57,7 +57,6 @@
 
 - 在 `tests/blockDsl.golden.test.ts` 或相关文件中添加测试用例。
 - 运行 `pnpm run test:dsl` 验证输出。
-
 6. **前端渲染**: 在 `RichTextRenderer.vue` 或对应组件中增加对新 token 类型的渲染逻辑。
 
 ---

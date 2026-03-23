@@ -9,7 +9,6 @@ import { lang } from "@/shared/lib/app/setupLang.ts";
 import { themeColor } from "@/shared/lib/app/useTheme.ts";
 import commonI18n from "@/data/I18N/commonI18n.json";
 import { personRawData, socialRawData } from "@/shared/lib/app/setupJson.ts";
-import ClientOnly from "@/shared/components/ClientOnly.vue";
 import { useCardGlow } from "@/shared/lib/app/animationCalculate.ts";
 import { changeSpareUrl, listPrimaryError } from "@/shared/lib/yaml";
 import { $message } from "@/shared/lib/app/msgUtils.ts";
@@ -128,9 +127,7 @@ watch(
 <template>
   <n-message-provider>
     <MessageProvider>
-      <ClientOnly>
-        <top-bar class="topBar"></top-bar>
-      </ClientOnly>
+      <top-bar class="topBar"></top-bar>
       <div class="viewport">
         <div class="main">
           <router-view v-slot="{ Component }">

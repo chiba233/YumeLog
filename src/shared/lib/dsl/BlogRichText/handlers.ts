@@ -10,6 +10,7 @@ import {
 } from "./builders";
 import { unescapeInline } from "./escape";
 import { createToken } from "@/shared/lib/dsl/BlogRichText/createToken";
+import { coreFormatTime, formatDateByLang } from "@/shared/lib/app/langCore.ts";
 
 type TitledLabelKey = "labelInfo" | "labelWarning" | "collapseClickToExpand";
 
@@ -35,6 +36,44 @@ export const TAG_HANDLERS: Partial<TagHandlerMap> = {
         type: "link",
         url: unescapeInline(extractText(urlPart)).trim(),
         value: contentPart,
+      });
+    },
+  },
+  fromNow: {
+    inline: (tokens: TextToken[]) => {
+      const parts = splitTokensByPipe(tokens);
+
+      const date = unescapeInline(extractText(parts[0] ?? [])).trim();
+      const lang = unescapeInline(extractText(parts[1] ?? [])).trim();
+
+      return createToken({
+        type: "fromNow",
+        value: coreFormatTime({
+          date,
+          lang: lang || undefined,
+        }),
+      });
+    },
+  },
+  date: {
+    inline: (tokens: TextToken[]) => {
+      const parts = splitTokensByPipe(tokens);
+      const date = unescapeInline(extractText(parts[0] ?? [])).trim();
+      const format = unescapeInline(extractText(parts[1] ?? [])).trim();
+      const lang = unescapeInline(extractText(parts[2] ?? [])).trim();
+      if (!format) {
+        return createToken({
+          type: "date",
+          value: formatDateByLang(lang || "en", date),
+        });
+      }
+      return createToken({
+        type: "date",
+        value: coreFormatTime({
+          date,
+          format,
+          lang: lang || undefined,
+        }),
       });
     },
   },

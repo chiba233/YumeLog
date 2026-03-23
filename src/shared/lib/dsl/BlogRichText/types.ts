@@ -10,6 +10,8 @@ export const RICH_TYPES = [
   "warning",
   "raw-code",
   "collapse",
+  "fromNow",
+  "date",
 ] as const;
 
 export const BLOCK_TYPES = ["info", "warning", "center", "raw-code", "collapse"] as const;

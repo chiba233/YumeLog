@@ -39,12 +39,20 @@ export const createYamlTextState = ({
   registerServerPrefetch = true,
 }: YamlTextResourceDeps) => {
   const introData = ref<DynamicIntroduction | null>(null);
+  const loadFailed = ref(false);
   const loadData = async () => {
-    if (introData.value) return;
     try {
       const res = await getSingle<DynamicIntroduction>(type, fileName);
-      if (res) introData.value = res;
+      if (res) {
+        introData.value = res;
+        loadFailed.value = false;
+      } else {
+        introData.value = null;
+        loadFailed.value = true;
+      }
     } catch (e) {
+      introData.value = null;
+      loadFailed.value = true;
       if (ssr && registerServerPrefetch) {
         throw new Error(
           `[SSR/YamlText] Failed to load ${type}/${fileName}: ${
@@ -74,7 +82,9 @@ export const createYamlTextState = ({
 
   const text = computed(() => {
     const data = introData.value;
-    if (!data || !Array.isArray(data[keyName])) return "...";
+    if (!data || !Array.isArray(data[keyName])) {
+      return loadFailed.value || ssr ? "..." : "";
+    }
     const targetBlocks = data[keyName] as CommonI18nBlock[];
     const current = currentLang.value;
     const found =

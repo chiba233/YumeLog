@@ -1,8 +1,10 @@
 // noinspection ES6PreferShortImport
 
 import assert from "node:assert/strict";
+import dayjs from "dayjs";
 import { parseRichText, stripRichText } from "../src/shared/lib/dsl/BlogRichText/blogFormat.ts";
 import type { TextToken } from "../src/shared/lib/dsl/BlogRichText/types.ts";
+import { formatDateByLang } from "../src/shared/lib/app/langCore.ts";
 import { runGoldenCases } from "./testHarness";
 
 const normalizeTokens = (tokens: TextToken[]): unknown[] => {
@@ -31,6 +33,30 @@ const createDeterministicDirtyText = (
 
   return output;
 };
+
+const createDeterministicNumbers = (
+  seed: number,
+  count: number,
+  minInclusive: number,
+  maxInclusive: number,
+): number[] => {
+  let state = seed >>> 0;
+  const values: number[] = [];
+  const span = maxInclusive - minInclusive + 1;
+
+  for (let i = 0; i < count; i++) {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    values.push(minInclusive + (state % span));
+  }
+
+  return values;
+};
+
+const formatIsoDay = (base: string, offsetDays: number): string =>
+  dayjs(base).add(offsetDays, "day").format("YYYY-MM-DD");
+
+const formatIsoInstant = (base: string, offsetDays: number): string =>
+  dayjs(base).add(offsetDays, "day").toISOString();
 
 const cases: Array<{ name: string; run: () => void }> = [
   // --- [Common] 核心与通用逻辑 ---
@@ -265,6 +291,51 @@ const cases: Array<{ name: string; run: () => void }> = [
   },
 
   // --- [Inline] 行内标签相关 ---
+  {
+    name: "[Inline/Date] date 标签自定义格式与语言 -> 应当产出格式化后的纯文本 token",
+    run: () => {
+      const tokens = parseRichText("$$date(2024-01-02|YYYY/MM/DD|en)$$", 50, true);
+
+      assert.deepEqual(normalizeTokens(tokens), [{ type: "date", value: "2024/01/02" }]);
+    },
+  },
+  {
+    name: "[Inline/Date] date 标签省略 format -> 应当走按语言默认日期格式",
+    run: () => {
+      const offsets = createDeterministicNumbers(42, 24, 0, 3650);
+
+      offsets.forEach((offset) => {
+        const date = formatIsoDay("2020-01-01", offset);
+        const tokens = parseRichText(`$$date(${date}||th)$$`, 50, true);
+        const expected = dayjs(date).locale("th").format("D MMMM BBBB - dddd");
+
+        assert.deepEqual(normalizeTokens(tokens), [{ type: "date", value: expected }]);
+        assert.equal(formatDateByLang("th", date), expected);
+      });
+    },
+  },
+  {
+    name: "[Inline/Time] fromNow 标签带语言参数 -> 应当基于当前时间输出相对时间文本",
+    run: () => {
+      const realDateNow = Date.now;
+      const baseNow = "2026-03-23T00:00:00.000Z";
+      Date.now = () => new Date(baseNow).valueOf();
+
+      try {
+        const offsets = createDeterministicNumbers(7, 20, -400, 400);
+
+        offsets.forEach((offset) => {
+          const date = formatIsoInstant(baseNow, offset);
+          const tokens = parseRichText(`$$fromNow(${date}|en)$$`, 50, true);
+          const expected = dayjs(date).locale("en-au").from(dayjs(baseNow));
+
+          assert.deepEqual(normalizeTokens(tokens), [{ type: "fromNow", value: expected }]);
+        });
+      } finally {
+        Date.now = realDateNow;
+      }
+    },
+  },
   {
     name: "[Inline/Basic] 基础标签 -> 应当生成正确的嵌套 token 结构",
     run: () => {

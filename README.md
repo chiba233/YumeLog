@@ -138,6 +138,13 @@ pnpm run verify:build
 
 先执行 `verify`，再执行完整 `build`。
 
+### 7. TypeScript 约束
+
+- 禁止提交 `as any`
+- 非必要场景不要直接使用 `any`
+- 遇到类型错误时，优先补全类型定义、收窄类型或抽出明确的类型守卫，不要用 `as any` 绕过检查
+- 如果确实存在边界场景需要逃逸类型，必须先说明原因，并选择比 `as any` 更小范围、更可审计的写法
+
 ---
 
 # DSL 总体架构 (DSL Architecture)
@@ -165,6 +172,8 @@ yumeLog 当前的内容系统可以理解为三层：
 - 删除线
 - 居中
 - 链接
+- 绝对日期格式化
+- 相对时间格式化
 - 提示块
 - 折叠块
 - 代码块
@@ -434,6 +443,8 @@ $$type(arg1 | arg2)$$
 ```text
 $$bold(Hello World)$$
 $$link(https://example.com | 点我访问)$$
+$$date(2026-03-21||zh)$$
+$$fromNow(2026-03-21T00:00:00.000Z|en)$$
 ```
 
 ---
@@ -496,6 +507,8 @@ $$collapse(点我展开)*
 | `center`    | 居中          |   no   |    no    | yes  |
 | `code`      | 行内代码        |   no   |    no    | yes  |
 | `link`      | 超链接         |   no   |    no    | yes  |
+| `date`      | 日期格式化       |   no   |    no    |  no  |
+| `fromNow`   | 相对时间格式化     |   no   |    no    |  no  |
 | `info`      | 信息提示块       |  yes   |   yes    | yes  |
 | `warning`   | 警告提示块       |  yes   |   yes    | yes  |
 | `collapse`  | 折叠块         |  yes   |   yes    | yes  |
@@ -515,6 +528,21 @@ $$bold(Hello World)$$
 
 ```text
 $$link(https://example.com | 点我访问)$$
+```
+
+### 日期
+
+```text
+$$date(2026-03-21)$$
+$$date(2026-03-21||th)$$
+$$date(2026-03-21|YYYY/MM/DD|en)$$
+```
+
+### 相对时间
+
+```text
+$$fromNow(2026-03-21T00:00:00.000Z|en)$$
+$$fromNow(2026-03-21|zh)$$
 ```
 
 ### 提示块
@@ -578,6 +606,74 @@ $$code(const a = 1)$$
 ```
 
 如果你在这些类型里写了额外的 `|`，解析器仍会把它当作文本中的参数切割处理，因此不建议这样写。
+
+### `date`
+
+标准写法：
+
+```text
+$$date(date | format | lang)$$
+```
+
+#### 参数含义
+
+- 第一个参数：日期值
+- 第二个参数：格式字符串，可选
+- 第三个参数：语言，可选
+
+#### fallback 规则
+
+- `format` 为空时：使用当前语言对应的默认日期格式
+- `lang` 为空时：默认按 `en` 处理
+
+#### 默认格式
+
+- `th`：`D MMMM BBBB - dddd`
+- 其他当前支持语言：`LL - dddd`
+
+#### 示例
+
+```text
+$$date(2026-03-21)$$
+$$date(2026-03-21||th)$$
+$$date(2026-03-21|YYYY/MM/DD|en)$$
+```
+
+说明：
+
+- 推荐传入 `YYYY-MM-DD` 或完整 ISO 时间字符串
+- `date` 的结果是纯文本，不会继续解析内部嵌套 Rich Text
+
+### `fromNow`
+
+标准写法：
+
+```text
+$$fromNow(date | lang)$$
+```
+
+#### 参数含义
+
+- 第一个参数：日期值
+- 第二个参数：语言，可选
+
+#### fallback 规则
+
+- `lang` 为空时：默认按 `en` 处理
+- `date` 非法时：输出 `error`
+
+#### 示例
+
+```text
+$$fromNow(2026-03-21T00:00:00.000Z|en)$$
+$$fromNow(2026-03-21|zh)$$
+```
+
+说明：
+
+- 相对时间是基于运行时当前时间计算的，例如“3 days ago”
+- 推荐优先使用完整 ISO 时间字符串，避免时区带来的理解偏差
+- `fromNow` 的结果是纯文本，不会继续解析内部嵌套 Rich Text
 
 ### `link`
 
@@ -764,6 +860,8 @@ code
 | `center`    | `$$center(text)$$`                               | `text`                   | 无特殊 fallback                          | 不建议传多参数       |
 | `code`      | `$$code(text)$$`                                 | `text`                   | 无特殊 fallback                          | 不建议传多参数       |
 | `link`      | `$$link(url \| text)$$`                          | `url`, `text`            | `text` fallback 为 `url`               | 多余参数合并进显示内容   |
+| `date`      | `$$date(date \| format \| lang)$$`               | `date`, `format`, `lang` | `format` 为空时按语言默认格式，`lang -> en`      | 第三个之后的参数不建议使用 |
+| `fromNow`   | `$$fromNow(date \| lang)$$`                      | `date`, `lang`           | `lang -> en`                          | 第二个之后的参数不建议使用 |
 | `info`      | `$$info(title \| content)$$`                     | `title`, `content`       | 标题 fallback 为默认文案                     | 多余参数合并进正文     |
 | `warning`   | `$$warning(title \| content)$$`                  | `title`, `content`       | 标题 fallback 为默认文案                     | 多余参数合并进正文     |
 | `collapse`  | `$$collapse(title \| content)$$`                 | `title`, `content`       | 标题 fallback 为默认文案                     | 多余参数合并进正文     |

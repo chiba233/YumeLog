@@ -505,7 +505,7 @@ const cases: Array<{ name: string; run: () => void }> = [
         "- title: \"a\\\"b\"\n  desc: 'c\\'d'",
       );
 
-      assert.deepEqual(stripTempIds(result), [{ title: "a\"b", desc: "c\\'d" }]);
+      assert.deepEqual(stripTempIds(result), [{ title: 'a"b', desc: "c\\'d" }]);
     },
   },
 

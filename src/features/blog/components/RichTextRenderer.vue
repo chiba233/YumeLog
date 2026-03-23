@@ -121,6 +121,8 @@ const tagMap: Record<RichType, RenderTarget> = {
   warning: NAlert,
   collapse: CollapseWrapper,
   "raw-code": ShikiCodeBlock,
+  date: "span",
+  fromNow: "span",
 };
 
 const getUrl = (token: TextToken) => (token.url ? normalizeUrl(token.url) : undefined);
@@ -178,6 +180,8 @@ const normalizeUrl = (raw: string): string | undefined => {
 .rich-text-content,
 .fw-bold,
 .fw-thin,
+.fw-date,
+.fw-fromNow,
 .center-text,
 .rich-underline,
 .rich-strike {
@@ -330,6 +334,8 @@ a.fw-link {
   .rich-underline,
   .fw-bold,
   .fw-thin,
+  .fw-date,
+  .fw-fromNow,
   .rich-strike {
     font-size: 1em !important;
     line-height: inherit !important;
@@ -415,6 +421,8 @@ a.fw-link {
   .rich-text-content,
   .fw-bold,
   .fw-thin,
+  .fw-date,
+  .fw-fromNow,
   .center-text,
   .rich-underline,
   .rich-strike,
@@ -441,6 +449,8 @@ a.fw-link {
   .rich-text-content,
   .fw-bold,
   .fw-thin,
+  .fw-date,
+  .fw-fromNow,
   .center-text,
   .rich-underline,
   .rich-strike,
@@ -482,6 +492,8 @@ a.fw-link {
     .rich-text-content,
     .fw-bold,
     .fw-thin,
+    .fw-date,
+    .fw-fromNow,
     .center-text,
     .rich-underline,
     .rich-strike,

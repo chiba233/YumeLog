@@ -75,6 +75,19 @@
       }
     }
   ],
+  "rootValidationCase": {
+    "name": "[SingleResource/Title] 根块校验 -> 在根块名称不匹配 title 时应当直接抛出异常",
+    "parserKey": "main:title.dsl",
+    "input": "@friends\n- type: en\n  content: Hello\n@end",
+    "syntax": {
+      "blockNames": [
+        "friends"
+      ],
+      "maxDepth": 1,
+      "nestableBlocks": []
+    },
+    "expectedMessage": "Unsupported DSL resource root: expected title, got friends"
+  },
   "errorCases": [
     {
       "name": "[SingleResource/FromNow] 鲁棒性 -> 局部 Key-Value 脏数据场景下应当跳过并恢复解析",

@@ -14,6 +14,7 @@ import {
 import { personRawData } from "../src/shared/lib/app/setupJson.ts";
 import type { Post } from "../src/shared/types/blog.ts";
 import type { CommonI18nBlock } from "../src/shared/types/common.ts";
+import type { PersonConfig } from "../src/shared/types/social.ts";
 import { MAIN_CONTENT_RESOURCES } from "../src/shared/lib/app/mainContentResources.ts";
 import { resolveSiteOrigin, sanitizeAssetUrl } from "../src/shared/lib/app/siteOrigin.ts";
 import { runGoldenCases } from "./testHarness";
@@ -36,7 +37,7 @@ interface HeadAndI18nFixture {
   seoHead: {
     origin: string;
     webTitles: Record<string, Record<string, string>>;
-    author: Record<string, Record<string, string>>;
+    author: PersonConfig;
     posts: Post[];
     blogCanonical: string;
     articleCanonical: string;

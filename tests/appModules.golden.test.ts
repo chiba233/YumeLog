@@ -45,18 +45,21 @@ const getCollectionLength = (value: unknown): number => {
 
 const createInjectedYamlApi = () => {
   const requests: string[] = [];
-  const files = new Map<string, string>([
+  const fileEntries: Array<readonly [string, string]> = [
     ["/data/config/yamlUrl.json", JSON.stringify(fixture.yamlConfig)],
     [fixture.blog.listPath, JSON.stringify(fixture.blog.fileNames)],
-    ...Object.entries(fixture.mainResources).map(([fileName, content]) => [
-      `${fixture.yamlConfig.main.url}/${fileName}`.replace(/\/+/g, "/"),
-      content,
-    ]),
-    ...Object.entries(fixture.blog.files).map(([fileName, content]) => [
+    ...Object.entries(fixture.mainResources).map(
+      ([fileName, content]): readonly [string, string] => [
+        `${fixture.yamlConfig.main.url}/${fileName}`.replace(/\/+/g, "/"),
+        content,
+      ],
+    ),
+    ...Object.entries(fixture.blog.files).map(([fileName, content]): readonly [string, string] => [
       `${fixture.yamlConfig.blog.url}/${fileName}`.replace(/\/+/g, "/"),
       content,
     ]),
-  ]);
+  ];
+  const files = new Map<string, string>(fileEntries);
 
   const api = createYamlApi(
     async (resourcePath) => {
@@ -109,7 +112,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         loadSingleYaml: api.loadSingleYaml,
       });
 
-      const posts = await store.getPosts<{ title: string }>("blog");
+      const posts = await store.getPosts<{ title: string; time: string }>("blog");
       const titleData = await store.getSingle<Record<string, unknown>>(
         titleResource.type,
         titleResource.fileName,

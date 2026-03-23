@@ -25,6 +25,8 @@ $$center($$bold($$underline(这是测试)$$)$$)$$
 @end
 
 @text
+$$date(2026-03-21||zh)$$
+$$fromNow(2026-03-21T00:00:00.000Z|en)$$
 $$bold(维度 5：无主之矛 (The Orphaned Dollars))$$
 1. 纯符号堆叠（后面无标签）：
 $$$$$$$$

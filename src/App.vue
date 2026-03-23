@@ -496,6 +496,10 @@ figure {
       opacity 0.3s !important;
   }
 
+  .n-message__content {
+    white-space: pre-line;
+  }
+
   .n-message.n-message--info-type {
     --n-color: rgba(235, 245, 255, 0.6) !important;
     --n-content-text-color: #2080f0 !important;

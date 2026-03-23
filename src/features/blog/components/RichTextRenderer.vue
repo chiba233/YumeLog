@@ -316,14 +316,15 @@ a.fw-link {
 .code-text {
   font-family: "SFMono-Regular", Consolas, monospace;
   background-color: rgba(var(--global-theme-rgb-deep), 0.13) !important;
-  padding: 0.2em 0.35em;
+  padding: 0.05em 0.35em;
   border-radius: 6px;
-  font-size: 0.8em;
+  font-size: 0.7em;
   font-weight: bold;
-  line-height: 1.4;
+  line-height: 1;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  display: inline !important;
+  display: inline-block !important;
+  vertical-align: baseline;
   text-decoration: none !important;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
@@ -337,7 +338,7 @@ a.fw-link {
   .fw-date,
   .fw-fromNow,
   .rich-strike {
-    font-size: 1em !important;
+    font-size: inherit !important;
     line-height: inherit !important;
   }
 
@@ -390,8 +391,28 @@ a.fw-link {
   .n-alert-body__content {
     min-width: 0;
 
-    span {
+    span:not(.code-text) {
       font-size: 1.1rem;
+    }
+
+    .code-text {
+      padding: 0.25em 0.35em !important;
+      font-size: 1em !important;
+      line-height: 1 !important;
+      vertical-align: baseline;
+
+      .rich-text-content,
+      .center-text,
+      .fw-link,
+      .rich-underline,
+      .fw-bold,
+      .fw-thin,
+      .fw-date,
+      .fw-fromNow,
+      .rich-strike {
+        font-size: inherit !important;
+        line-height: inherit !important;
+      }
     }
   }
 
@@ -498,11 +519,30 @@ a.fw-link {
     .rich-underline,
     .rich-strike,
     .n-alert-body__content,
-    .n-alert-body__content span,
+    .n-alert-body__content span:not(.code-text),
     .n-alert-body__content div,
     .n-alert-body__content p {
       font-size: 1.02rem !important;
       line-height: 1.45rem !important;
+    }
+
+    .n-alert-body__content .code-text {
+      padding: 0.15em 0.3em !important;
+      font-size: 0.9em !important;
+      line-height: 1 !important;
+
+      .rich-text-content,
+      .center-text,
+      .fw-link,
+      .rich-underline,
+      .fw-bold,
+      .fw-thin,
+      .fw-date,
+      .fw-fromNow,
+      .rich-strike {
+        font-size: inherit !important;
+        line-height: inherit !important;
+      }
     }
   }
 }

@@ -562,10 +562,15 @@ $border-radius: 16px;
     }
 
     .skeleton-image {
-      width: 120px;
-      height: 120px;
+      width: 7.5em;
+      height: 7.5em;
       flex-shrink: 0;
       border-radius: 12px;
+
+      @media (max-width: 899.98px) {
+        width: 6.7em;
+        height: 6.7em;
+      }
     }
 
     .skeleton-description {
@@ -573,11 +578,11 @@ $border-radius: 16px;
       flex-direction: column;
       flex: 1;
       width: 100%;
-      gap: 0.5rem;
+      gap: 0.45rem;
       justify-content: center;
 
       .skeleton-text-line {
-        height: 0.8rem;
+        height: 1em;
 
         &.line-1 {
           width: 100%;
@@ -924,12 +929,17 @@ $border-radius: 16px;
 
       img {
         z-index: 3;
-        width: 120px;
-        height: 120px;
+        width: 7.5em;
+        height: 7.5em;
         object-fit: cover;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         margin: 0 0.25rem;
+
+        @media (max-width: 899.98px) {
+          width: 6.7em;
+          height: 6.7em;
+        }
       }
 
       .thirdImg,
@@ -968,34 +978,34 @@ $border-radius: 16px;
 
       &.expanded-text p {
         @media (max-width: 899.98px) {
-          -webkit-line-clamp: 11;
-          line-clamp: 11;
+          -webkit-line-clamp: 9;
+          line-clamp: 9;
         }
         @media (min-width: 900px) {
-          -webkit-line-clamp: 8;
-          line-clamp: 8;
+          -webkit-line-clamp: 7;
+          line-clamp: 7;
         }
       }
 
       p {
         max-height: 100%;
         margin: 0;
-        line-height: 1.4;
-        font-size: 0.8rem;
+        line-height: 1.45;
+        font-size: 1em;
         word-break: break-all;
         white-space: normal;
         display: -webkit-box;
         -webkit-box-orient: vertical;
         overflow: hidden;
-        letter-spacing: 0.02em;
+        letter-spacing: 0.03em;
         box-orient: vertical; //test values
         @media (max-width: 899.98px) {
           -webkit-line-clamp: 4;
           line-clamp: 4;
         }
         @media (min-width: 900px) {
-          -webkit-line-clamp: 8;
-          line-clamp: 8;
+          -webkit-line-clamp: 7;
+          line-clamp: 7;
         }
       }
     }

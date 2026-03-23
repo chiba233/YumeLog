@@ -18,11 +18,7 @@ $$center($$bold($$underline(这是测试)$$)$$)$$
 @divider
 @end
 
-@image
-- src: /background0.webp
-  spareUrl: /background0.webp
-  desc: 这是图片描述
-@end
+
 
 @text
 $$date(2026-03-21||zh)$$

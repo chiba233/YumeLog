@@ -645,10 +645,7 @@ const cases: Array<{ name: string; run: () => void }> = [
       assert.equal(messageState.errors.length, 1);
       assert.equal(messageState.errors[0]?.closable, true);
       assert.equal(messageState.errors[0]?.duration, 5000);
-      assert.match(
-        messageState.errors[0]?.content ?? "",
-        /^\[RichText Error\] \(L2:C1\) Inline tag not closed:/,
-      );
+      assert.match(messageState.errors[0]?.content ?? "", /^\(L2:C1\) Inline tag not closed:/);
       assert.match(messageState.errors[0]?.content ?? "", />>>\$\$bold\(<<< hello$/);
     },
   },
@@ -777,10 +774,7 @@ const cases: Array<{ name: string; run: () => void }> = [
         "$$raw-code(ts)%\nconst a = 1\n  %end$$",
       );
       assert.equal(messageState.errors.length, 1);
-      assert.match(
-        messageState.errors[0]?.content ?? "",
-        /^\[RichText Error\] \(L3:C3\) Malformed raw close:/,
-      );
+      assert.match(messageState.errors[0]?.content ?? "", /^\(L3:C3\) Malformed raw close:/);
       assert.doesNotMatch(messageState.errors[0]?.content ?? "", /Raw block not closed/);
       assert.match(messageState.errors[0]?.content ?? "", />>>%end\$\$<</);
     },
@@ -918,10 +912,7 @@ const cases: Array<{ name: string; run: () => void }> = [
         "$$collapse(Title)*\nhello\n  *end$$",
       );
       assert.equal(messageState.errors.length, 1);
-      assert.match(
-        messageState.errors[0]?.content ?? "",
-        /^\[RichText Error\] \(L3:C3\) Malformed block close:/,
-      );
+      assert.match(messageState.errors[0]?.content ?? "", /^\(L3:C3\) Malformed block close:/);
       assert.doesNotMatch(messageState.errors[0]?.content ?? "", /Block tag not closed/);
       assert.match(messageState.errors[0]?.content ?? "", />>>\*end\$\$<</);
     },

@@ -84,25 +84,25 @@
     "other": "Page routing failed, please try again later"
   },
   "richTextDepthLimit": {
-    "zh": "[RichText Error] (L{line}:C{column}) 嵌套过深: {context}",
-    "en": "[RichText Error] (L{line}:C{column}) Nesting too deep: {context}",
-    "ja": "[RichText Error] (L{line}:C{column}) ネストが深すぎます: {context}",
-    "th": "[RichText Error] (L{line}:C{column}) การซ้อนทับลึกเกินไป: {context}",
-    "other": "[RichText Error] (L{line}:C{column}) Nesting too deep: {context}"
+    "zh": "(L{line}:C{column}) 嵌套过深: {context}",
+    "en": "(L{line}:C{column}) Nesting too deep: {context}",
+    "ja": "(L{line}:C{column}) ネストが深すぎます: {context}",
+    "th": "(L{line}:C{column}) การซ้อนทับลึกเกินไป: {context}",
+    "other": "(L{line}:C{column}) Nesting too deep: {context}"
   },
   "richTextUnexpectedClose": {
-    "zh": "[RichText Error] (L{line}:C{column}) 意外闭合: {context}",
-    "en": "[RichText Error] (L{line}:C{column}) Unexpected close: {context}",
-    "ja": "[RichText Error] (L{line}:C{column}) 予期しない閉じタグ: {context}",
-    "th": "[RichText Error] (L{line}:C{column}) แท็กปิดที่ไม่คาดคิด: {context}",
-    "other": "[RichText Error] (L{line}:C{column}) Unexpected close: {context}"
+    "zh": "(L{line}:C{column}) 意外闭合: {context}",
+    "en": "(L{line}:C{column}) Unexpected close: {context}",
+    "ja": "(L{line}:C{column}) 予期しない閉じタグ: {context}",
+    "th": "(L{line}:C{column}) แท็กปิดที่ไม่คาดคิด: {context}",
+    "other": "(L{line}:C{column}) Unexpected close: {context}"
   },
   "richTextUnknownTag": {
-    "zh": "[RichText Error] (L{line}:C{column}) 未知标签 '{tag}': {context}",
-    "en": "[RichText Error] (L{line}:C{column}) Unknown tag '{tag}': {context}",
-    "ja": "[RichText Error] (L{line}:C{column}) 不明なタグ '{tag}': {context}",
-    "th": "[RichText Error] (L{line}:C{column}) แท็กที่ไม่รู้จัก '{tag}': {context}",
-    "other": "[RichText Error] (L{line}:C{column}) Unknown tag '{tag}': {context}"
+    "zh": "(L{line}:C{column}) 未知标签 '{tag}': {context}",
+    "en": "(L{line}:C{column}) Unknown tag '{tag}': {context}",
+    "ja": "(L{line}:C{column}) 不明なタグ '{tag}': {context}",
+    "th": "(L{line}:C{column}) แท็กที่ไม่รู้จัก '{tag}': {context}",
+    "other": "(L{line}:C{column}) Unknown tag '{tag}': {context}"
   },
   "yamlLoadFailed": {
     "zh": "YAML加载失败: {err}",
@@ -161,18 +161,18 @@
     "other": "[Config Error]: Type '{type}' not found in YamlUrlConfig."
   },
   "richTextRawNotClosed": {
-    "zh": "[RichText Error] (L{line}:C{column}) Raw 块未闭合: {context}",
-    "en": "[RichText Error] (L{line}:C{column}) Raw block not closed: {context}",
-    "ja": "[RichText Error] (L{line}:C{column}) raw ブロックが閉じられていません: {context}",
-    "th": "[RichText Error] (L{line}:C{column}) บล็อก raw ยังไม่ได้ปิด: {context}",
-    "other": "[RichText Error] (L{line}:C{column}) Raw block not closed: {context}"
+    "zh": "(L{line}:C{column}) Raw 块未闭合: {context}",
+    "en": "(L{line}:C{column}) Raw block not closed: {context}",
+    "ja": "(L{line}:C{column}) raw ブロックが閉じられていません: {context}",
+    "th": "(L{line}:C{column}) บล็อก raw ยังไม่ได้ปิด: {context}",
+    "other": "(L{line}:C{column}) Raw block not closed: {context}"
   },
   "richTextRawCloseMalformed": {
-    "zh": "[RichText Error] (L{line}:C{column}) Raw 闭合行格式错误: {context}",
-    "en": "[RichText Error] (L{line}:C{column}) Malformed raw close: {context}",
-    "ja": "[RichText Error] (L{line}:C{column}) raw の閉じ行の形式が不正です: {context}",
-    "th": "[RichText Error] (L{line}:C{column}) รูปแบบบรรทัดปิด raw ไม่ถูกต้อง: {context}",
-    "other": "[RichText Error] (L{line}:C{column}) Malformed raw close: {context}"
+    "zh": "(L{line}:C{column}) Raw 闭合行格式错误: {context}",
+    "en": "(L{line}:C{column}) Malformed raw close: {context}",
+    "ja": "(L{line}:C{column}) raw の閉じ行の形式が不正です: {context}",
+    "th": "(L{line}:C{column}) รูปแบบบรรทัดปิด raw ไม่ถูกต้อง: {context}",
+    "other": "(L{line}:C{column}) Malformed raw close: {context}"
   },
   "unsupportedCodeLanguage": {
     "zh": "不支持的代码语言：'{language}'。",
@@ -238,25 +238,25 @@
     "other": "[DSL Error] DSL nesting exceeded max depth {maxDepth}; block \"{name}\" is at line {line}"
   },
   "richTextBlockNotClosed": {
-    "zh": "[RichText Error] (L{line}:C{column}) Block 块未闭合: {context}",
-    "en": "[RichText Error] (L{line}:C{column}) Block tag not closed: {context}",
-    "ja": "[RichText Error] (L{line}:C{column}) ブロックタグが閉じられていません: {context}",
-    "th": "[RichText Error] (L{line}:C{column}) แท็กบล็อกยังไม่ได้ปิด: {context}",
-    "other": "[RichText Error] (L{line}:C{column}) Block tag not closed: {context}"
+    "zh": "(L{line}:C{column}) Block 块未闭合: {context}",
+    "en": "(L{line}:C{column}) Block tag not closed: {context}",
+    "ja": "(L{line}:C{column}) ブロックタグが閉じられていません: {context}",
+    "th": "(L{line}:C{column}) แท็กบล็อกยังไม่ได้ปิด: {context}",
+    "other": "(L{line}:C{column}) Block tag not closed: {context}"
   },
   "richTextBlockCloseMalformed": {
-    "zh": "[RichText Error] (L{line}:C{column}) Block 闭合行格式错误: {context}",
-    "en": "[RichText Error] (L{line}:C{column}) Malformed block close: {context}",
-    "ja": "[RichText Error] (L{line}:C{column}) ブロックの閉じ行の形式が不正です: {context}",
-    "th": "[RichText Error] (L{line}:C{column}) รูปแบบบรรทัดปิด block ไม่ถูกต้อง: {context}",
-    "other": "[RichText Error] (L{line}:C{column}) Malformed block close: {context}"
+    "zh": "(L{line}:C{column}) Block 闭合行格式错误: {context}",
+    "en": "(L{line}:C{column}) Malformed block close: {context}",
+    "ja": "(L{line}:C{column}) ブロックの閉じ行の形式が不正です: {context}",
+    "th": "(L{line}:C{column}) รูปแบบบรรทัดปิด block ไม่ถูกต้อง: {context}",
+    "other": "(L{line}:C{column}) Malformed block close: {context}"
   },
   "richTextInlineNotClosed": {
-    "zh": "[RichText Error] (L{line}:C{column}) Inline 标签未闭合: {context}",
-    "en": "[RichText Error] (L{line}:C{column}) Inline tag not closed: {context}",
-    "ja": "[RichText Error] (L{line}:C{column}) インラインタグが閉じられていません: {context}",
-    "th": "[RichText Error] (L{line}:C{column}) แท็ก inline ยังไม่ได้ปิด: {context}",
-    "other": "[RichText Error] (L{line}:C{column}) Inline tag not closed: {context}"
+    "zh": "(L{line}:C{column}) Inline 标签未闭合: {context}",
+    "en": "(L{line}:C{column}) Inline tag not closed: {context}",
+    "ja": "(L{line}:C{column}) インラインタグが閉じられていません: {context}",
+    "th": "(L{line}:C{column}) แท็ก inline ยังไม่ได้ปิด: {context}",
+    "other": "(L{line}:C{column}) Inline tag not closed: {context}"
   },
   "collapseClickToExpand": {
     "zh": "点击展开内容",

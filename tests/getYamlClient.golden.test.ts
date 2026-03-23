@@ -107,7 +107,7 @@ const friendsResource = MAIN_CONTENT_RESOURCES.friends;
 
 const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
-    name: "配置文件加载失败时会同步状态并提示 configLoadFailed",
+    name: "[Config/Init] 配置文件读取失败 -> 应当同步错误状态并输出 configLoadFailed 错误消息",
     run: async () => {
       const { client, refs, messages } = createClientHarness({});
 
@@ -126,7 +126,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "配置类型缺失时会提示 configTypeError 且不污染错误状态",
+    name: "[Config/Init] 配置项类型缺失 -> 应当输出 configTypeError 错误且不污染全局错误状态",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
         "/data/config/yamlUrl.json": JSON.stringify({}),
@@ -147,7 +147,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "列表主源和备用源都失败时会置上 listPrimaryError listSpareError 和 notFoundError",
+    name: "[State/List] 列表双源均失效 -> 应当置位主/备源错误标志及 notFoundError",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
         "/data/config/yamlUrl.json": JSON.stringify({
@@ -173,7 +173,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "单篇缺失时会走 single 独立状态并提示切备用源与彻底失败",
+    name: "[State/Single] 单篇资源双源均缺失 -> 应当进入独立 single 错误状态并输出 fallback 失败消息",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
         "/data/config/yamlUrl.json": JSON.stringify({
@@ -207,7 +207,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "单篇主源失败但备用源成功时只提示切备用源",
+    name: "[State/Single] 单篇主源失败备用源成功 -> 应当仅提示切换备用源并成功返回数据",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
         "/data/config/yamlUrl.json": JSON.stringify({
@@ -237,7 +237,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "singleYamlFallback 会按当前语言输出 warning 文案并替换路径参数",
+    name: "[State/Single] I18n 兼容性 (Fallback) -> 应当按当前语言输出警告并替换路径参数",
     run: async () => {
       const { client, messages, refs } = createClientHarness(
         {
@@ -272,7 +272,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "singleYamlReadFailed 会按当前语言输出 error 文案并替换路径参数",
+    name: "[State/Single] I18n 兼容性 (Failure) -> 应当按当前语言输出彻底失败的错误文案",
     run: async () => {
       const { client, messages, refs } = createClientHarness(
         {
@@ -311,7 +311,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "局部 DSL 错误会提示 dsl 文案并在单篇缺失时标记 yamlLoadingFault",
+    name: "[DSL/Compatibility] 局部解析错误 -> 应当输出 DSL 警告并在部分资源失效时标记 yamlLoadingFault",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
         "/data/config/yamlUrl.json": JSON.stringify({
@@ -344,7 +344,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "DSL 资源不受支持时会提示 yamlLoadFailed 而不是 dsl error",
+    name: "[DSL/Compatibility] 不受支持的资源 -> 应当直接提示 yamlLoadFailed 而非 DSL 内部解析错误",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
         "/data/config/yamlUrl.json": JSON.stringify({
@@ -370,7 +370,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "单篇网络错误不会污染列表状态，并会置上 singleServerError",
+    name: "[State/Single] 错误隔离 -> 单篇网络错误应当仅置位 singleServerError 而不污染列表全局状态",
     run: async () => {
       const refs = createStateRefs();
       const messages: Array<{ level: "error" | "warning"; content: string }> = [];
@@ -416,7 +416,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "加载进行中时 yamlLoading 会置 true，结束后恢复 false",
+    name: "[Runtime/Loading] 加载状态同步 -> 在异步加载期间 yamlLoading 应当为 true 并在结束时恢复",
     run: async () => {
       const listDeferred = createDeferred<string>();
       const { refs } = createClientHarness({
@@ -467,7 +467,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "网络重试时会切到 yamlRetrying 并记录 faultTimes，成功后恢复",
+    name: "[Runtime/Network] 自动重试机制 -> 在网络抖动时应当同步 yamlRetrying 并累计 faultTimes",
     run: async () => {
       const sleepDeferred = createDeferred<void>();
       let attempts = 0;

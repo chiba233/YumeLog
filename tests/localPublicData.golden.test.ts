@@ -45,7 +45,7 @@ const api = createYamlApi(readPublicYamlText, {
 
 const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
-    name: "yamlUrl 配置要求主源必填，备用源只能作为补充出现",
+    name: "[Config/Validation] YAML 路由配置规则 -> 应当确保主源必填，且备用源与主源成对出现",
     run: async () => {
       const yamlUrl = await loadPublicJson<YamlUrlConfig>("data/config/yamlUrl.json");
       assert.ok(yamlUrl);
@@ -68,7 +68,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "博客备用源如果存在就校验本地列表和文章结构，缺失时只记录提醒",
+    name: "[Data/BlogSpare] 博客本地备用源 -> 若配置存在，应当验证所有本地 DSL 文件均可解析且结构正确",
     run: async () => {
       const yamlUrl = await loadPublicJson<YamlUrlConfig>("data/config/yamlUrl.json");
       assert.ok(yamlUrl);
@@ -112,7 +112,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "main 本地单文件资源都真实存在且能解析成预期数据树",
+    name: "[Data/MainDSL] Main 本地资源完整性 -> 应当确保所有单文件 DSL 真实存在且能成功解析",
     run: async () => {
       const yamlUrl = await loadPublicJson<YamlUrlConfig>("data/config/yamlUrl.json");
       assert.ok(yamlUrl);
@@ -133,7 +133,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "绝对本地 JSON 资源都真实存在且数据结构正常",
+    name: "[Data/JSON] 静态 JSON 配置 -> 应当验证 webTitle/socialLinks/person/colorData 等文件真实存在且非空",
     run: async () => {
       const [webTitle, socialLinks, person, colorData] = await Promise.all([
         loadPublicJson<Record<string, Record<string, string>>>("data/main/webTitle.json"),

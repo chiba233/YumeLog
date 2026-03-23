@@ -16,7 +16,7 @@ const makeTextBlock = (content: string, temp_id: string, tokens?: TextToken[]): 
 
 const cases: Array<{ name: string; run: () => void }> = [
   {
-    name: "非 SSR 且没有缓存时 LazyBlock 初始会给 DSL 空 tokens 数组",
+    name: "[Lazy/Initial] 客户端初次渲染 -> 非 SSR 且无缓存时应当返回空 tokens 占位并标记未解析",
     run: () => {
       let parseCalls = 0;
       const state = resolveLazyBlockInitialState(
@@ -37,7 +37,7 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
-    name: "摘要提取达到目标长度后不会继续消费后续块",
+    name: "[Summary/Limit] 文本摘要提取 -> 达到目标长度后应当停止消费后续块以优化性能",
     run: () => {
       const calls: string[] = [];
       const blocks: PostBlock[] = [

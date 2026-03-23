@@ -6,8 +6,18 @@ import { formatDateByLang, formatTimeByLang, resolvePreferredLang } from "./lang
 
 export const langMap: Ref<SelectOption[]> = ref([]);
 
-const rawLang = import.meta.env?.SSR ? "zh" : navigator.language.slice(0, 2);
-export const lang: Ref<string> = useStorage("useLang", rawLang);
+const resolveSsgLang = (): string => {
+  const rawEnvLang: unknown = import.meta.env?.VITE_SSR_LANG;
+  if (typeof rawEnvLang !== "string") return "zh";
+
+  const envLang = rawEnvLang.trim().toLowerCase();
+  return envLang ? envLang.slice(0, 2) : "zh";
+};
+
+const rawLang = import.meta.env?.SSR ? resolveSsgLang() : navigator.language.slice(0, 2);
+export const lang: Ref<string> = import.meta.env?.SSR
+  ? ref(rawLang)
+  : useStorage("useLang", rawLang);
 
 watch(
   langMap,

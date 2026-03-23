@@ -45,6 +45,14 @@ export const createYamlTextState = ({
       const res = await getSingle<DynamicIntroduction>(type, fileName);
       if (res) introData.value = res;
     } catch (e) {
+      if (ssr && registerServerPrefetch) {
+        throw new Error(
+          `[SSR/YamlText] Failed to load ${type}/${fileName}: ${
+            e instanceof Error ? e.message : String(e)
+          }`,
+        );
+      }
+
       if (!ssr) {
         const pathMsg = (yamlLoadFailed[currentLang.value] || yamlLoadFailed.en).replace(
           "{err}",

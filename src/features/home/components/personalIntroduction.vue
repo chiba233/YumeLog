@@ -11,10 +11,9 @@
 <script lang="ts" setup>
 import { useCardGlow } from "@/shared/lib/app/animationCalculate.ts";
 import { useYamlText } from "@/shared/lib/app/useYamlI18n.ts";
-import { useHead } from "@unhead/vue";
-import { computed } from "vue";
 import { lang } from "@/shared/lib/app/setupLang.ts";
 import { MAIN_CONTENT_RESOURCES } from "@/shared/lib/app/mainContentResources.ts";
+import { homeIntroductionUseHead } from "@/shared/lib/app/useHead.ts";
 
 const displayContent = useYamlText(
   MAIN_CONTENT_RESOURCES.introduction.type,
@@ -22,26 +21,7 @@ const displayContent = useYamlText(
   MAIN_CONTENT_RESOURCES.introduction.keyName,
 );
 
-useHead({
-  meta: [
-    {
-      name: "description",
-      content: computed(() => (displayContent.value || "").slice(0, 160)),
-    },
-    {
-      property: "og:description",
-      content: computed(() => (displayContent.value || "").slice(0, 160)),
-    },
-    {
-      property: "og:type",
-      content: "website",
-    },
-    {
-      property: "twitter:description",
-      content: computed(() => (displayContent.value || "").slice(0, 160)),
-    },
-  ],
-});
+homeIntroductionUseHead(displayContent);
 const { onMove, onLeave, onEnter } = useCardGlow();
 </script>
 

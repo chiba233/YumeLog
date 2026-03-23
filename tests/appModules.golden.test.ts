@@ -19,7 +19,7 @@ const titleResource = MAIN_CONTENT_RESOURCES.title;
 
 const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
-    name: "语言选择会保留当前合法语言并按 raw en first 顺序回退",
+    name: "[Lang/Preference] 语言协商逻辑 -> 应当优先保留合法当前语言，并按 raw/en 顺序处理回退",
     run: () => {
       assert.equal(resolvePreferredLang(langOptions(["en", "ja"]), "ja", "zh"), "ja");
       assert.equal(resolvePreferredLang(langOptions(["en", "ja"]), "zh", "ja"), "ja");
@@ -28,7 +28,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "语言格式化会在未知语言时回退英文并处理泰语佛历",
+    name: "[Lang/Format] 日期时间格式化 -> 应当在未知语言时回退英文，并能正确处理泰语佛历年份",
     run: () => {
       assert.equal(resolveLocale("unknown"), "en-au");
       assert.equal(formatTimeByLang("en", undefined), "error");
@@ -38,7 +38,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "内容缓存会命中 TTL 并在过期或 force 时重新拉取 posts",
+    name: "[Cache/Posts] 博客列表缓存 -> 应当在 TTL 内命中缓存，并在过期或 force 时触发重新拉取",
     run: async () => {
       let now = 1_000;
       let calls = 0;
@@ -65,7 +65,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "内容缓存不会缓存空 posts 且会缓存非空 single 结果",
+    name: "[Cache/Single] 单文件与空数据缓存 -> 不应当缓存空列表，并应当正确缓存非空单文件解析结果",
     run: async () => {
       let now = 1_000;
       let postCalls = 0;
@@ -107,7 +107,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "路由表和 memory router resolve 结果稳定",
+    name: "[Router/Resolve] 路由解析稳定性 -> 应当确保路由表定义正确，且 memory router 能准确识别路径",
     run: () => {
       assert.deepEqual(
         routes.map((route) => ({

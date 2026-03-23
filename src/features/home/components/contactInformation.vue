@@ -151,8 +151,7 @@ import { $message } from "@/shared/lib/app/msgUtils.ts";
 import { useRouteModal } from "@/shared/lib/app/useRouteModal.ts";
 import { PlatformConfig, PlatformId } from "@/shared/types/social.ts";
 import { UserDataType } from "@/shared/types/external.ts";
-import { headLinks } from "@/shared/lib/app/useHead.ts";
-import { useHead } from "@unhead/vue";
+import { homeContactUseHead } from "@/shared/lib/app/useHead.ts";
 import { sanitizeAssetUrl } from "@/shared/lib/app/siteOrigin.ts";
 
 const { onMove, onLeave, onEnter } = useCardGlow();
@@ -308,15 +307,7 @@ watch([showWechatModel, showLineModel], async ([wechat, line]) => {
   const overlay = document.querySelector(".n-image-preview-overlay");
   overlay?.classList.add("contacts-overlay");
 });
-useHead({
-  link: headLinks,
-  meta: [
-    {
-      name: "maimai-rating",
-      content: computed(() => data.value?.playerRating?.toString() || ""),
-    },
-  ],
-});
+homeContactUseHead(computed(() => data.value?.playerRating?.toString() || ""));
 </script>
 
 <style lang="scss">

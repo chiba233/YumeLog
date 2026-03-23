@@ -1,6 +1,7 @@
 import { useHead } from "@unhead/vue";
-import { computed } from "vue";
+import { computed, type ComputedRef, type Ref } from "vue";
 import {
+  currentPostTitle,
   friends,
   friendsTitle,
   getDescriptionText,
@@ -8,7 +9,11 @@ import {
   platforms,
   posts,
   selectedPost,
+  showCatModel,
+  showLineModel,
+  showMaiModal,
   showModal,
+  showWechatModel,
   socialLinks,
 } from "@/shared/lib/app/useGlobalState.ts";
 import { lang } from "@/shared/lib/app/setupLang.ts";
@@ -29,9 +34,16 @@ const siteOrigin = resolveSiteOrigin({
   browserOrigin: typeof window !== "undefined" ? window.location.origin : "",
 });
 
+// Blog Head
 export interface BlogHeadDeps {
   origin?: string;
   ssr?: boolean;
+}
+
+// App Head
+export interface AppHeadDeps {
+  routeName: ComputedRef<string>;
+  webTitleData: Record<string, Record<string, string>>;
 }
 
 export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: BlogHeadDeps = {}) => {
@@ -242,6 +254,119 @@ export const createBlogHeadEntries = ({ origin = siteOrigin, ssr = isSSR }: Blog
 export const blogUseHead = () => {
   useHead(createBlogHeadEntries());
 };
+
+// App Head
+export const createAppHeadEntries = ({ routeName, webTitleData }: AppHeadDeps) => {
+  const dynamicTitle = computed(() => {
+    const currentLang = lang.value;
+    const currentRouteName = routeName.value || "home";
+    const baseTitle = globalWebTitleMap.value[currentRouteName]?.[currentLang] || currentRouteName;
+
+    if (currentRouteName === "blog" && currentPostTitle.value) {
+      return `${currentPostTitle.value} - ${baseTitle}`;
+    }
+
+    const modals = [
+      { active: showWechatModel.value, data: webTitleData.weChat },
+      { active: showCatModel.value, data: webTitleData.neko },
+      { active: showLineModel.value, data: webTitleData.line },
+      { active: showMaiModal.value, data: webTitleData.maimai },
+    ];
+
+    if (currentRouteName === "home") {
+      const active = modals.find((modal) => modal.active);
+      if (active) {
+        const subTitle = active.data?.[currentLang] || active.data?.en || "";
+        return subTitle ? `${subTitle} - ${baseTitle}` : baseTitle;
+      }
+    }
+
+    return baseTitle;
+  });
+
+  return {
+    title: dynamicTitle,
+    meta: [
+      {
+        property: "og:title",
+        content: dynamicTitle,
+      },
+      {
+        property: "og:site_name",
+        content: computed(
+          () =>
+            globalWebTitleMap.value.home?.[lang.value] || globalWebTitleMap.value.home?.en || "",
+        ),
+      },
+      {
+        property: "og:locale",
+        content: computed(() => lang.value || "en"),
+      },
+    ],
+  };
+};
+
+export const appUseHead = (deps: AppHeadDeps) => {
+  useHead(createAppHeadEntries(deps));
+};
+
+// Home Head
+export const createHomeTitleHeadEntries = (title: Ref<string>) => {
+  const homeOgImage = toAbsoluteSiteUrl(siteOrigin, "/icon/icon.webp");
+  const homeOgTitle = computed(() => (title.value || "").slice(0, 160));
+
+  return {
+    meta: [
+      {
+        property: "og:title",
+        content: homeOgTitle,
+      },
+      ...(homeOgImage
+        ? [
+            {
+              property: "og:image",
+              content: homeOgImage,
+            },
+          ]
+        : []),
+    ],
+  };
+};
+
+export const homeTitleUseHead = (title: Ref<string>) => {
+  useHead(createHomeTitleHeadEntries(title));
+};
+
+export const createHomeIntroductionHeadEntries = (content: Ref<string>) => {
+  const description = computed(() => (content.value || "").slice(0, 160));
+
+  return {
+    meta: [
+      {
+        name: "description",
+        content: description,
+      },
+      {
+        property: "og:description",
+        content: description,
+      },
+      {
+        property: "og:type",
+        content: "website",
+      },
+      {
+        property: "twitter:description",
+        content: description,
+      },
+    ],
+  };
+};
+
+export const homeIntroductionUseHead = (content: Ref<string>) => {
+  useHead(createHomeIntroductionHeadEntries(content));
+};
+
+// Home Friends Head
 export const friendsUseHead = () => {
   const baseOrigin = siteOrigin;
   const toAbsolute = (path: string) => {
@@ -297,11 +422,34 @@ export const headLinks = computed(() => {
             href: siteOrigin,
             title: "Home",
           },
-          {
-            property: "og:url",
-            content: siteOrigin,
-          },
         ]
       : []),
   ];
 });
+
+export const headMeta = computed(() =>
+  siteOrigin
+    ? [
+        {
+          property: "og:url",
+          content: siteOrigin,
+        },
+      ]
+    : [],
+);
+
+// Home Contact Head
+export const createHomeContactHeadEntries = (maimaiRating: ComputedRef<string>) => ({
+  link: headLinks,
+  meta: computed(() => [
+    ...headMeta.value,
+    {
+      name: "maimai-rating",
+      content: maimaiRating.value,
+    },
+  ]),
+});
+
+export const homeContactUseHead = (maimaiRating: ComputedRef<string>) => {
+  useHead(createHomeContactHeadEntries(maimaiRating));
+};

@@ -67,7 +67,7 @@ const createFakeApi = (
 
 const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
-    name: "loadAllPosts 会按 pin 优先再按时间倒序排序并在单篇失败时切换 spareUrl",
+    name: "[Core/List] 博客列表获取 -> 应当按 pin 优先及时间倒序排序并在部分失效时切换备用源",
     run: async () => {
       const { api, state, dslErrors } = createFakeApi({
         "/data/config/yamlUrl.json": JSON.stringify({
@@ -99,7 +99,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "loadSingleYaml 会在主地址缺失时切到 spare 并保留 DSL 错误恢复结果",
+    name: "[Core/Single] 备用源容错机制 -> 主地址缺失时应当自动切备用源并保留 DSL 错误恢复结果",
     run: async () => {
       const { api, state, dslErrors } = createFakeApi({
         "/data/config/yamlUrl.json": JSON.stringify({
@@ -141,7 +141,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "loadSingleYaml 会正确读取 main 下各个单文件并生成对应数据树",
+    name: "[Core/Main] 单文件映射完整性 -> 应当能正确读取并解析 main 目录下所有预定义 DSL 为数据树",
     run: async () => {
       const mainFixtures = Object.fromEntries(
         await Promise.all(
@@ -174,7 +174,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "loadAllPosts 在列表缺失时会设置 notFoundError 并返回空数组",
+    name: "[Core/Error] 列表资源缺失 -> 应当在请求 404 或 ENOENT 时置位 notFoundError 并返回空列表",
     run: async () => {
       const { api, state } = createFakeApi({
         "/data/config/yamlUrl.json": JSON.stringify({
@@ -194,7 +194,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "loadSingleYaml 在不支持的 DSL 资源上会回调 onYamlLoadFailed",
+    name: "[Core/Error] 格式/资源不受支持 -> 解析不受支持的 DSL 根块时应当触发 onYamlLoadFailed 回调",
     run: async () => {
       const { api, yamlLoadFailed } = createFakeApi({
         "/data/config/yamlUrl.json": JSON.stringify({
@@ -212,7 +212,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "loadSingleYaml 在配置类型缺失时会回调 onConfigTypeError",
+    name: "[Core/Config] 配置校验 -> 当请求未在 yamlUrl.json 中定义的类型时应当触发 onConfigTypeError",
     run: async () => {
       const { api, configTypeErrors } = createFakeApi({
         "/data/config/yamlUrl.json": JSON.stringify({}),

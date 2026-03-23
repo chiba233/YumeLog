@@ -50,7 +50,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Run DSL tests
-        run: pnpm run test:dsl
+        run: pnpm run test
 
       - name: Build
         run: |

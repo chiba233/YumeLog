@@ -69,8 +69,9 @@ const captureConsoleError = (run: () => void): string[] => {
 };
 
 const cases: Array<{ name: string; run: () => void }> = [
+  // --- [Parser/Block] 块级 DSL 核心解析器 ---
   {
-    name: "parseDSL 能保留扁平博客块并裁掉块尾空行",
+    name: "[Parser/Block] 扁平博客块 -> 应当正确解析块内容并裁掉尾部多余换行",
     run: () => {
       const ast = parseDSL("@meta\ntime: 2024-01-01\n@end\n@text\nhello\nworld\n\n@end\n", {
         blockNames: ["meta", "text", "image", "divider"],
@@ -101,7 +102,7 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
-    name: "parseDSL 会把被转义的指令行当作普通文本",
+    name: "[Parser/Block] 转义指令行 -> 应当将 \\@ 后的指令视为普通文本保留",
     run: () => {
       const ast = parseDSL("@text\n\\@image\n@end", {
         blockNames: ["meta", "text", "image", "divider"],
@@ -123,7 +124,7 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
-    name: "parseDSL 会把未知但像指令的行保留为普通文本",
+    name: "[Parser/Block] 未知指令行 -> 应当将 @unknown 形式保留为块内普通文本",
     run: () => {
       const ast = parseDSL("@text\n@unknown\n@end", {
         blockNames: ["meta", "text", "image", "divider"],
@@ -145,7 +146,7 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
-    name: "显式允许嵌套时 parseDSL 会构建树结构",
+    name: "[Parser/Block] 嵌套允许模式 -> 应当正确构建树状 AST 结构",
     run: () => {
       const ast = parseDSL(
         "@fromNow\n@event\ntime: 20200101\n@names\n- type: en\n  content: test\n@end\n@end\n@end",
@@ -241,7 +242,7 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
-    name: "不允许的嵌套块会退化为文本并上报错误",
+    name: "[Parser/Block] 非法嵌套块 -> 应当将内层块退化为文本并上报错误",
     run: () => {
       const errors = collectErrors((bucket) => {
         const ast = parseDSL("@text\n@image\n- src: /a.webp\n@end\n@end", {
@@ -277,7 +278,7 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
-    name: "超过最大深度时会退化为文本并上报错误",
+    name: "[Parser/Block] 深度溢出处理 -> 应当在达到 maxDepth 后将子块退化为文本",
     run: () => {
       const errors = collectErrors((bucket) => {
         const ast = parseDSL("@fromNow\n@event\n@event\n@end\n@end\n@end", {
@@ -336,7 +337,7 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
-    name: "多余的块结束符会被恢复并上报错误",
+    name: "[Parser/Block] 多余结束符 -> 应当直接忽略孤立的 @end 并上报意外结束错误",
     run: () => {
       const errors = collectErrors((bucket) => {
         const ast = parseDSL("@end", { onError: (error) => bucket.push(error) });
@@ -347,7 +348,7 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
-    name: "文件结尾未闭合的块会自动补闭合并上报错误",
+    name: "[Parser/Block] 未闭合块处理 -> 应当在文件结束时自动补全闭合并上报缺失错误",
     run: () => {
       const errors = collectErrors((bucket) => {
         const ast = parseDSL("@text\nhello", { onError: (error) => bucket.push(error) });
@@ -371,191 +372,7 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
-    name: "parseDashList 能解析引号和多行字面量",
-    run: () => {
-      const result = parseTypedDashObjectList<{
-        temp_id: string;
-        title: string;
-        body?: string;
-        desc?: string;
-      }>("- title: \"Hello\"\n  body: |\n    line1\n      line2\n\n- title: 'World'\n  desc: done");
-
-      assert.deepEqual(stripTempIds(result), [
-        { title: "Hello", body: "line1\n  line2" },
-        { title: "World", desc: "done" },
-      ]);
-    },
-  },
-  {
-    name: "parseDashList 会报告孤立属性和格式错误",
-    run: () => {
-      const errors = collectErrors((bucket) => {
-        const result = parseTypedDashObjectList<{ temp_id: string; key?: string }>(
-          "  key: value\nabc\n- broken",
-          { onError: (error) => bucket.push(error) },
-        );
-
-        assert.deepEqual(result, []);
-      });
-
-      assert.deepEqual(errors, [
-        { code: "dslIsolatedProperty", params: { raw: "  key: value" } },
-        { code: "dslUnrecognizedLine", params: { raw: "abc" } },
-        { code: "dslFormatError", params: { raw: "- broken" } },
-      ]);
-    },
-  },
-  {
-    name: "astToPost 能把元数据和博客块映射成最终文章结构",
-    run: () => {
-      const ast = parseDSL(
-        "@meta\ntime: 2024-01-01\ntitle: hi\n@end\n@text\nhello\n@end\n@image\n- src: /a.webp\n  desc: wow\n@end\n@divider\n@end",
-        {
-          blockNames: ["meta", "text", "image", "divider"],
-          maxDepth: 1,
-          nestableBlocks: [],
-        },
-      );
-
-      assert.deepEqual(stripTempIds(astToPost(ast)), {
-        blocks: [
-          { type: "text", content: "hello" },
-          { type: "image", content: [{ src: "/a.webp", desc: "wow" }] },
-          { type: "divider", content: "" },
-        ],
-        time: "2024-01-01",
-        title: "hi",
-      });
-    },
-  },
-  {
-    name: "astToPost 在 chunked text 场景会按顺序拆分块",
-    run: () => {
-      const ast = parseDSL("@text\nhello\n@divider\n@end\nworld\n@end", {
-        blockNames: ["meta", "text", "image", "divider"],
-        maxDepth: 2,
-        nestableBlocks: ["text"],
-      });
-
-      assert.deepEqual(stripTempIds(astToPost(ast)), {
-        blocks: [
-          { type: "text", content: "hello" },
-          { type: "divider", content: "" },
-          { type: "text", content: "world" },
-        ],
-      });
-    },
-  },
-  {
-    name: "astToPost 的 meta 重复 key 会以后值覆盖并上报告警",
-    run: () => {
-      const ast = parseDSL("@meta\ntitle: first\ntitle: second\n@end", {
-        blockNames: ["meta"],
-        maxDepth: 1,
-        nestableBlocks: [],
-      });
-
-      const warnings = captureConsoleError(() => {
-        assert.deepEqual(stripTempIds(astToPost(ast)), {
-          blocks: [],
-          title: "second",
-        });
-      });
-
-      assert.deepEqual(warnings, ["[DSL Warning] Duplicate key: title"]);
-    },
-  },
-  {
-    name: "astToPost 的保留 meta key 会被忽略并上报告警",
-    run: () => {
-      const ast = parseDSL("@meta\nblocks: hacked\ntitle: ok\n@end", {
-        blockNames: ["meta"],
-        maxDepth: 1,
-        nestableBlocks: [],
-      });
-
-      const warnings = captureConsoleError(() => {
-        assert.deepEqual(stripTempIds(astToPost(ast)), {
-          blocks: [],
-          title: "ok",
-        });
-      });
-
-      assert.deepEqual(warnings, ["[DSL Warning] Reserved key: blocks"]);
-    },
-  },
-  {
-    name: "单文件 title 解释器能映射 i18n 列表",
-    run: () => {
-      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:title.dsl"];
-      const ast = parseDSL("@title\n- type: en\n  content: Hello\n@end", parser.syntax);
-
-      assert.deepEqual(stripTempIds(parser.parse(ast)), {
-        title: [{ type: "en", content: "Hello" }],
-      });
-    },
-  },
-  {
-    name: "单文件 introduction 解释器能映射 i18n 列表",
-    run: () => {
-      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:introduction.dsl"];
-      const ast = parseDSL("@introduction\n- type: en\n  content: Intro\n@end", parser.syntax);
-
-      assert.deepEqual(stripTempIds(parser.parse(ast)), {
-        introduction: [{ type: "en", content: "Intro" }],
-      });
-    },
-  },
-  {
-    name: "单文件 friends 解释器能映射 dash-list 记录",
-    run: () => {
-      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:friends.dsl"];
-      const ast = parseDSL(
-        "@friends\n- name: A\n  alias: Bee\n  url: https://a.com\n  icon: cat\n@end",
-        parser.syntax,
-      );
-
-      assert.deepEqual(stripTempIds(parser.parse(ast)), {
-        friends: [{ name: "A", alias: "Bee", url: "https://a.com", icon: "cat" }],
-      });
-    },
-  },
-  {
-    name: "单文件 neko 解释器能映射图片记录",
-    run: () => {
-      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:neko.dsl"];
-      const ast = parseDSL(
-        "@img\n- imgError: err\n  img: /a.webp\n  imgName: cat\n@end",
-        parser.syntax,
-      );
-
-      assert.deepEqual(stripTempIds(parser.parse(ast)), {
-        img: [{ imgError: "err", img: "/a.webp", imgName: "cat" }],
-      });
-    },
-  },
-  {
-    name: "单文件 fromNow 解释器能映射嵌套 event 和 names",
-    run: () => {
-      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:fromNow.dsl"];
-      const ast = parseDSL(
-        "@fromNow\n@event\ntime: 20200101\nphoto: /a.webp\n@names\n- type: en\n  content: Test\n@end\n@end\n@end",
-        parser.syntax,
-      );
-
-      assert.deepEqual(stripTempIds(parser.parse(ast)), {
-        fromNow: [
-          {
-            time: "20200101",
-            photo: "/a.webp",
-            names: [{ type: "en", content: "Test" }],
-          },
-        ],
-      });
-    },
-  },
-  {
-    name: "parseDSL 能处理 BOM 和 CRLF 换行",
+    name: "[Parser/Block] 环境兼容性 -> 应当支持包含 BOM 头及 CRLF 换行的原始输入",
     run: () => {
       const ast = parseDSL("\uFEFF@text\r\nhello\r\n@end\r\n");
 
@@ -573,108 +390,7 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
-    name: "parseDashList 能解析双引号转义但会保留单引号反斜杠",
-    run: () => {
-      const result = parseTypedDashObjectList<{ temp_id: string; title: string; desc: string }>(
-        "- title: \"a\\\"b\"\n  desc: 'c\\'d'",
-      );
-
-      assert.deepEqual(stripTempIds(result), [{ title: 'a"b', desc: "c\\'d" }]);
-    },
-  },
-  {
-    name: "fromNow 单文件在局部 key-value 脏数据下会尽量恢复剩余内容",
-    run: () => {
-      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:fromNow.dsl"];
-      const errors = collectErrors((bucket) => {
-        const ast = parseDSL(
-          "@fromNow\n@event\ntime 20200101\n@names\n- type: en\n  content: Test\n@end\n@end\n@end",
-          {
-            ...parser.syntax,
-            onError: (error) => bucket.push(error),
-          },
-        );
-
-        assert.deepEqual(stripTempIds(parser.parse(ast, (error) => bucket.push(error))), {
-          fromNow: [
-            {
-              time: "",
-              photo: "",
-              names: [{ type: "en", content: "Test" }],
-            },
-          ],
-        });
-      });
-
-      assert.deepEqual(errors, [
-        {
-          code: "dslUnrecognizedLine",
-          params: { raw: "time 20200101" },
-        },
-      ]);
-    },
-  },
-  {
-    name: "fromNow 单文件在一个坏 event 后仍能恢复后续正常 event",
-    run: () => {
-      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:fromNow.dsl"];
-      const errors = collectErrors((bucket) => {
-        const ast = parseDSL(
-          "@fromNow\n@event\ntime bad\n@names\n- type: en\n  content: broken\n@end\n@end\n@event\ntime: 20240101\n@names\n- type: en\n  content: good\n@end\n@end\n@end",
-          {
-            ...parser.syntax,
-            onError: (error) => bucket.push(error),
-          },
-        );
-
-        assert.deepEqual(stripTempIds(parser.parse(ast, (error) => bucket.push(error))), {
-          fromNow: [
-            {
-              time: "",
-              photo: "",
-              names: [{ type: "en", content: "broken" }],
-            },
-            {
-              time: "20240101",
-              photo: "",
-              names: [{ type: "en", content: "good" }],
-            },
-          ],
-        });
-      });
-
-      assert.deepEqual(errors, [
-        {
-          code: "dslUnrecognizedLine",
-          params: { raw: "time bad" },
-        },
-      ]);
-    },
-  },
-  {
-    name: "坏 block 后面跟正常文本和正常 inline 时块顺序仍能恢复",
-    run: () => {
-      const ast = parseDSL(
-        "@text\n@image\n- src: /a.webp\n@end\nhello $$bold(ok)$$\n@divider\n@end\nworld\n@end",
-        {
-          blockNames: ["meta", "text", "image", "divider"],
-          maxDepth: 2,
-          nestableBlocks: ["text"],
-        },
-      );
-
-      assert.deepEqual(stripTempIds(astToPost(ast)), {
-        blocks: [
-          { type: "image", content: [{ src: "/a.webp" }] },
-          { type: "text", content: "hello $$bold(ok)$$" },
-          { type: "divider", content: "" },
-          { type: "text", content: "world" },
-        ],
-      });
-    },
-  },
-  {
-    name: "深度限制触发后后续仍能正确解析 sibling 块",
+    name: "[Parser/Block] 深度隔离 -> 深度限制触发后后续应当仍能正确解析 sibling 块",
     run: () => {
       const errors = collectErrors((bucket) => {
         const ast = parseDSL(
@@ -745,8 +461,171 @@ const cases: Array<{ name: string; run: () => void }> = [
       ]);
     },
   },
+
+  // --- [Parser/DashList] 列表解析器 ---
   {
-    name: "单文件解释器在根块不匹配时会直接抛错",
+    name: "[Parser/DashList] 基础解析 -> 应当支持引号包裹的标题与多行字面量内容",
+    run: () => {
+      const result = parseTypedDashObjectList<{
+        temp_id: string;
+        title: string;
+        body?: string;
+        desc?: string;
+      }>("- title: \"Hello\"\n  body: |\n    line1\n      line2\n\n- title: 'World'\n  desc: done");
+
+      assert.deepEqual(stripTempIds(result), [
+        { title: "Hello", body: "line1\n  line2" },
+        { title: "World", desc: "done" },
+      ]);
+    },
+  },
+  {
+    name: "[Parser/DashList] 错误恢复 -> 应当识别孤立属性、未知行及非法列表格式",
+    run: () => {
+      const errors = collectErrors((bucket) => {
+        const result = parseTypedDashObjectList<{ temp_id: string; key?: string }>(
+          "  key: value\nabc\n- broken",
+          { onError: (error) => bucket.push(error) },
+        );
+
+        assert.deepEqual(result, []);
+      });
+
+      assert.deepEqual(errors, [
+        { code: "dslIsolatedProperty", params: { raw: "  key: value" } },
+        { code: "dslUnrecognizedLine", params: { raw: "abc" } },
+        { code: "dslFormatError", params: { raw: "- broken" } },
+      ]);
+    },
+  },
+  {
+    name: "[Parser/DashList] 引号转义行为 -> 应当支持双引号内转义并保留单引号反斜杠",
+    run: () => {
+      const result = parseTypedDashObjectList<{ temp_id: string; title: string; desc: string }>(
+        "- title: \"a\\\"b\"\n  desc: 'c\\'d'",
+      );
+
+      assert.deepEqual(stripTempIds(result), [{ title: "a\"b", desc: "c\\'d" }]);
+    },
+  },
+
+  // --- [Post] 博客文章转换逻辑 ---
+  {
+    name: "[Post/Transform] 基础转换 -> 应当将 AST 映射为包含元数据和块列表的文章结构",
+    run: () => {
+      const ast = parseDSL(
+        "@meta\ntime: 2024-01-01\ntitle: hi\n@end\n@text\nhello\n@end\n@image\n- src: /a.webp\n  desc: wow\n@end\n@divider\n@end",
+        {
+          blockNames: ["meta", "text", "image", "divider"],
+          maxDepth: 1,
+          nestableBlocks: [],
+        },
+      );
+
+      assert.deepEqual(stripTempIds(astToPost(ast)), {
+        blocks: [
+          { type: "text", content: "hello" },
+          { type: "image", content: [{ src: "/a.webp", desc: "wow" }] },
+          { type: "divider", content: "" },
+        ],
+        time: "2024-01-01",
+        title: "hi",
+      });
+    },
+  },
+  {
+    name: "[Post/Transform] 顺序稳定性 -> 在块内包含子指令时应当按原始顺序拆分块序列",
+    run: () => {
+      const ast = parseDSL("@text\nhello\n@divider\n@end\nworld\n@end", {
+        blockNames: ["meta", "text", "image", "divider"],
+        maxDepth: 2,
+        nestableBlocks: ["text"],
+      });
+
+      assert.deepEqual(stripTempIds(astToPost(ast)), {
+        blocks: [
+          { type: "text", content: "hello" },
+          { type: "divider", content: "" },
+          { type: "text", content: "world" },
+        ],
+      });
+    },
+  },
+  {
+    name: "[Post/Transform] 错误恢复 -> 损坏块后面跟正常文本时块顺序仍能正确恢复",
+    run: () => {
+      const ast = parseDSL(
+        "@text\n@image\n- src: /a.webp\n@end\nhello $$bold(ok)$$\n@divider\n@end\nworld\n@end",
+        {
+          blockNames: ["meta", "text", "image", "divider"],
+          maxDepth: 2,
+          nestableBlocks: ["text"],
+        },
+      );
+
+      assert.deepEqual(stripTempIds(astToPost(ast)), {
+        blocks: [
+          { type: "image", content: [{ src: "/a.webp" }] },
+          { type: "text", content: "hello $$bold(ok)$$" },
+          { type: "divider", content: "" },
+          { type: "text", content: "world" },
+        ],
+      });
+    },
+  },
+  {
+    name: "[Post/Meta] 重复 Key 处理 -> 应当使用后出现的值进行覆盖并上报告警",
+    run: () => {
+      const ast = parseDSL("@meta\ntitle: first\ntitle: second\n@end", {
+        blockNames: ["meta"],
+        maxDepth: 1,
+        nestableBlocks: [],
+      });
+
+      const warnings = captureConsoleError(() => {
+        assert.deepEqual(stripTempIds(astToPost(ast)), {
+          blocks: [],
+          title: "second",
+        });
+      });
+
+      assert.deepEqual(warnings, ["[DSL Warning] Duplicate key: title"]);
+    },
+  },
+  {
+    name: "[Post/Meta] 保留 Key 冲突 -> 应当忽略 meta 块中名为 blocks 的非法 Key",
+    run: () => {
+      const ast = parseDSL("@meta\nblocks: hacked\ntitle: ok\n@end", {
+        blockNames: ["meta"],
+        maxDepth: 1,
+        nestableBlocks: [],
+      });
+
+      const warnings = captureConsoleError(() => {
+        assert.deepEqual(stripTempIds(astToPost(ast)), {
+          blocks: [],
+          title: "ok",
+        });
+      });
+
+      assert.deepEqual(warnings, ["[DSL Warning] Reserved key: blocks"]);
+    },
+  },
+
+  // --- [SingleResource] 业务单文件 DSL 映射 ---
+  {
+    name: "[SingleResource/Title] title.dsl 映射 -> 应当正确解析并映射 i18n 标题列表",
+    run: () => {
+      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:title.dsl"];
+      const ast = parseDSL("@title\n- type: en\n  content: Hello\n@end", parser.syntax);
+
+      assert.deepEqual(stripTempIds(parser.parse(ast)), {
+        title: [{ type: "en", content: "Hello" }],
+      });
+    },
+  },
+  {
+    name: "[SingleResource/Title] 根块校验 -> 在根块名称不匹配 title 时应当直接抛出异常",
     run: () => {
       const parser = SINGLE_RESOURCE_DSL_PARSERS["main:title.dsl"];
       const parseAsRuntime = parser.parse as (ast: DSLTree) => unknown;
@@ -762,7 +641,137 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
-    name: "随机脏输入不会让块级 DSL 解析链路崩溃",
+    name: "[SingleResource/Intro] introduction.dsl 映射 -> 应当正确解析并映射 i18n 简介列表",
+    run: () => {
+      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:introduction.dsl"];
+      const ast = parseDSL("@introduction\n- type: en\n  content: Intro\n@end", parser.syntax);
+
+      assert.deepEqual(stripTempIds(parser.parse(ast)), {
+        introduction: [{ type: "en", content: "Intro" }],
+      });
+    },
+  },
+  {
+    name: "[SingleResource/Friends] friends.dsl 映射 -> 应当正确解析并映射 dash-list 友链记录",
+    run: () => {
+      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:friends.dsl"];
+      const ast = parseDSL(
+        "@friends\n- name: A\n  alias: Bee\n  url: https://a.com\n  icon: cat\n@end",
+        parser.syntax,
+      );
+
+      assert.deepEqual(stripTempIds(parser.parse(ast)), {
+        friends: [{ name: "A", alias: "Bee", url: "https://a.com", icon: "cat" }],
+      });
+    },
+  },
+  {
+    name: "[SingleResource/Neko] neko.dsl 映射 -> 应当正确解析并映射图片元数据记录",
+    run: () => {
+      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:neko.dsl"];
+      const ast = parseDSL(
+        "@img\n- imgError: err\n  img: /a.webp\n  imgName: cat\n@end",
+        parser.syntax,
+      );
+
+      assert.deepEqual(stripTempIds(parser.parse(ast)), {
+        img: [{ imgError: "err", img: "/a.webp", imgName: "cat" }],
+      });
+    },
+  },
+  {
+    name: "[SingleResource/FromNow] fromNow.dsl 映射 -> 应当支持嵌套解析 event 与 i18n names",
+    run: () => {
+      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:fromNow.dsl"];
+      const ast = parseDSL(
+        "@fromNow\n@event\ntime: 20200101\nphoto: /a.webp\n@names\n- type: en\n  content: Test\n@end\n@end\n@end",
+        parser.syntax,
+      );
+
+      assert.deepEqual(stripTempIds(parser.parse(ast)), {
+        fromNow: [
+          {
+            time: "20200101",
+            photo: "/a.webp",
+            names: [{ type: "en", content: "Test" }],
+          },
+        ],
+      });
+    },
+  },
+  {
+    name: "[SingleResource/FromNow] 鲁棒性 -> 局部 Key-Value 脏数据场景下应当跳过并恢复解析",
+    run: () => {
+      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:fromNow.dsl"];
+      const errors = collectErrors((bucket) => {
+        const ast = parseDSL(
+          "@fromNow\n@event\ntime 20200101\n@names\n- type: en\n  content: Test\n@end\n@end\n@end",
+          {
+            ...parser.syntax,
+            onError: (error) => bucket.push(error),
+          },
+        );
+
+        assert.deepEqual(stripTempIds(parser.parse(ast, (error) => bucket.push(error))), {
+          fromNow: [
+            {
+              time: "",
+              photo: "",
+              names: [{ type: "en", content: "Test" }],
+            },
+          ],
+        });
+      });
+
+      assert.deepEqual(errors, [
+        {
+          code: "dslUnrecognizedLine",
+          params: { raw: "time 20200101" },
+        },
+      ]);
+    },
+  },
+  {
+    name: "[SingleResource/FromNow] 错误隔离 -> 单个损坏 event 不应当影响后续合法 event 解析",
+    run: () => {
+      const parser = SINGLE_RESOURCE_DSL_PARSERS["main:fromNow.dsl"];
+      const errors = collectErrors((bucket) => {
+        const ast = parseDSL(
+          "@fromNow\n@event\ntime bad\n@names\n- type: en\n  content: broken\n@end\n@end\n@event\ntime: 20240101\n@names\n- type: en\n  content: good\n@end\n@end\n@end",
+          {
+            ...parser.syntax,
+            onError: (error) => bucket.push(error),
+          },
+        );
+
+        assert.deepEqual(stripTempIds(parser.parse(ast, (error) => bucket.push(error))), {
+          fromNow: [
+            {
+              time: "",
+              photo: "",
+              names: [{ type: "en", content: "broken" }],
+            },
+            {
+              time: "20240101",
+              photo: "",
+              names: [{ type: "en", content: "good" }],
+            },
+          ],
+        });
+      });
+
+      assert.deepEqual(errors, [
+        {
+          code: "dslUnrecognizedLine",
+          params: { raw: "time bad" },
+        },
+      ]);
+    },
+  },
+
+  // --- [Common] 鲁棒性与压力测试 ---
+  {
+    name: "[Common/Robustness] 随机脏输入压力测试 -> 块级 DSL 解析链路应当永不崩溃并输出稳定",
     run: () => {
       const parts = [
         "@text\n",

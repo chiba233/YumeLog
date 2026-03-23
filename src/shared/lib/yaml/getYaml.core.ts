@@ -12,14 +12,32 @@ import type { SingleResourceData, SingleResourceParser } from "./singleResourceD
 import { SINGLE_RESOURCE_DSL_PARSERS } from "./singleResourceDSL.ts";
 
 export interface YamlApiHooks {
-  onConfigLoadFailed?: (payload: { err: string }) => void;
+  onConfigLoadFailed?: (payload: {
+    err: string;
+    phase: "yaml-config";
+    resourcePath: string;
+  }) => void;
   onConfigTypeError?: (payload: { type: string }) => void;
   onYamlLoadFailed?: (payload: { err: string }) => void;
+  onListYamlReadFailed?: (payload: {
+    phase: "yaml-list";
+    type: string;
+    reason: "not-found" | "network";
+    listUrl: string;
+    spareListUrl?: string;
+    baseUrl: string;
+    spareUrl?: string;
+  }) => void;
   onSingleYamlFallback?: (payload: { type: string; fileName: string }) => void;
   onSingleYamlReadFailed?: (payload: {
+    phase: "yaml-single";
     type: string;
     fileName: string;
     reason: "not-found" | "network";
+    baseUrl: string;
+    spareUrl?: string;
+    primaryUrl: string;
+    spareResourceUrl?: string;
   }) => void;
   onDslError?: (error: DSLError) => void;
   onStateChange?: (state: YamlApiState) => void;
@@ -45,6 +63,8 @@ const joinResourcePath = (base: string, fileName: string): string => {
   const normalizedFile = fileName.replace(/^\/+/, "");
   return `${normalizedBase}/${normalizedFile}`;
 };
+
+const YAML_CONFIG_RESOURCE_PATH = "/data/config/yamlUrl.json";
 
 const parseTime = (value?: string): number => {
   if (!value) return 0;
@@ -182,8 +202,12 @@ export const createYamlApi = (
 
     if (!memoizedConfig || now - cacheTime > TTL) {
       cacheTime = now;
-      memoizedConfig = readJsonResource<YamlUrlConfig>("/data/config/yamlUrl.json").catch((err) => {
-        hooks.onConfigLoadFailed?.({ err: String(err) });
+      memoizedConfig = readJsonResource<YamlUrlConfig>(YAML_CONFIG_RESOURCE_PATH).catch((err) => {
+        hooks.onConfigLoadFailed?.({
+          err: String(err),
+          phase: "yaml-config",
+          resourcePath: YAML_CONFIG_RESOURCE_PATH,
+        });
         memoizedConfig = undefined;
         throw err;
       });
@@ -273,6 +297,16 @@ export const createYamlApi = (
     }
 
     if (!listResult.ok) {
+      hooks.onListYamlReadFailed?.({
+        phase: "yaml-list",
+        type,
+        reason: listResult.reason,
+        listUrl,
+        spareListUrl,
+        baseUrl,
+        spareUrl,
+      });
+
       if (listResult.reason === "not-found") {
         state.notFoundError = true;
       } else {
@@ -358,13 +392,15 @@ export const createYamlApi = (
 
     const { url: baseUrl, spareUrl } = configItem;
 
-    let textResult = await readTextWithRetry(joinResourcePath(baseUrl, fileName), 2, 500);
+    const primaryUrl = joinResourcePath(baseUrl, fileName);
+    const spareResourceUrl = spareUrl ? joinResourcePath(spareUrl, fileName) : undefined;
+    let textResult = await readTextWithRetry(primaryUrl, 2, 500);
 
     if (!textResult.ok && spareUrl) {
       state.singleChangeSpareUrl = true;
       notifyState();
       hooks.onSingleYamlFallback?.({ type, fileName });
-      textResult = await readTextWithRetry(joinResourcePath(spareUrl, fileName), 2, 500);
+      textResult = await readTextWithRetry(spareResourceUrl ?? primaryUrl, 2, 500);
     }
 
     if (!textResult.ok) {
@@ -375,7 +411,16 @@ export const createYamlApi = (
       }
       state.singleYamlLoadFailed = true;
       notifyState();
-      hooks.onSingleYamlReadFailed?.({ type, fileName, reason: textResult.reason });
+      hooks.onSingleYamlReadFailed?.({
+        phase: "yaml-single",
+        type,
+        fileName,
+        reason: textResult.reason,
+        baseUrl,
+        spareUrl,
+        primaryUrl,
+        spareResourceUrl,
+      });
       return null;
     }
 

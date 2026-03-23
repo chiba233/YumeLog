@@ -47,7 +47,7 @@ const titleResource = MAIN_CONTENT_RESOURCES.title;
 
 const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
-    name: "useYamlI18n 会在缺少当前语言时回退 en 并在语言切换后更新文本",
+    name: "[I18n/Yaml] 文本自动回退 -> 缺少当前语言时应当回退 en 并在全局语言切换后实时更新文本",
     run: async () => {
       const currentLang = ref("ja");
       const messages: string[] = [];
@@ -81,7 +81,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "useYamlI18n 在非 SSR 加载失败时会保留占位并上报消息",
+    name: "[I18n/Yaml] 加载异常处理 -> 非 SSR 模式下加载失败应当保留占位符并上报错误消息",
     run: async () => {
       const messages: string[] = [];
       const state = createYamlTextState({
@@ -114,7 +114,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "useHead 会在博客列表页和文章详情页之间正确切换 head 数据",
+    name: "[SEO/Head] 页面状态联动 -> 应当在博客列表页与文章详情页之间正确切换 SEO Head 元数据",
     run: () => {
       resetHeadState();
       lang.value = "en";
@@ -194,7 +194,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "站点域名为 localhost 或空值时不应把编译地址写进 SSR head",
+    name: "[SEO/Head] 域名安全校验 -> 在本地开发或空域名环境下不应当将编译地址写入 SSR Head",
     run: () => {
       assert.equal(
         resolveSiteOrigin({
@@ -219,7 +219,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     },
   },
   {
-    name: "本地文件图片路径不应进入博客 SEO head",
+    name: "[SEO/Asset] 路径安全性 -> 本地或非法协议的图片路径不应当进入博客 SEO 外部索引",
     run: () => {
       resetHeadState();
       lang.value = "en";

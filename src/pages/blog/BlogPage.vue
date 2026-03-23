@@ -67,7 +67,11 @@ if (import.meta.env.SSR) {
         }
       }
     } catch (err) {
-      console.error("SSR Prefetch Error:", err);
+      throw new Error(
+        `[SSR/BlogPage] Failed to prefetch blog route="${route.fullPath}" id="${currentId || ""}": ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
     }
   });
 }

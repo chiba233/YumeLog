@@ -19,10 +19,10 @@ export interface ResolveSiteOriginOptions {
 }
 
 export const resolveSiteOrigin = ({
-                                    ssr,
-                                    ssrOrigin,
-                                    browserOrigin,
-                                  }: ResolveSiteOriginOptions): string => {
+  ssr,
+  ssrOrigin,
+  browserOrigin,
+}: ResolveSiteOriginOptions): string => {
   if (ssr) {
     return isSafeStaticOrigin(ssrOrigin) ? normalizeSiteOrigin(ssrOrigin) : "";
   }

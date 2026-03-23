@@ -1,3 +1,5 @@
+// noinspection ES6PreferShortImport
+
 import assert from "node:assert/strict";
 import { MAIN_CONTENT_RESOURCES } from "../src/shared/lib/app/mainContentResources.ts";
 

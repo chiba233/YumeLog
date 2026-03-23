@@ -13,19 +13,11 @@ import ClientOnly from "@/shared/components/ClientOnly.vue";
 import { useCardGlow } from "@/shared/lib/app/animationCalculate.ts";
 import { changeSpareUrl, listPrimaryError } from "@/shared/lib/yaml";
 import { $message } from "@/shared/lib/app/msgUtils.ts";
-import {
-  blogDisplay,
-  currentPostTitle,
-  globalWebTitleMap,
-  showCatModel,
-  showLineModel,
-  showMaiModal,
-  showWechatModel,
-} from "@/shared/lib/app/useGlobalState.ts";
-import { useHead } from "@unhead/vue";
+import { blogDisplay, globalWebTitleMap } from "@/shared/lib/app/useGlobalState.ts";
 import webTitle from "@/data/I18N/webTitle.json";
 import { PersonConfig, SocialConfig } from "@/shared/types/social.ts";
 import { loadPublicJson } from "@/shared/lib/app/publicData.ts";
+import { appUseHead } from "@/shared/lib/app/useHead.ts";
 
 interface TitleEntry {
   [key: string]: string;
@@ -45,53 +37,9 @@ onMounted(async () => {
   }
 });
 
-const dynamicTitle = computed(() => {
-  const currentLang = lang.value;
-  const routeName = (route.name as string) || "home";
-  const baseTitle = globalWebTitleMap.value[routeName]?.[currentLang] || routeName;
-
-  if (routeName === "blog" && currentPostTitle.value) {
-    return `${currentPostTitle.value} - ${baseTitle}`;
-  }
-
-  const modals = [
-    { active: showWechatModel.value, data: webTitleData.weChat },
-    { active: showCatModel.value, data: webTitleData.neko },
-    { active: showLineModel.value, data: webTitleData.line },
-    { active: showMaiModal.value, data: webTitleData.maimai },
-  ];
-
-  if (routeName === "home") {
-    const active = modals.find((m) => m.active);
-    if (active) {
-      const sub = active.data[currentLang] || active.data.en;
-      return `${sub} - ${baseTitle}`;
-    }
-  }
-
-  return baseTitle;
-});
-useHead({
-  title: dynamicTitle,
-  meta: [
-    {
-      property: "og:title",
-      content: dynamicTitle,
-    },
-    {
-      property: "og:site_name",
-      content: computed(
-        () =>
-          globalWebTitleMap.value["home"]?.[lang.value] ||
-          globalWebTitleMap.value["home"]?.en ||
-          "",
-      ),
-    },
-    {
-      property: "og:locale",
-      content: computed(() => lang.value || "en"),
-    },
-  ],
+appUseHead({
+  routeName: computed(() => (route.name as string) || "home"),
+  webTitleData,
 });
 
 type ColorData = Record<string, string>;

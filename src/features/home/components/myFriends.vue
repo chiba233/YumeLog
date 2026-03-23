@@ -71,11 +71,19 @@ const loadFriendsData = async () => {
     if (rawData && rawData.friends) {
       friends.value = rawData.friends;
     }
-  } catch {
+  } catch (error) {
+    if (import.meta.env.SSR) {
+      throw new Error(
+        `[SSR/HomeFriends] Failed to load ${friendsResource.type}/${friendsResource.fileName}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+
     const yamlEntry = commonI18n.yamlLoadFailed as I18nMap;
     const yamlMsg = (yamlEntry[lang.value] || yamlEntry.en).replace(
       "{err}",
-      friendsResource.fileName,
+      error instanceof Error ? error.message : String(error),
     );
     $message.error(yamlMsg, true, 3000);
   }

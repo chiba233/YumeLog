@@ -102,22 +102,41 @@ pnpm dev
 ### 3. 局域网调试
 
 ```bash
-pnpm run host
+pnpm run dev:host
 ```
 
 ### 4. 生产构建
 
 ```bash
-pnpm type-check
-vite-ssg build
+pnpm run build
 ```
 
 ### 5. 代码质量检查
 
 ```bash
 pnpm lint
-pnpm type-check
+pnpm run typecheck
 ```
+
+### 6. 验证命令
+
+```bash
+pnpm run verify
+```
+
+日常改动默认跑这个命令。它会运行 `eslint` 与默认单元测试（当前为 `test:dsl`）。
+
+```bash
+pnpm run build
+```
+
+只在需要验证 SSG、SEO、SSR 输出或构建链路时运行。它会执行类型检查、SSG 构建与 `test:ssg`。
+
+```bash
+pnpm run verify:build
+```
+
+先执行 `verify`，再执行完整 `build`。
 
 ---
 

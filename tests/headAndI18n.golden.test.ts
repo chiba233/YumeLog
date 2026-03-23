@@ -17,6 +17,54 @@ import type { CommonI18nBlock } from "../src/shared/types/common.ts";
 import { MAIN_CONTENT_RESOURCES } from "../src/shared/lib/app/mainContentResources.ts";
 import { resolveSiteOrigin, sanitizeAssetUrl } from "../src/shared/lib/app/siteOrigin.ts";
 import { runGoldenCases } from "./testHarness";
+import { loadTestJsonFixture } from "./testFixtures.ts";
+
+interface HeadAndI18nFixture {
+  yamlFallback: {
+    initialLang: string;
+    switchLang: string;
+    titleEntries: CommonI18nBlock[];
+    expectedInitialText: string;
+    expectedSwitchedText: string;
+    expectedMessages: string[];
+  };
+  yamlError: {
+    lang: string;
+    expectedPlaceholder: string;
+    errorMessage: string;
+  };
+  seoHead: {
+    origin: string;
+    webTitles: Record<string, Record<string, string>>;
+    author: Record<string, Record<string, string>>;
+    posts: Post[];
+    blogCanonical: string;
+    articleCanonical: string;
+    expectedListTitle: string;
+    expectedArticleTitle: string;
+    expectedArticlePublishedTime: string;
+    expectedImage: string;
+    expectedDescriptionPattern: string;
+    expectedBlogSchemaPattern: string;
+    expectedPostingSchemaPattern: string;
+    expectedAuthorPattern: string;
+  };
+  originSafety: {
+    ssrOrigin: string;
+    browserOrigin: string;
+    expectedResolvedOrigin: string;
+    headOrigin: string;
+  };
+  assetSafety: {
+    origin: string;
+    webTitles: Record<string, Record<string, string>>;
+    post: Post;
+    safeAssetSamples: string[];
+    unsafeAssetSamples: string[];
+  };
+}
+
+const fixture = await loadTestJsonFixture<HeadAndI18nFixture>("headAndI18n.golden.json");
 
 const captureConsoleError = async (run: () => Promise<void> | void): Promise<string[]> => {
   const original = console.error;
@@ -49,7 +97,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
     name: "[I18n/Yaml] 文本自动回退 -> 缺少当前语言时应当回退 en 并在全局语言切换后实时更新文本",
     run: async () => {
-      const currentLang = ref("ja");
+      const currentLang = ref(fixture.yamlFallback.initialLang);
       const messages: string[] = [];
       const state = createYamlTextState({
         type: titleResource.type,
@@ -65,19 +113,16 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
           _force?: boolean,
         ): Promise<T | null> =>
           ({
-            title: [
-              { temp_id: "1", type: "en", content: "Hello" },
-              { temp_id: "2", type: "zh", content: "你好" },
-            ] satisfies CommonI18nBlock[],
+            title: fixture.yamlFallback.titleEntries,
           }) as unknown as T,
       });
 
       await state.loadData();
-      assert.equal(state.text.value, "Hello");
+      assert.equal(state.text.value, fixture.yamlFallback.expectedInitialText);
 
-      currentLang.value = "zh";
-      assert.equal(state.text.value, "你好");
-      assert.deepEqual(messages, []);
+      currentLang.value = fixture.yamlFallback.switchLang;
+      assert.equal(state.text.value, fixture.yamlFallback.expectedSwitchedText);
+      assert.deepEqual(messages, fixture.yamlFallback.expectedMessages);
     },
   },
   {
@@ -90,14 +135,14 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         keyName: titleResource.keyName,
         ssr: true,
         registerServerPrefetch: false,
-        currentLang: ref("en"),
+        currentLang: ref(fixture.yamlError.lang),
         message: { error: (msg) => messages.push(msg) },
         getSingle: async <T extends object>(
           _type: string,
           _fileName: string,
           _force?: boolean,
         ): Promise<T | null> => {
-          throw new Error("boom");
+          throw new Error(fixture.yamlError.errorMessage);
         },
       });
 
@@ -105,11 +150,11 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         await state.loadData();
       });
 
-      assert.equal(state.text.value, "...");
+      assert.equal(state.text.value, fixture.yamlError.expectedPlaceholder);
       assert.deepEqual(messages, []);
       assert.equal(
         errors[0],
-        `[YAML Load Error] ${titleResource.type}/${titleResource.fileName}: Error: boom`,
+        `[YAML Load Error] ${titleResource.type}/${titleResource.fileName}: Error: ${fixture.yamlError.errorMessage}`,
       );
     },
   },
@@ -118,77 +163,60 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     run: () => {
       resetHeadState();
       lang.value = "en";
-      globalWebTitleMap.value = {
-        blog: { en: "Blog" },
-        home: { en: "Home" },
-      };
-      personRawData.value = {
-        author: {
-          en: "Tester",
-        },
-      };
+      globalWebTitleMap.value = fixture.seoHead.webTitles;
+      personRawData.value = fixture.seoHead.author;
 
-      const blogPosts: Post[] = [
-        {
-          id: "hello-world",
-          title: "Hello World",
-          time: "20240102",
-          blocks: [
-            { type: "text", content: "Intro $$bold(text)$$", temp_id: "t1" },
-            {
-              type: "image",
-              content: [{ src: "https://img/a.webp", temp_id: "i1" }],
-              temp_id: "b1",
-            },
-          ],
-        },
-        {
-          title: "Second Post",
-          time: "20231201",
-          blocks: [{ type: "text", content: "Second body", temp_id: "t2" }],
-        },
-      ];
+      const blogPosts: Post[] = fixture.seoHead.posts;
       posts.value = blogPosts;
 
-      const head = createBlogHeadEntries({ origin: "https://example.com", ssr: true });
+      const head = createBlogHeadEntries({ origin: fixture.seoHead.origin, ssr: true });
 
-      assert.equal(head.title.value, "Blog");
+      assert.equal(head.title.value, fixture.seoHead.expectedListTitle);
       assert.deepEqual(head.link.value, [
         {
           rel: "canonical",
-          href: "https://example.com/blog",
+          href: fixture.seoHead.blogCanonical,
         },
       ]);
-      assert.match(head.script.value[0]?.innerHTML ?? "", /"@type":"Blog"/);
+      assert.match(
+        head.script.value[0]?.innerHTML ?? "",
+        new RegExp(fixture.seoHead.expectedBlogSchemaPattern),
+      );
       assert.match(
         head.meta.value.find((item) => item.name === "description")?.content ?? "",
-        /Hello World/,
+        new RegExp(fixture.seoHead.expectedDescriptionPattern),
       );
       assert.equal(head.meta.value.find((item) => item.property === "og:type")?.content, "website");
 
       selectedPost.value = blogPosts[0];
       showModal.value = true;
 
-      assert.equal(head.title.value, "Hello World - Blog");
+      assert.equal(head.title.value, fixture.seoHead.expectedArticleTitle);
       assert.deepEqual(head.link.value, [
         {
           rel: "canonical",
-          href: "https://example.com/blog/hello-world",
+          href: fixture.seoHead.articleCanonical,
         },
       ]);
       assert.equal(head.meta.value.find((item) => item.property === "og:type")?.content, "article");
       assert.equal(
         head.meta.value.find((item) => item.property === "article:published_time")?.content,
-        "2024-01-02",
+        fixture.seoHead.expectedArticlePublishedTime,
       );
       assert.equal(
         head.meta.value.find(
           (item) => item.property === "og:image" || item.name === "twitter:image",
         )?.content,
-        "https://img/a.webp",
+        fixture.seoHead.expectedImage,
       );
-      assert.match(head.script.value[0]?.innerHTML ?? "", /"@type":"BlogPosting"/);
-      assert.match(head.script.value[0]?.innerHTML ?? "", /"name":"Tester"/);
+      assert.match(
+        head.script.value[0]?.innerHTML ?? "",
+        new RegExp(fixture.seoHead.expectedPostingSchemaPattern),
+      );
+      assert.match(
+        head.script.value[0]?.innerHTML ?? "",
+        new RegExp(fixture.seoHead.expectedAuthorPattern),
+      );
 
       resetHeadState();
     },
@@ -199,13 +227,13 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       assert.equal(
         resolveSiteOrigin({
           ssr: true,
-          ssrOrigin: "http://localhost:5173",
-          browserOrigin: "",
+          ssrOrigin: fixture.originSafety.ssrOrigin,
+          browserOrigin: fixture.originSafety.browserOrigin,
         }),
-        "",
+        fixture.originSafety.expectedResolvedOrigin,
       );
 
-      const head = createBlogHeadEntries({ origin: "", ssr: true });
+      const head = createBlogHeadEntries({ origin: fixture.originSafety.headOrigin, ssr: true });
 
       assert.deepEqual(head.link.value, []);
       assert.equal(
@@ -223,44 +251,17 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     run: () => {
       resetHeadState();
       lang.value = "en";
-      globalWebTitleMap.value = {
-        blog: { en: "Blog" },
-        home: { en: "Home" },
-      };
-      posts.value = [
-        {
-          id: "unsafe-image",
-          title: "Unsafe Image",
-          time: "20240102",
-          blocks: [
-            {
-              type: "image",
-              content: [{ src: "file:///tmp/secret.webp", temp_id: "i1" }],
-              temp_id: "b1",
-            },
-          ],
-        },
-      ];
+      globalWebTitleMap.value = fixture.assetSafety.webTitles;
+      posts.value = [fixture.assetSafety.post];
       selectedPost.value = posts.value[0] ?? null;
       showModal.value = true;
 
-      const head = createBlogHeadEntries({ origin: "https://example.com", ssr: true });
-      const safeAssetSamples = [
-        "https://cdn.example.com/cover.webp",
-        "http://cdn.example.com/cover.webp",
-        "/cat/cover.webp",
-      ];
-      const unsafeAssetSamples = [
-        "C:\\Users\\name\\Desktop\\secret.webp",
-        "\\\\server\\share\\secret.webp",
-        "file:///tmp/secret.webp",
-        "secret.webp",
-      ];
+      const head = createBlogHeadEntries({ origin: fixture.assetSafety.origin, ssr: true });
 
-      for (const safePath of safeAssetSamples) {
+      for (const safePath of fixture.assetSafety.safeAssetSamples) {
         assert.equal(sanitizeAssetUrl(safePath), safePath);
       }
-      for (const unsafePath of unsafeAssetSamples) {
+      for (const unsafePath of fixture.assetSafety.unsafeAssetSamples) {
         assert.equal(sanitizeAssetUrl(unsafePath), "");
       }
       assert.equal(
@@ -270,7 +271,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
         false,
       );
       const scriptHtml = head.script.value[0]?.innerHTML ?? "";
-      for (const unsafePath of unsafeAssetSamples) {
+      for (const unsafePath of fixture.assetSafety.unsafeAssetSamples) {
         assert.ok(!scriptHtml.includes(unsafePath));
       }
 

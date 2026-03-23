@@ -1,0 +1,144 @@
+{
+  "mappingCases": [
+    {
+      "name": "[SingleResource/Title] title.dsl 映射 -> 应当正确解析并映射 i18n 标题列表",
+      "parserKey": "main:title.dsl",
+      "input": "@title\n- type: en\n  content: Hello\n@end",
+      "expected": {
+        "title": [
+          {
+            "type": "en",
+            "content": "Hello"
+          }
+        ]
+      }
+    },
+    {
+      "name": "[SingleResource/Intro] introduction.dsl 映射 -> 应当正确解析并映射 i18n 简介列表",
+      "parserKey": "main:introduction.dsl",
+      "input": "@introduction\n- type: en\n  content: Intro\n@end",
+      "expected": {
+        "introduction": [
+          {
+            "type": "en",
+            "content": "Intro"
+          }
+        ]
+      }
+    },
+    {
+      "name": "[SingleResource/Friends] friends.dsl 映射 -> 应当正确解析并映射 dash-list 友链记录",
+      "parserKey": "main:friends.dsl",
+      "input": "@friends\n- name: A\n  alias: Bee\n  url: https://a.com\n  icon: cat\n@end",
+      "expected": {
+        "friends": [
+          {
+            "name": "A",
+            "alias": "Bee",
+            "url": "https://a.com",
+            "icon": "cat"
+          }
+        ]
+      }
+    },
+    {
+      "name": "[SingleResource/Neko] neko.dsl 映射 -> 应当正确解析并映射图片元数据记录",
+      "parserKey": "main:neko.dsl",
+      "input": "@img\n- imgError: err\n  img: /a.webp\n  imgName: cat\n@end",
+      "expected": {
+        "img": [
+          {
+            "imgError": "err",
+            "img": "/a.webp",
+            "imgName": "cat"
+          }
+        ]
+      }
+    },
+    {
+      "name": "[SingleResource/FromNow] fromNow.dsl 映射 -> 应当支持嵌套解析 event 与 i18n names",
+      "parserKey": "main:fromNow.dsl",
+      "input": "@fromNow\n@event\ntime: 20200101\nphoto: /a.webp\n@names\n- type: en\n  content: Test\n@end\n@end\n@end",
+      "expected": {
+        "fromNow": [
+          {
+            "time": "20200101",
+            "photo": "/a.webp",
+            "names": [
+              {
+                "type": "en",
+                "content": "Test"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "errorCases": [
+    {
+      "name": "[SingleResource/FromNow] 鲁棒性 -> 局部 Key-Value 脏数据场景下应当跳过并恢复解析",
+      "parserKey": "main:fromNow.dsl",
+      "input": "@fromNow\n@event\ntime 20200101\n@names\n- type: en\n  content: Test\n@end\n@end\n@end",
+      "expected": {
+        "fromNow": [
+          {
+            "time": "",
+            "photo": "",
+            "names": [
+              {
+                "type": "en",
+                "content": "Test"
+              }
+            ]
+          }
+        ]
+      },
+      "errors": [
+        {
+          "code": "dslUnrecognizedLine",
+          "params": {
+            "raw": "time 20200101"
+          }
+        }
+      ]
+    },
+    {
+      "name": "[SingleResource/FromNow] 错误隔离 -> 单个损坏 event 不应当影响后续合法 event 解析",
+      "parserKey": "main:fromNow.dsl",
+      "input": "@fromNow\n@event\ntime bad\n@names\n- type: en\n  content: broken\n@end\n@end\n@event\ntime: 20240101\n@names\n- type: en\n  content: good\n@end\n@end\n@end",
+      "expected": {
+        "fromNow": [
+          {
+            "time": "",
+            "photo": "",
+            "names": [
+              {
+                "type": "en",
+                "content": "broken"
+              }
+            ]
+          },
+          {
+            "time": "20240101",
+            "photo": "",
+            "names": [
+              {
+                "type": "en",
+                "content": "good"
+              }
+            ]
+          }
+        ]
+      },
+      "errors": [
+        {
+          "code": "dslUnrecognizedLine",
+          "params": {
+            "raw": "time bad"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "yamlConfig": {
+    "main": {
+      "url": "/main"
+    },
+    "blog": {
+      "listUrl": "/blog/list.json",
+      "url": "/blog"
+    }
+  },
+  "mainResources": {
+    "title.dsl": "@title\n- type: en\n  content: Hello\n- type: zh\n  content: 你好\n@end",
+    "introduction.dsl": "@introduction\n- type: en\n  content: Intro text\n@end",
+    "friends.dsl": "@friends\n- name: Alice\n  alias: Ally\n  url: https://example.com\n  icon: avatar.webp\n@end",
+    "neko.dsl": "@img\n- imgError: broken\n  img: /cat/cover.webp\n  imgName: cover\n@end",
+    "fromNow.dsl": "@fromNow\n@event\ntime: 20240101\nphoto: /cat/cover.webp\n@names\n- type: en\n  content: Started\n@end\n@end\n@end"
+  },
+  "mainResourceLengths": {
+    "title.dsl": 2,
+    "introduction.dsl": 1,
+    "friends.dsl": 1,
+    "neko.dsl": 1,
+    "fromNow.dsl": 1
+  },
+  "blog": {
+    "listPath": "/blog/list.json",
+    "fileNames": [
+      "welcome.dsl",
+      "update.dsl"
+    ],
+    "files": {
+      "welcome.dsl": "@meta\ntitle: Welcome\ntime: 20240102\n@end\n@text\nHello\n@end",
+      "update.dsl": "@meta\ntitle: Update\ntime: 20240203\n@end\n@text\nWorld\n@end"
+    },
+    "expectedTitles": [
+      "Update",
+      "Welcome"
+    ]
+  }
+}

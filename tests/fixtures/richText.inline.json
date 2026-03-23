@@ -1,0 +1,255 @@
+{
+  "inlineCases": [
+    {
+      "name": "[Inline/Bold] 空 bold 标签 -> 应当生成空内容的 bold token",
+      "mode": "parse",
+      "input": "$$bold()$$",
+      "expectedTokens": [
+        {
+          "type": "bold",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Bold] bold 含空格 -> 应当完整保留内部空格内容",
+      "mode": "parse",
+      "input": "$$bold( )$$ ",
+      "expectedTokens": [
+        {
+          "type": "bold",
+          "value": [
+            {
+              "type": "text",
+              "value": " "
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Bold] bold 含引号 -> 应当按普通文本保留引号",
+      "mode": "parse",
+      "input": "$$bold(\"\")$$",
+      "expectedTokens": [
+        {
+          "type": "bold",
+          "value": [
+            {
+              "type": "text",
+              "value": "\"\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Bold] bold 管道符在开头 -> 应当作为内容的一部分保留",
+      "mode": "parse",
+      "input": "$$bold(| 1)$$ ",
+      "expectedTokens": [
+        {
+          "type": "bold",
+          "value": [
+            {
+              "type": "text",
+              "value": "| 1"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Bold] bold 管道符在中间 -> 应当作为内容的一部分保留",
+      "mode": "parse",
+      "input": "$$bold(1 |1)$$ ",
+      "expectedTokens": [
+        {
+          "type": "bold",
+          "value": [
+            {
+              "type": "text",
+              "value": "1 |1"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Bold] bold 管道符且含空格 -> 应当保留管道符及所有空格",
+      "mode": "parse",
+      "input": "$$bold(1  |  1)$$ ",
+      "expectedTokens": [
+        {
+          "type": "bold",
+          "value": [
+            {
+              "type": "text",
+              "value": "1  |  1"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Link] 缺少显示文本 -> 应当自动回退 URL 为标签内容",
+      "mode": "parse",
+      "input": "$$link(https://example.com)$$",
+      "expectedTokens": [
+        {
+          "type": "link",
+          "url": "https://example.com",
+          "value": [
+            {
+              "type": "text",
+              "value": "https://example.com"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Link] link 带多余参数 -> 应当将多余部分并入标签文本",
+      "mode": "parse",
+      "input": "$$link(https://a.com | hello | extra)$$",
+      "expectedTokens": [
+        {
+          "type": "link",
+          "url": "https://a.com",
+          "value": [
+            {
+              "type": "text",
+              "value": "hello "
+            },
+            {
+              "type": "text",
+              "value": "extra"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Link] link 标签文本嵌套 -> 应当支持在显示文本中嵌套其它 known 标签",
+      "mode": "parse",
+      "input": "$$link(https://a.com | hello $$bold(world)$$)$$",
+      "expectedTokens": [
+        {
+          "type": "link",
+          "url": "https://a.com",
+          "value": [
+            {
+              "type": "text",
+              "value": "hello "
+            },
+            {
+              "type": "bold",
+              "value": [
+                {
+                  "type": "text",
+                  "value": "world"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Link] 显式空标签文本 -> 应当允许并生成空 value",
+      "mode": "parse",
+      "input": "$$link(https://a.com | )$$",
+      "expectedTokens": [
+        {
+          "type": "link",
+          "url": "https://a.com",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Titled] 标题类标签只有单参数 -> 应当使用默认标题并解析内容",
+      "mode": "parse",
+      "input": "$$info(hello world)$$",
+      "expectedTokens": [
+        {
+          "type": "info",
+          "title": "Info",
+          "value": [
+            {
+              "type": "text",
+              "value": "hello world"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Params] 标题类标签带多余参数 -> 应当将后续参数并入正文解析",
+      "mode": "parse",
+      "input": "$$info(title | content | extra)$$",
+      "expectedTokens": [
+        {
+          "type": "info",
+          "title": "title",
+          "value": [
+            {
+              "type": "text",
+              "value": "content "
+            },
+            {
+              "type": "text",
+              "value": "extra"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Boundary] 显式传递空正文 -> 应当保留标题并生成空 value",
+      "mode": "parse",
+      "input": "$$warning(only title | )$$",
+      "expectedTokens": [
+        {
+          "type": "warning",
+          "title": "only title",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "[Inline/Boundary] 未闭合 inline 标签 -> 应当退化为普通文本",
+      "mode": "strip",
+      "input": "$$bold(hello",
+      "expectedText": "$$bold(hello"
+    },
+    {
+      "name": "[Inline/Boundary] 带参数未闭合 inline 标签 -> 应当完整退化为原始文本",
+      "mode": "strip",
+      "input": "$$link(https://example.com | Example",
+      "expectedText": "$$link(https://example.com | Example"
+    },
+    {
+      "name": "[Inline/Boundary] 已入栈后未闭合 inline 标签 -> 应当保留原始开头片段再拼接已解析内容",
+      "mode": "strip",
+      "input": "$$link(https://example.com | before $$bold(ok)$$ tail",
+      "expectedText": "$$link(https://example.com | before ok tail"
+    }
+  ]
+}

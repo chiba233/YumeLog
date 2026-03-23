@@ -4,11 +4,15 @@ const shouldUseNodePublicRead = (): boolean =>
 
 type NodeFsPromisesModule = typeof import("node:fs/promises");
 type NodePathModule = typeof import("node:path");
+const NODE_FS_PROMISES_SPECIFIER = "node:fs/promises";
+const NODE_PATH_SPECIFIER = "node:path";
+const dynamicImport = async <T>(specifier: string): Promise<T> =>
+  (await import(/* @vite-ignore */ specifier)) as T;
 
 const loadServerPublicText = async (resourcePath: string): Promise<string> => {
   const [fsModule, pathModule]: [NodeFsPromisesModule, NodePathModule] = await Promise.all([
-    import("node:fs/promises"),
-    import("node:path"),
+    dynamicImport<NodeFsPromisesModule>(NODE_FS_PROMISES_SPECIFIER),
+    dynamicImport<NodePathModule>(NODE_PATH_SPECIFIER),
   ]);
   const filePath = pathModule.join(process.cwd(), "public", resourcePath);
   return await fsModule.readFile(filePath, "utf8");

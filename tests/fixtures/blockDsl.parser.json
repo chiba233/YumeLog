@@ -1,0 +1,108 @@
+{
+  "parserCases": [
+    {
+      "name": "[Parser/Block] 扁平博客块 -> 应当正确解析块内容并裁掉尾部多余换行",
+      "input": "@meta\ntime: 2024-01-01\n@end\n@text\nhello\nworld\n\n@end\n",
+      "syntax": {
+        "blockNames": [
+          "meta",
+          "text",
+          "image",
+          "divider"
+        ],
+        "maxDepth": 1,
+        "nestableBlocks": []
+      },
+      "expectedAst": [
+        {
+          "name": "meta",
+          "content": "time: 2024-01-01",
+          "children": [],
+          "chunks": [
+            {
+              "type": "text",
+              "value": "time: 2024-01-01"
+            }
+          ],
+          "depth": 0,
+          "lineStart": 1,
+          "lineEnd": 3
+        },
+        {
+          "name": "text",
+          "content": "hello\nworld",
+          "children": [],
+          "chunks": [
+            {
+              "type": "text",
+              "value": "hello\nworld"
+            }
+          ],
+          "depth": 0,
+          "lineStart": 4,
+          "lineEnd": 8
+        }
+      ]
+    },
+    {
+      "name": "[Parser/Block] 转义指令行 -> 应当将 \\\\@ 后的指令视为普通文本保留",
+      "input": "@text\n\\@image\n@end",
+      "syntax": {
+        "blockNames": [
+          "meta",
+          "text",
+          "image",
+          "divider"
+        ],
+        "maxDepth": 1,
+        "nestableBlocks": []
+      },
+      "expectedAst": [
+        {
+          "name": "text",
+          "content": "@image",
+          "children": [],
+          "chunks": [
+            {
+              "type": "text",
+              "value": "@image"
+            }
+          ],
+          "depth": 0,
+          "lineStart": 1,
+          "lineEnd": 3
+        }
+      ]
+    },
+    {
+      "name": "[Parser/Block] 未知指令行 -> 应当将 @unknown 形式保留为块内普通文本",
+      "input": "@text\n@unknown\n@end",
+      "syntax": {
+        "blockNames": [
+          "meta",
+          "text",
+          "image",
+          "divider"
+        ],
+        "maxDepth": 1,
+        "nestableBlocks": []
+      },
+      "expectedAst": [
+        {
+          "name": "text",
+          "content": "@unknown",
+          "children": [],
+          "chunks": [
+            {
+              "type": "text",
+              "value": "@unknown"
+            }
+          ],
+          "depth": 0,
+          "lineStart": 1,
+          "lineEnd": 3
+        }
+      ]
+    }
+  ]
+}

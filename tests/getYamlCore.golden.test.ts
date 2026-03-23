@@ -1,13 +1,11 @@
 // noinspection ES6PreferShortImport
 
 import assert from "node:assert/strict";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { createYamlApi, createYamlApiState } from "../src/shared/lib/yaml/getYaml.core.ts";
 import type { DSLError } from "../src/shared/lib/dsl/extractAtBlocks/dslError.ts";
-import { MAIN_CONTENT_RESOURCES } from "../src/shared/lib/app/mainContentResources.ts";
 import { assertFromNowShape, MAIN_RESOURCE_ASSERTIONS } from "./mainResourceAssertions.ts";
 import { runGoldenCases } from "./testHarness";
+import { loadTestJsonFixture } from "./testFixtures.ts";
 
 interface FakeApiContext {
   api: ReturnType<typeof createYamlApi>;
@@ -17,9 +15,53 @@ interface FakeApiContext {
   configTypeErrors: string[];
 }
 
-const loadMainFixture = async (fileName: string): Promise<string> => {
-  const filePath = path.resolve(process.cwd(), "public", "data", "main", fileName);
-  return await fs.readFile(filePath, "utf-8");
+interface GetYamlCoreFixture {
+  listCase: {
+    yamlConfig: Record<string, unknown>;
+    listFileNames: string[];
+    files: Record<string, string>;
+    expectedPosts: Array<{
+      title: string;
+      time: string;
+      pin?: string;
+    }>;
+  };
+  singleFallback: {
+    yamlConfig: Record<string, unknown>;
+    spareFileName: string;
+    spareContent: string;
+    expectedDslErrors: DSLError[];
+    expectedLength: number;
+    expectedFirstNamesLength: number;
+  };
+  mainResources: {
+    yamlConfig: Record<string, unknown>;
+    files: Record<keyof typeof MAIN_RESOURCE_ASSERTIONS, string>;
+  };
+  missingList: {
+    yamlConfig: Record<string, unknown>;
+  };
+  unsupportedResource: {
+    yamlConfig: Record<string, unknown>;
+    fileName: string;
+    content: string;
+    expectedError: string;
+  };
+}
+
+const fixture = await loadTestJsonFixture<GetYamlCoreFixture>("getYamlCore.golden.json");
+
+const normalizePostExpectation = (post: { title: string; time: string; pin?: string }) => {
+  const normalized: { title: string; time: string; pin?: string } = {
+    title: post.title,
+    time: post.time,
+  };
+
+  if (post.pin !== undefined) {
+    normalized.pin = post.pin;
+  }
+
+  return normalized;
 };
 
 const createFakeApi = (
@@ -70,29 +112,14 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "[Core/List] 博客列表获取 -> 应当按 pin 优先及时间倒序排序并在部分失效时切换备用源",
     run: async () => {
       const { api, state, dslErrors } = createFakeApi({
-        "/data/config/yamlUrl.json": JSON.stringify({
-          blog: {
-            listUrl: "/blog/list.json",
-            url: "/blog",
-            spareUrl: "/spare-blog",
-          },
-        }),
-        "/blog/list.json": JSON.stringify(["a.dsl", "b.dsl", "c.dsl"]),
-        "/blog/a.dsl": "@meta\ntitle: A\ntime: 20240101\n@end\n@text\nA\n@end",
-        "/blog/b.dsl": "@meta\ntitle: B\ntime: 20250101\npin: true\n@end\n@text\nB\n@end",
-        "/spare-blog/c.dsl": "@meta\ntitle: C\ntime: 20230101\n@end\n@text\nC\n@end",
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.listCase.yamlConfig),
+        "/blog/list.json": JSON.stringify(fixture.listCase.listFileNames),
+        ...fixture.listCase.files,
       });
 
       const posts = await api.loadAllPosts<{ title: string; time: string; pin?: string }>("blog");
 
-      assert.deepEqual(
-        posts.map((post) => ({ title: post.title, time: post.time, pin: post.pin })),
-        [
-          { title: "B", time: "20250101", pin: "true" },
-          { title: "A", time: "20240101", pin: undefined },
-          { title: "C", time: "20230101", pin: undefined },
-        ],
-      );
+      assert.deepEqual(posts.map(normalizePostExpectation), fixture.listCase.expectedPosts);
       assert.equal(state.changeSpareUrl, true);
       assert.equal(state.yamlLoadingFault, false);
       assert.deepEqual(dslErrors, []);
@@ -102,14 +129,9 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "[Core/Single] 备用源容错机制 -> 主地址缺失时应当自动切备用源并保留 DSL 错误恢复结果",
     run: async () => {
       const { api, state, dslErrors } = createFakeApi({
-        "/data/config/yamlUrl.json": JSON.stringify({
-          main: {
-            url: "/main",
-            spareUrl: "/spare-main",
-          },
-        }),
-        "/spare-main/fromNow.dsl":
-          "@fromNow\n@event\ntime bad\n@names\n- type: en\n  content: broken\n@end\n@end\n@event\ntime: 20240101\n@names\n- type: en\n  content: good\n@end\n@end\n@end",
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.singleFallback.yamlConfig),
+        [`/spare-main/${fixture.singleFallback.spareFileName}`]:
+          fixture.singleFallback.spareContent,
       });
 
       const data = await api.loadSingleYaml<{
@@ -127,39 +149,24 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
 
       assert.ok(data);
       assertFromNowShape(data.fromNow);
-      assert.equal(data.fromNow.length, 2);
-      assert.equal(data.fromNow[0]?.names.length, 1);
+      assert.equal(data.fromNow.length, fixture.singleFallback.expectedLength);
+      assert.equal(data.fromNow[0]?.names.length, fixture.singleFallback.expectedFirstNamesLength);
       assert.equal(state.changeSpareUrl, false);
       assert.equal(state.singleChangeSpareUrl, true);
       assert.equal(state.singleYamlLoadFailed, false);
-      assert.deepEqual(dslErrors, [
-        {
-          code: "dslUnrecognizedLine",
-          params: { raw: "time bad" },
-        },
-      ]);
+      assert.deepEqual(dslErrors, fixture.singleFallback.expectedDslErrors);
     },
   },
   {
     name: "[Core/Main] 单文件映射完整性 -> 应当能正确读取并解析 main 目录下所有预定义 DSL 为数据树",
     run: async () => {
-      const mainFixtures = Object.fromEntries(
-        await Promise.all(
-          Object.values(MAIN_CONTENT_RESOURCES).map(async (resource) => [
-            resource.fileName,
-            await loadMainFixture(resource.fileName),
-          ]),
-        ),
-      ) as Record<keyof typeof MAIN_RESOURCE_ASSERTIONS, string>;
-
       const { api, dslErrors } = createFakeApi({
-        "/data/config/yamlUrl.json": JSON.stringify({
-          main: {
-            url: "/main",
-          },
-        }),
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.mainResources.yamlConfig),
         ...Object.fromEntries(
-          Object.entries(mainFixtures).map(([fileName, content]) => [`/main/${fileName}`, content]),
+          Object.entries(fixture.mainResources.files).map(([fileName, content]) => [
+            `/main/${fileName}`,
+            content,
+          ]),
         ),
       });
 
@@ -177,12 +184,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "[Core/Error] 列表资源缺失 -> 应当在请求 404 或 ENOENT 时置位 notFoundError 并返回空列表",
     run: async () => {
       const { api, state } = createFakeApi({
-        "/data/config/yamlUrl.json": JSON.stringify({
-          blog: {
-            listUrl: "/blog/list.json",
-            url: "/blog",
-          },
-        }),
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.missingList.yamlConfig),
       });
 
       const posts = await api.loadAllPosts("blog");
@@ -197,18 +199,14 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "[Core/Error] 格式/资源不受支持 -> 解析不受支持的 DSL 根块时应当触发 onYamlLoadFailed 回调",
     run: async () => {
       const { api, yamlLoadFailed } = createFakeApi({
-        "/data/config/yamlUrl.json": JSON.stringify({
-          main: {
-            url: "/main",
-          },
-        }),
-        "/main/unknown.dsl": "@unknown\nhello\n@end",
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.unsupportedResource.yamlConfig),
+        [`/main/${fixture.unsupportedResource.fileName}`]: fixture.unsupportedResource.content,
       });
 
-      const result = await api.loadSingleYaml("main", "unknown.dsl");
+      const result = await api.loadSingleYaml("main", fixture.unsupportedResource.fileName);
 
       assert.equal(result, null);
-      assert.deepEqual(yamlLoadFailed, ["Error: Unsupported DSL resource: main:unknown.dsl"]);
+      assert.deepEqual(yamlLoadFailed, [fixture.unsupportedResource.expectedError]);
     },
   },
   {

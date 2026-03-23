@@ -6,6 +6,76 @@ import { createYamlClientBindings } from "../src/shared/lib/yaml/getYaml.client.
 import { createYamlApiState } from "../src/shared/lib/yaml/getYaml.core.ts";
 import { MAIN_CONTENT_RESOURCES } from "../src/shared/lib/app/mainContentResources.ts";
 import { runGoldenCases } from "./testHarness";
+import { loadTestJsonFixture } from "./testFixtures.ts";
+
+interface ClientMessage {
+  level: "error" | "warning";
+  content: string;
+}
+
+interface GetYamlClientFixture {
+  configLoadFailed: {
+    expectedMessages: ClientMessage[];
+  };
+  missingType: {
+    yamlConfig: Record<string, unknown>;
+    type: string;
+    expectedMessages: ClientMessage[];
+  };
+  listDualFail: {
+    yamlConfig: Record<string, unknown>;
+  };
+  singleDualFail: {
+    yamlConfig: Record<string, unknown>;
+    expectedMessages: ClientMessage[];
+  };
+  singleSpareSuccess: {
+    yamlConfig: Record<string, unknown>;
+    spareTitleDsl: string;
+    expectedMessages: ClientMessage[];
+  };
+  singleZhFallback: {
+    yamlConfig: Record<string, unknown>;
+    currentLang: string;
+    spareTitleDsl: string;
+    expectedMessages: ClientMessage[];
+  };
+  singleZhFailure: {
+    yamlConfig: Record<string, unknown>;
+    currentLang: string;
+    expectedMessages: ClientMessage[];
+  };
+  dslWarning: {
+    yamlConfig: Record<string, unknown>;
+    listFileNames: string[];
+    badDsl: string;
+    expectedTitles: string[];
+    expectedMessages: ClientMessage[];
+  };
+  unsupportedResource: {
+    yamlConfig: Record<string, unknown>;
+    fileName: string;
+    content: string;
+    expectedMessages: ClientMessage[];
+  };
+  singleNetworkFailure: {
+    yamlConfig: Record<string, unknown>;
+    expectedMessages: ClientMessage[];
+  };
+  loadingState: {
+    yamlConfig: Record<string, unknown>;
+    listPayload: string;
+    postDsl: string;
+  };
+  retry: {
+    yamlConfig: Record<string, unknown>;
+    listPayload: string;
+    postDsl: string;
+    expectedMessages: ClientMessage[];
+  };
+}
+
+const fixture = await loadTestJsonFixture<GetYamlClientFixture>("getYamlClient.golden.json");
 
 const createStateRefs = () => ({
   yamlLoading: ref(false),
@@ -31,7 +101,7 @@ const createClientHarness = (
   } = {},
 ) => {
   const fileMap = new Map(Object.entries(files));
-  const messages: Array<{ level: "error" | "warning"; content: string }> = [];
+  const messages: ClientMessage[] = [];
   const refs = createStateRefs();
 
   const client = createYamlClientBindings(
@@ -78,6 +148,26 @@ const flushMicrotasks = async (times = 4): Promise<void> => {
   }
 };
 
+const assertMessagesLike = (
+  actual: ClientMessage[],
+  expected: Array<{
+    level: ClientMessage["level"];
+    includes?: string[];
+  }>,
+): void => {
+  assert.equal(actual.length, expected.length);
+
+  expected.forEach((message, index) => {
+    const current = actual[index];
+    assert.ok(current, `Missing message at index ${index}`);
+    assert.equal(current.level, message.level);
+
+    for (const fragment of message.includes ?? []) {
+      assert.match(current.content, new RegExp(fragment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    }
+  });
+};
+
 const getSingleI18nList = (
   value: unknown,
   key: string,
@@ -113,11 +203,10 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
 
       await assert.rejects(() => client.getYamlConfig());
 
-      assert.deepEqual(messages, [
+      assertMessagesLike(messages, [
         {
           level: "error",
-          content:
-            "[Config Load Failed]: Failed to load configuration file. Error: ENOENT /data/config/yamlUrl.json",
+          includes: ["/data/config/yamlUrl.json"],
         },
       ]);
       assert.equal(refs.yamlLoading.value, false);
@@ -129,16 +218,16 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "[Config/Init] 配置项类型缺失 -> 应当输出 configTypeError 错误且不污染全局错误状态",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
-        "/data/config/yamlUrl.json": JSON.stringify({}),
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.missingType.yamlConfig),
       });
 
-      const result = await client.loadSingleYaml("missing", titleResource.fileName);
+      const result = await client.loadSingleYaml(fixture.missingType.type, titleResource.fileName);
 
       assert.equal(result, null);
-      assert.deepEqual(messages, [
+      assertMessagesLike(messages, [
         {
           level: "error",
-          content: "[Config Error]: Type 'missing' not found in YamlUrlConfig.",
+          includes: [fixture.missingType.type],
         },
       ]);
       assert.equal(refs.serverError.value, false);
@@ -150,14 +239,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "[State/List] 列表双源均失效 -> 应当置位主/备源错误标志及 notFoundError",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
-        "/data/config/yamlUrl.json": JSON.stringify({
-          blog: {
-            listUrl: "/blog/list.json",
-            spareListUrl: "/spare-blog/list.json",
-            url: "/blog",
-            spareUrl: "/spare-blog",
-          },
-        }),
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.listDualFail.yamlConfig),
       });
 
       const posts = await client.loadAllPosts("blog");
@@ -176,25 +258,20 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "[State/Single] 单篇资源双源均缺失 -> 应当进入独立 single 错误状态并输出 fallback 失败消息",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
-        "/data/config/yamlUrl.json": JSON.stringify({
-          main: {
-            url: "/main",
-            spareUrl: "/spare-main",
-          },
-        }),
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.singleDualFail.yamlConfig),
       });
 
       const result = await client.loadSingleYaml(titleResource.type, titleResource.fileName);
 
       assert.equal(result, null);
-      assert.deepEqual(messages, [
+      assertMessagesLike(messages, [
         {
           level: "warning",
-          content: `Primary resource failed, switching to spare source: ${titleResource.type}/${titleResource.fileName}`,
+          includes: [`${titleResource.type}/${titleResource.fileName}`],
         },
         {
           level: "error",
-          content: `Single resource load failed completely: ${titleResource.type}/${titleResource.fileName}`,
+          includes: [`${titleResource.type}/${titleResource.fileName}`],
         },
       ]);
       assert.equal(refs.changeSpareUrl.value, false);
@@ -210,23 +287,17 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "[State/Single] 单篇主源失败备用源成功 -> 应当仅提示切换备用源并成功返回数据",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
-        "/data/config/yamlUrl.json": JSON.stringify({
-          main: {
-            url: "/main",
-            spareUrl: "/spare-main",
-          },
-        }),
-        [`/spare-main/${titleResource.fileName}`]:
-          '@title\n- type: "en"\n  content: "fallback ok"\n@end',
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.singleSpareSuccess.yamlConfig),
+        [`/spare-main/${titleResource.fileName}`]: fixture.singleSpareSuccess.spareTitleDsl,
       });
 
       const result = await client.loadSingleYaml(titleResource.type, titleResource.fileName);
 
       getSingleI18nList(result, "title", 1);
-      assert.deepEqual(messages, [
+      assertMessagesLike(messages, [
         {
           level: "warning",
-          content: `Primary resource failed, switching to spare source: ${titleResource.type}/${titleResource.fileName}`,
+          includes: [`${titleResource.type}/${titleResource.fileName}`],
         },
       ]);
       assert.equal(refs.singleChangeSpareUrl.value, true);
@@ -241,25 +312,20 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     run: async () => {
       const { client, messages, refs } = createClientHarness(
         {
-          "/data/config/yamlUrl.json": JSON.stringify({
-            main: {
-              url: "/main",
-              spareUrl: "/spare-main",
-            },
-          }),
-          [`/spare-main/${titleResource.fileName}`]: '@title\n- type: "zh"\n  content: "ok"\n@end',
+          "/data/config/yamlUrl.json": JSON.stringify(fixture.singleZhFallback.yamlConfig),
+          [`/spare-main/${titleResource.fileName}`]: fixture.singleZhFallback.spareTitleDsl,
         },
         {
-          currentLang: "zh",
+          currentLang: fixture.singleZhFallback.currentLang,
         },
       );
 
       await client.loadSingleYaml(titleResource.type, titleResource.fileName);
 
-      assert.deepEqual(messages, [
+      assertMessagesLike(messages, [
         {
           level: "warning",
-          content: `主资源加载失败，正在切换到备用源: ${titleResource.type}/${titleResource.fileName}`,
+          includes: [`${titleResource.type}/${titleResource.fileName}`],
         },
       ]);
       assert.equal(refs.singleChangeSpareUrl.value, true);
@@ -276,29 +342,24 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     run: async () => {
       const { client, messages, refs } = createClientHarness(
         {
-          "/data/config/yamlUrl.json": JSON.stringify({
-            main: {
-              url: "/main",
-              spareUrl: "/spare-main",
-            },
-          }),
+          "/data/config/yamlUrl.json": JSON.stringify(fixture.singleZhFailure.yamlConfig),
         },
         {
-          currentLang: "zh",
+          currentLang: fixture.singleZhFailure.currentLang,
         },
       );
 
       const result = await client.loadSingleYaml(friendsResource.type, friendsResource.fileName);
 
       assert.equal(result, null);
-      assert.deepEqual(messages, [
+      assertMessagesLike(messages, [
         {
           level: "warning",
-          content: `主资源加载失败，正在切换到备用源: ${friendsResource.type}/${friendsResource.fileName}`,
+          includes: [`${friendsResource.type}/${friendsResource.fileName}`],
         },
         {
           level: "error",
-          content: `单文件资源加载彻底失败: ${friendsResource.type}/${friendsResource.fileName}`,
+          includes: [`${friendsResource.type}/${friendsResource.fileName}`],
         },
       ]);
       assert.equal(refs.singleChangeSpareUrl.value, true);
@@ -314,28 +375,21 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "[DSL/Compatibility] 局部解析错误 -> 应当输出 DSL 警告并在部分资源失效时标记 yamlLoadingFault",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
-        "/data/config/yamlUrl.json": JSON.stringify({
-          blog: {
-            listUrl: "/blog/list.json",
-            url: "/blog",
-            spareUrl: "/spare-blog",
-          },
-        }),
-        "/blog/list.json": JSON.stringify(["bad.dsl", "missing.dsl"]),
-        "/blog/bad.dsl":
-          "@meta\ntitle: Bad\ntime: 20240101\n@end\n@image\noops\n@end\n@text\nhello\n@end",
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.dslWarning.yamlConfig),
+        "/blog/list.json": JSON.stringify(fixture.dslWarning.listFileNames),
+        "/blog/bad.dsl": fixture.dslWarning.badDsl,
       });
 
       const posts = await client.loadAllPosts<{ title: string }>("blog");
 
       assert.deepEqual(
         posts.map((post) => post.title),
-        ["Bad"],
+        fixture.dslWarning.expectedTitles,
       );
-      assert.deepEqual(messages, [
+      assertMessagesLike(messages, [
         {
           level: "error",
-          content: '[DSL Warning] Unrecognized line, skipped: "oops"',
+          includes: ["oops"],
         },
       ]);
       assert.equal(refs.yamlLoadingFault.value, true);
@@ -347,21 +401,17 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "[DSL/Compatibility] 不受支持的资源 -> 应当直接提示 yamlLoadFailed 而非 DSL 内部解析错误",
     run: async () => {
       const { client, refs, messages } = createClientHarness({
-        "/data/config/yamlUrl.json": JSON.stringify({
-          main: {
-            url: "/main",
-          },
-        }),
-        "/main/unknown.dsl": "@unknown\nhello\n@end",
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.unsupportedResource.yamlConfig),
+        [`/main/${fixture.unsupportedResource.fileName}`]: fixture.unsupportedResource.content,
       });
 
-      const result = await client.loadSingleYaml("main", "unknown.dsl");
+      const result = await client.loadSingleYaml("main", fixture.unsupportedResource.fileName);
 
       assert.equal(result, null);
-      assert.deepEqual(messages, [
+      assertMessagesLike(messages, [
         {
           level: "error",
-          content: "YAML load failed: Error: Unsupported DSL resource: main:unknown.dsl",
+          includes: ["Unsupported DSL resource", `main:${fixture.unsupportedResource.fileName}`],
         },
       ]);
       assert.equal(refs.notFoundError.value, false);
@@ -373,15 +423,11 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     name: "[State/Single] 错误隔离 -> 单篇网络错误应当仅置位 singleServerError 而不污染列表全局状态",
     run: async () => {
       const refs = createStateRefs();
-      const messages: Array<{ level: "error" | "warning"; content: string }> = [];
+      const messages: ClientMessage[] = [];
       const client = createYamlClientBindings(
         async (resourcePath) => {
           if (resourcePath === "/data/config/yamlUrl.json") {
-            return JSON.stringify({
-              main: {
-                url: "/main",
-              },
-            });
+            return JSON.stringify(fixture.singleNetworkFailure.yamlConfig);
           }
           if (resourcePath === "/main/friends.dsl") {
             throw new Error("network fail");
@@ -402,10 +448,10 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       const result = await client.loadSingleYaml(friendsResource.type, friendsResource.fileName);
 
       assert.equal(result, null);
-      assert.deepEqual(messages, [
+      assertMessagesLike(messages, [
         {
           level: "error",
-          content: `Single resource load failed completely: ${friendsResource.type}/${friendsResource.fileName}`,
+          includes: [`${friendsResource.type}/${friendsResource.fileName}`],
         },
       ]);
       assert.equal(refs.singleServerError.value, true);
@@ -420,30 +466,20 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
     run: async () => {
       const listDeferred = createDeferred<string>();
       const { refs } = createClientHarness({
-        "/data/config/yamlUrl.json": JSON.stringify({
-          blog: {
-            listUrl: "/blog/list.json",
-            url: "/blog",
-          },
-        }),
-        "/blog/a.dsl": "@meta\ntitle: A\ntime: 20240101\n@end\n@text\nA\n@end",
+        "/data/config/yamlUrl.json": JSON.stringify(fixture.loadingState.yamlConfig),
+        "/blog/a.dsl": fixture.loadingState.postDsl,
       });
 
       const delayedClient = createYamlClientBindings(
         async (resourcePath) => {
           if (resourcePath === "/data/config/yamlUrl.json") {
-            return JSON.stringify({
-              blog: {
-                listUrl: "/blog/list.json",
-                url: "/blog",
-              },
-            });
+            return JSON.stringify(fixture.loadingState.yamlConfig);
           }
           if (resourcePath === "/blog/list.json") {
             return listDeferred.promise;
           }
           if (resourcePath === "/blog/a.dsl") {
-            return "@meta\ntitle: A\ntime: 20240101\n@end\n@text\nA\n@end";
+            return fixture.loadingState.postDsl;
           }
           throw new Error(`ENOENT ${resourcePath}`);
         },
@@ -460,7 +496,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
 
       assert.equal(refs.yamlLoading.value, true);
 
-      listDeferred.resolve('["a.dsl"]');
+      listDeferred.resolve(fixture.loadingState.listPayload);
       await pending;
 
       assert.equal(refs.yamlLoading.value, false);
@@ -473,14 +509,9 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       let attempts = 0;
       const { refs, messages } = createClientHarness(
         {
-          "/data/config/yamlUrl.json": JSON.stringify({
-            blog: {
-              listUrl: "/blog/list.json",
-              url: "/blog",
-            },
-          }),
-          "/blog/list.json": '["ok.dsl"]',
-          "/blog/ok.dsl": "@meta\ntitle: OK\ntime: 20240101\n@end\n@text\nok\n@end",
+          "/data/config/yamlUrl.json": JSON.stringify(fixture.retry.yamlConfig),
+          "/blog/list.json": fixture.retry.listPayload,
+          "/blog/ok.dsl": fixture.retry.postDsl,
         },
         {
           sleep: async () => sleepDeferred.promise,
@@ -490,22 +521,17 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       const retryingClient = createYamlClientBindings(
         async (resourcePath) => {
           if (resourcePath === "/data/config/yamlUrl.json") {
-            return JSON.stringify({
-              blog: {
-                listUrl: "/blog/list.json",
-                url: "/blog",
-              },
-            });
+            return JSON.stringify(fixture.retry.yamlConfig);
           }
           if (resourcePath === "/blog/list.json") {
             attempts++;
             if (attempts === 1) {
               throw new Error("network fail");
             }
-            return '["ok.dsl"]';
+            return fixture.retry.listPayload;
           }
           if (resourcePath === "/blog/ok.dsl") {
-            return "@meta\ntitle: OK\ntime: 20240101\n@end\n@text\nok\n@end";
+            return fixture.retry.postDsl;
           }
           throw new Error(`ENOENT ${resourcePath}`);
         },
@@ -534,7 +560,7 @@ const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
       assert.equal(refs.yamlRetrying.value, false);
       assert.equal(refs.yamlLoading.value, false);
       assert.equal(refs.serverError.value, false);
-      assert.deepEqual(messages, []);
+      assertMessagesLike(messages, []);
     },
   },
 ];

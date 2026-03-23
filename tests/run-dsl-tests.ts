@@ -1,5 +1,9 @@
 export {};
 
+console.log("=== App Modules Unit ===");
+await import("./appModules.unit.test.ts");
+console.log("=== App Modules Smoke ===");
+await import("./appModules.golden.test.ts");
 console.log("=== Rich Text DSL ===");
 await import("./richText.golden.test.ts");
 console.log("=== Block DSL ===");
@@ -8,8 +12,6 @@ console.log("=== Yaml API DSL ===");
 await import("./getYamlCore.golden.test.ts");
 console.log("=== Yaml Client ===");
 await import("./getYamlClient.golden.test.ts");
-console.log("=== App Modules ===");
-await import("./appModules.golden.test.ts");
 console.log("=== Lazy Rendering ===");
 await import("./lazyRendering.golden.test.ts");
 console.log("=== Head + I18n ===");

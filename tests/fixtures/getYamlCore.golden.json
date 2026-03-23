@@ -1,0 +1,88 @@
+{
+  "listCase": {
+    "yamlConfig": {
+      "blog": {
+        "listUrl": "/blog/list.json",
+        "url": "/blog",
+        "spareUrl": "/spare-blog"
+      }
+    },
+    "listFileNames": [
+      "a.dsl",
+      "b.dsl",
+      "c.dsl"
+    ],
+    "files": {
+      "/blog/a.dsl": "@meta\ntitle: A\ntime: 20240101\n@end\n@text\nA\n@end",
+      "/blog/b.dsl": "@meta\ntitle: B\ntime: 20250101\npin: true\n@end\n@text\nB\n@end",
+      "/spare-blog/c.dsl": "@meta\ntitle: C\ntime: 20230101\n@end\n@text\nC\n@end"
+    },
+    "expectedPosts": [
+      {
+        "title": "B",
+        "time": "20250101",
+        "pin": "true"
+      },
+      {
+        "title": "A",
+        "time": "20240101"
+      },
+      {
+        "title": "C",
+        "time": "20230101"
+      }
+    ]
+  },
+  "singleFallback": {
+    "yamlConfig": {
+      "main": {
+        "url": "/main",
+        "spareUrl": "/spare-main"
+      }
+    },
+    "spareFileName": "fromNow.dsl",
+    "spareContent": "@fromNow\n@event\ntime bad\n@names\n- type: en\n  content: broken\n@end\n@end\n@event\ntime: 20240101\n@names\n- type: en\n  content: good\n@end\n@end\n@end",
+    "expectedDslErrors": [
+      {
+        "code": "dslUnrecognizedLine",
+        "params": {
+          "raw": "time bad"
+        }
+      }
+    ],
+    "expectedLength": 2,
+    "expectedFirstNamesLength": 1
+  },
+  "mainResources": {
+    "yamlConfig": {
+      "main": {
+        "url": "/main"
+      }
+    },
+    "files": {
+      "title.dsl": "@title\n- type: en\n  content: Hello\n- type: zh\n  content: 你好\n@end",
+      "introduction.dsl": "@introduction\n- type: en\n  content: Intro text\n@end",
+      "friends.dsl": "@friends\n- name: Alice\n  alias: Ally\n  url: https://example.com\n  icon: avatar.webp\n@end",
+      "neko.dsl": "@img\n- imgError: broken\n  img: /cat/cover.webp\n  imgName: cover\n@end",
+      "fromNow.dsl": "@fromNow\n@event\ntime: 20240101\nphoto: /cat/cover.webp\n@names\n- type: en\n  content: Started\n@end\n@end\n@end"
+    }
+  },
+  "missingList": {
+    "yamlConfig": {
+      "blog": {
+        "listUrl": "/blog/list.json",
+        "url": "/blog"
+      }
+    }
+  },
+  "unsupportedResource": {
+    "yamlConfig": {
+      "main": {
+        "url": "/main"
+      }
+    },
+    "fileName": "unknown.dsl",
+    "content": "@unknown\nhello\n@end",
+    "expectedError": "Error: Unsupported DSL resource: main:unknown.dsl"
+  }
+}

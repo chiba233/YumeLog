@@ -6,6 +6,33 @@ import { getDescriptionTextWithStripper } from "../src/shared/lib/app/useGlobalS
 import type { PostBlock, TextPostBlock } from "../src/shared/types/blog.ts";
 import type { TextToken } from "../src/shared/lib/dsl/BlogRichText/types.ts";
 import { runGoldenCases } from "./testHarness";
+import { loadTestJsonFixture } from "./testFixtures.ts";
+
+interface LazyRenderingFixture {
+  initial: {
+    block: {
+      content: string;
+      temp_id: string;
+    };
+    parsedTokens: TextToken[];
+    expectedState: {
+      tokens: [];
+      parsed: boolean;
+    };
+    expectedParseCalls: number;
+  };
+  summary: {
+    blocks: Array<{
+      content: string;
+      temp_id: string;
+    }>;
+    limit: number;
+    expectedSummary: string;
+    expectedCalls: string[];
+  };
+}
+
+const fixture = await loadTestJsonFixture<LazyRenderingFixture>("lazyRendering.golden.json");
 
 const makeTextBlock = (content: string, temp_id: string, tokens?: TextToken[]): TextPostBlock => ({
   type: "text",
@@ -20,39 +47,34 @@ const cases: Array<{ name: string; run: () => void }> = [
     run: () => {
       let parseCalls = 0;
       const state = resolveLazyBlockInitialState(
-        makeTextBlock("**hello**", "block-1"),
+        makeTextBlock(fixture.initial.block.content, fixture.initial.block.temp_id),
         false,
         [],
         () => {
           parseCalls++;
-          return [{ type: "text", value: "hello", temp_id: "token-1" }] as TextToken[];
+          return fixture.initial.parsedTokens;
         },
       );
 
-      assert.deepEqual(state, {
-        tokens: [],
-        parsed: false,
-      });
-      assert.equal(parseCalls, 0);
+      assert.deepEqual(state, fixture.initial.expectedState);
+      assert.equal(parseCalls, fixture.initial.expectedParseCalls);
     },
   },
   {
     name: "[Summary/Limit] 文本摘要提取 -> 达到目标长度后应当停止消费后续块以优化性能",
     run: () => {
       const calls: string[] = [];
-      const blocks: PostBlock[] = [
-        makeTextBlock("first block", "block-1"),
-        makeTextBlock("second block", "block-2"),
-        makeTextBlock("third block should not be touched", "block-3"),
-      ];
+      const blocks: PostBlock[] = fixture.summary.blocks.map((block) =>
+        makeTextBlock(block.content, block.temp_id),
+      );
 
-      const summary = getDescriptionTextWithStripper(blocks, 12, (content) => {
+      const summary = getDescriptionTextWithStripper(blocks, fixture.summary.limit, (content) => {
         calls.push(content);
         return content;
       });
 
-      assert.equal(summary, "first block...");
-      assert.deepEqual(calls, ["first block", "second block"]);
+      assert.equal(summary, fixture.summary.expectedSummary);
+      assert.deepEqual(calls, fixture.summary.expectedCalls);
     },
   },
 ];

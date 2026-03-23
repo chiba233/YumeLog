@@ -1,0 +1,170 @@
+{
+  "configLoadFailed": {
+    "expectedMessages": [
+      {
+        "level": "error",
+        "content": "[Config Load Failed]: Failed to load configuration file. Error: ENOENT /data/config/yamlUrl.json"
+      }
+    ]
+  },
+  "missingType": {
+    "yamlConfig": {},
+    "type": "missing",
+    "expectedMessages": [
+      {
+        "level": "error",
+        "content": "[Config Error]: Type 'missing' not found in YamlUrlConfig."
+      }
+    ]
+  },
+  "listDualFail": {
+    "yamlConfig": {
+      "blog": {
+        "listUrl": "/blog/list.json",
+        "spareListUrl": "/spare-blog/list.json",
+        "url": "/blog",
+        "spareUrl": "/spare-blog"
+      }
+    }
+  },
+  "singleDualFail": {
+    "yamlConfig": {
+      "main": {
+        "url": "/main",
+        "spareUrl": "/spare-main"
+      }
+    },
+    "expectedMessages": [
+      {
+        "level": "warning",
+        "content": "Primary resource failed, switching to spare source: main/title.dsl"
+      },
+      {
+        "level": "error",
+        "content": "Single resource load failed completely: main/title.dsl"
+      }
+    ]
+  },
+  "singleSpareSuccess": {
+    "yamlConfig": {
+      "main": {
+        "url": "/main",
+        "spareUrl": "/spare-main"
+      }
+    },
+    "spareTitleDsl": "@title\n- type: \"en\"\n  content: \"fallback ok\"\n@end",
+    "expectedMessages": [
+      {
+        "level": "warning",
+        "content": "Primary resource failed, switching to spare source: main/title.dsl"
+      }
+    ]
+  },
+  "singleZhFallback": {
+    "yamlConfig": {
+      "main": {
+        "url": "/main",
+        "spareUrl": "/spare-main"
+      }
+    },
+    "currentLang": "zh",
+    "spareTitleDsl": "@title\n- type: \"zh\"\n  content: \"ok\"\n@end",
+    "expectedMessages": [
+      {
+        "level": "warning",
+        "content": "主资源加载失败，正在切换到备用源: main/title.dsl"
+      }
+    ]
+  },
+  "singleZhFailure": {
+    "yamlConfig": {
+      "main": {
+        "url": "/main",
+        "spareUrl": "/spare-main"
+      }
+    },
+    "currentLang": "zh",
+    "expectedMessages": [
+      {
+        "level": "warning",
+        "content": "主资源加载失败，正在切换到备用源: main/friends.dsl"
+      },
+      {
+        "level": "error",
+        "content": "单文件资源加载彻底失败: main/friends.dsl"
+      }
+    ]
+  },
+  "dslWarning": {
+    "yamlConfig": {
+      "blog": {
+        "listUrl": "/blog/list.json",
+        "url": "/blog",
+        "spareUrl": "/spare-blog"
+      }
+    },
+    "listFileNames": [
+      "bad.dsl",
+      "missing.dsl"
+    ],
+    "badDsl": "@meta\ntitle: Bad\ntime: 20240101\n@end\n@image\noops\n@end\n@text\nhello\n@end",
+    "expectedTitles": [
+      "Bad"
+    ],
+    "expectedMessages": [
+      {
+        "level": "error",
+        "content": "[DSL Warning] Unrecognized line, skipped: \"oops\""
+      }
+    ]
+  },
+  "unsupportedResource": {
+    "yamlConfig": {
+      "main": {
+        "url": "/main"
+      }
+    },
+    "fileName": "unknown.dsl",
+    "content": "@unknown\nhello\n@end",
+    "expectedMessages": [
+      {
+        "level": "error",
+        "content": "YAML load failed: Error: Unsupported DSL resource: main:unknown.dsl"
+      }
+    ]
+  },
+  "singleNetworkFailure": {
+    "yamlConfig": {
+      "main": {
+        "url": "/main"
+      }
+    },
+    "expectedMessages": [
+      {
+        "level": "error",
+        "content": "Single resource load failed completely: main/friends.dsl"
+      }
+    ]
+  },
+  "loadingState": {
+    "yamlConfig": {
+      "blog": {
+        "listUrl": "/blog/list.json",
+        "url": "/blog"
+      }
+    },
+    "listPayload": "[\"a.dsl\"]",
+    "postDsl": "@meta\ntitle: A\ntime: 20240101\n@end\n@text\nA\n@end"
+  },
+  "retry": {
+    "yamlConfig": {
+      "blog": {
+        "listUrl": "/blog/list.json",
+        "url": "/blog"
+      }
+    },
+    "listPayload": "[\"ok.dsl\"]",
+    "postDsl": "@meta\ntitle: OK\ntime: 20240101\n@end\n@text\nok\n@end",
+    "expectedMessages": []
+  }
+}

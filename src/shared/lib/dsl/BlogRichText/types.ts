@@ -32,6 +32,8 @@ export interface TextToken {
   temp_id: string;
 }
 
+export type TokenDraft = Omit<TextToken, "temp_id">;
+
 export interface ParseStackNode {
   tag: RichTagName;
   richType: RichType | null;
@@ -80,9 +82,9 @@ export interface TagHead {
   argStart: number;
 }
 
-export type InlineParser = (tokens: TextToken[]) => TextToken;
-export type RawParser = (arg: string | undefined, content: string) => TextToken;
-export type BlockParser = (arg: string | undefined, content: TextToken[]) => TextToken;
+export type InlineParser = (tokens: TextToken[]) => TokenDraft;
+export type RawParser = (arg: string | undefined, content: string) => TokenDraft;
+export type BlockParser = (arg: string | undefined, content: TextToken[]) => TokenDraft;
 
 export interface TagHandler {
   inline?: InlineParser;

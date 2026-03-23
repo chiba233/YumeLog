@@ -1,0 +1,132 @@
+{
+  "yamlFallback": {
+    "initialLang": "ja",
+    "switchLang": "zh",
+    "titleEntries": [
+      {
+        "temp_id": "1",
+        "type": "en",
+        "content": "Hello"
+      },
+      {
+        "temp_id": "2",
+        "type": "zh",
+        "content": "你好"
+      }
+    ],
+    "expectedInitialText": "Hello",
+    "expectedSwitchedText": "你好",
+    "expectedMessages": []
+  },
+  "yamlError": {
+    "lang": "en",
+    "expectedPlaceholder": "...",
+    "errorMessage": "boom"
+  },
+  "seoHead": {
+    "origin": "https://example.com",
+    "webTitles": {
+      "blog": {
+        "en": "Blog"
+      },
+      "home": {
+        "en": "Home"
+      }
+    },
+    "author": {
+      "author": {
+        "en": "Tester"
+      }
+    },
+    "posts": [
+      {
+        "id": "hello-world",
+        "title": "Hello World",
+        "time": "20240102",
+        "blocks": [
+          {
+            "type": "text",
+            "content": "Intro $$bold(text)$$",
+            "temp_id": "t1"
+          },
+          {
+            "type": "image",
+            "content": [
+              {
+                "src": "https://img/a.webp",
+                "temp_id": "i1"
+              }
+            ],
+            "temp_id": "b1"
+          }
+        ]
+      },
+      {
+        "title": "Second Post",
+        "time": "20231201",
+        "blocks": [
+          {
+            "type": "text",
+            "content": "Second body",
+            "temp_id": "t2"
+          }
+        ]
+      }
+    ],
+    "blogCanonical": "https://example.com/blog",
+    "articleCanonical": "https://example.com/blog/hello-world",
+    "expectedListTitle": "Blog",
+    "expectedArticleTitle": "Hello World - Blog",
+    "expectedArticlePublishedTime": "2024-01-02",
+    "expectedImage": "https://img/a.webp",
+    "expectedDescriptionPattern": "Hello World",
+    "expectedBlogSchemaPattern": "\"@type\":\"Blog\"",
+    "expectedPostingSchemaPattern": "\"@type\":\"BlogPosting\"",
+    "expectedAuthorPattern": "\"name\":\"Tester\""
+  },
+  "originSafety": {
+    "ssrOrigin": "http://localhost:5173",
+    "browserOrigin": "",
+    "expectedResolvedOrigin": "",
+    "headOrigin": ""
+  },
+  "assetSafety": {
+    "origin": "https://example.com",
+    "webTitles": {
+      "blog": {
+        "en": "Blog"
+      },
+      "home": {
+        "en": "Home"
+      }
+    },
+    "post": {
+      "id": "unsafe-image",
+      "title": "Unsafe Image",
+      "time": "20240102",
+      "blocks": [
+        {
+          "type": "image",
+          "content": [
+            {
+              "src": "file:///tmp/secret.webp",
+              "temp_id": "i1"
+            }
+          ],
+          "temp_id": "b1"
+        }
+      ]
+    },
+    "safeAssetSamples": [
+      "https://cdn.example.com/cover.webp",
+      "http://cdn.example.com/cover.webp",
+      "/cat/cover.webp"
+    ],
+    "unsafeAssetSamples": [
+      "C:\\Users\\name\\Desktop\\secret.webp",
+      "\\\\server\\share\\secret.webp",
+      "file:///tmp/secret.webp",
+      "secret.webp"
+    ]
+  }
+}

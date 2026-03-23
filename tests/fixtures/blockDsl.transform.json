@@ -1,0 +1,164 @@
+{
+  "dashListCases": [
+    {
+      "name": "[Parser/DashList] 基础解析 -> 应当支持引号包裹的标题与多行字面量内容",
+      "input": "- title: \"Hello\"\n  body: |\n    line1\n      line2\n\n- title: 'World'\n  desc: done",
+      "expected": [
+        {
+          "title": "Hello",
+          "body": "line1\n  line2"
+        },
+        {
+          "title": "World",
+          "desc": "done"
+        }
+      ]
+    },
+    {
+      "name": "[Parser/DashList] 引号转义行为 -> 应当支持双引号内转义并保留单引号反斜杠",
+      "input": "- title: \"a\\\"b\"\n  desc: 'c\\'d'",
+      "expected": [
+        {
+          "title": "a\"b",
+          "desc": "c\\'d"
+        }
+      ]
+    }
+  ],
+  "dashListErrorCase": {
+    "name": "[Parser/DashList] 错误恢复 -> 应当识别孤立属性、未知行及非法列表格式",
+    "input": "  key: value\nabc\n- broken",
+    "expected": [],
+    "errors": [
+      {
+        "code": "dslIsolatedProperty",
+        "params": {
+          "raw": "  key: value"
+        }
+      },
+      {
+        "code": "dslUnrecognizedLine",
+        "params": {
+          "raw": "abc"
+        }
+      },
+      {
+        "code": "dslFormatError",
+        "params": {
+          "raw": "- broken"
+        }
+      }
+    ]
+  },
+  "postCases": [
+    {
+      "name": "[Post/Transform] 基础转换 -> 应当将 AST 映射为包含元数据和块列表的文章结构",
+      "input": "@meta\ntime: 2024-01-01\ntitle: hi\n@end\n@text\nhello\n@end\n@image\n- src: /a.webp\n  desc: wow\n@end\n@divider\n@end",
+      "syntax": {
+        "blockNames": [
+          "meta",
+          "text",
+          "image",
+          "divider"
+        ],
+        "maxDepth": 1,
+        "nestableBlocks": []
+      },
+      "expected": {
+        "blocks": [
+          {
+            "type": "text",
+            "content": "hello"
+          },
+          {
+            "type": "image",
+            "content": [
+              {
+                "src": "/a.webp",
+                "desc": "wow"
+              }
+            ]
+          },
+          {
+            "type": "divider",
+            "content": ""
+          }
+        ],
+        "time": "2024-01-01",
+        "title": "hi"
+      }
+    },
+    {
+      "name": "[Post/Transform] 顺序稳定性 -> 在块内包含子指令时应当按原始顺序拆分块序列",
+      "input": "@text\nhello\n@divider\n@end\nworld\n@end",
+      "syntax": {
+        "blockNames": [
+          "meta",
+          "text",
+          "image",
+          "divider"
+        ],
+        "maxDepth": 2,
+        "nestableBlocks": [
+          "text"
+        ]
+      },
+      "expected": {
+        "blocks": [
+          {
+            "type": "text",
+            "content": "hello"
+          },
+          {
+            "type": "divider",
+            "content": ""
+          },
+          {
+            "type": "text",
+            "content": "world"
+          }
+        ]
+      }
+    },
+    {
+      "name": "[Post/Transform] 错误恢复 -> 损坏块后面跟正常文本时块顺序仍能正确恢复",
+      "input": "@text\n@image\n- src: /a.webp\n@end\nhello $$bold(ok)$$\n@divider\n@end\nworld\n@end",
+      "syntax": {
+        "blockNames": [
+          "meta",
+          "text",
+          "image",
+          "divider"
+        ],
+        "maxDepth": 2,
+        "nestableBlocks": [
+          "text"
+        ]
+      },
+      "expected": {
+        "blocks": [
+          {
+            "type": "image",
+            "content": [
+              {
+                "src": "/a.webp"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "content": "hello $$bold(ok)$$"
+          },
+          {
+            "type": "divider",
+            "content": ""
+          },
+          {
+            "type": "text",
+            "content": "world"
+          }
+        ]
+      }
+    }
+  ]
+}

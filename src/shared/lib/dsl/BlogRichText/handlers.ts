@@ -4,12 +4,10 @@ import {
   buildLabeledInlineBlock,
   buildPlainRawBlock,
   buildRichBlock,
-  extractText,
   normalizeLang,
-  splitTokensByPipe,
+  parsePipeArgs,
+  parsePipeTextArgs,
 } from "./builders";
-import { unescapeInline } from "./escape";
-import { createToken } from "@/shared/lib/dsl/BlogRichText/createToken";
 import { coreFormatTime, formatDateByLang } from "@/shared/lib/app/langCore.ts";
 
 type TitledLabelKey = "labelInfo" | "labelWarning" | "collapseClickToExpand";
@@ -28,53 +26,48 @@ const createTitledTagHandler = (
 export const TAG_HANDLERS: Partial<TagHandlerMap> = {
   link: {
     inline: (tokens) => {
-      const parts = splitTokensByPipe(tokens);
-      const urlPart = parts[0] ?? [];
-      const contentPart = parts.length > 1 ? parts.slice(1).flat() : urlPart;
+      const args = parsePipeArgs(tokens);
 
-      return createToken({
+      return {
         type: "link",
-        url: unescapeInline(extractText(urlPart)).trim(),
-        value: contentPart,
-      });
+        url: args.text(0),
+        value: args.parts.length > 1 ? args.materializedTailTokens(1) : args.materializedTokens(0),
+      };
     },
   },
   fromNow: {
     inline: (tokens: TextToken[]) => {
-      const parts = splitTokensByPipe(tokens);
+      const args = parsePipeArgs(tokens);
 
-      const date = unescapeInline(extractText(parts[0] ?? [])).trim();
-      const lang = unescapeInline(extractText(parts[1] ?? [])).trim();
-
-      return createToken({
+      return {
         type: "fromNow",
         value: coreFormatTime({
-          date,
-          lang: lang || undefined,
+          date: args.text(0),
+          lang: args.text(1) || undefined,
         }),
-      });
+      };
     },
   },
   date: {
     inline: (tokens: TextToken[]) => {
-      const parts = splitTokensByPipe(tokens);
-      const date = unescapeInline(extractText(parts[0] ?? [])).trim();
-      const format = unescapeInline(extractText(parts[1] ?? [])).trim();
-      const lang = unescapeInline(extractText(parts[2] ?? [])).trim();
+      const args = parsePipeArgs(tokens);
+      const date = args.text(0);
+      const format = args.text(1);
+      const lang = args.text(2);
       if (!format) {
-        return createToken({
+        return {
           type: "date",
           value: formatDateByLang(lang || "en", date),
-        });
+        };
       }
-      return createToken({
+      return {
         type: "date",
         value: coreFormatTime({
           date,
           format,
           lang: lang || undefined,
         }),
-      });
+      };
     },
   },
 
@@ -84,18 +77,18 @@ export const TAG_HANDLERS: Partial<TagHandlerMap> = {
 
   "raw-code": {
     raw: (arg, content) => {
-      const parts = splitTokensByPipe([createToken({ type: "text", value: arg ?? "" })]);
-      const codeLang = normalizeLang(unescapeInline(extractText(parts[0] ?? [])).trim());
-      const title = unescapeInline(extractText(parts[1] ?? [])).trim();
-      const label = unescapeInline(extractText(parts[2] ?? [])).trim();
+      const args = parsePipeTextArgs(arg ?? "");
+      const codeLang = normalizeLang(args.text(0));
+      const title = args.text(1);
+      const label = args.text(2);
 
-      return createToken({
+      return {
         type: "raw-code",
         codeLang,
         title: title || "Code:",
         label,
         value: content.replace(/\r\n/g, "\n").replace(/\n$/, ""),
-      });
+      };
     },
   },
 };

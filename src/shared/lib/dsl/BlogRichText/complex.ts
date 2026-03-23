@@ -14,6 +14,7 @@ import {
 } from "@/shared/lib/dsl/BlogRichText/constants.ts";
 import { isRichType, TAG_HANDLERS } from "./handlers";
 import { consumeBlockTagTrailingLineBreak, normalizeBlockTagContent } from "./blockTagFormatting";
+import { createToken } from "./createToken";
 
 export const tryParseComplexTag = (
   text: string,
@@ -93,9 +94,8 @@ export const tryParseComplexTag = (
     return {
       handled: true,
       nextIndex: consumeBlockTagTrailingLineBreak(tag, text, end + BLOCK_CLOSE.length),
-      token: handler.block(
-        arg,
-        parseInlineContent(blockContent, Math.max(depthLimit - 1, 0), silent),
+      token: createToken(
+        handler.block(arg, parseInlineContent(blockContent, Math.max(depthLimit - 1, 0), silent)),
       ),
     };
   }
@@ -148,6 +148,6 @@ export const tryParseComplexTag = (
   return {
     handled: true,
     nextIndex: consumeBlockTagTrailingLineBreak(tag, text, end + RAW_CLOSE.length),
-    token: handler.raw(arg, content),
+    token: createToken(handler.raw(arg, content)),
   };
 };

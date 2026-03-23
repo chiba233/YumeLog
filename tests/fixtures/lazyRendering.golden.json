@@ -1,0 +1,42 @@
+{
+  "initial": {
+    "block": {
+      "content": "**hello**",
+      "temp_id": "block-1"
+    },
+    "parsedTokens": [
+      {
+        "type": "text",
+        "value": "hello",
+        "temp_id": "token-1"
+      }
+    ],
+    "expectedState": {
+      "tokens": [],
+      "parsed": false
+    },
+    "expectedParseCalls": 0
+  },
+  "summary": {
+    "blocks": [
+      {
+        "content": "first block",
+        "temp_id": "block-1"
+      },
+      {
+        "content": "second block",
+        "temp_id": "block-2"
+      },
+      {
+        "content": "third block should not be touched",
+        "temp_id": "block-3"
+      }
+    ],
+    "limit": 12,
+    "expectedSummary": "first block...",
+    "expectedCalls": [
+      "first block",
+      "second block"
+    ]
+  }
+}

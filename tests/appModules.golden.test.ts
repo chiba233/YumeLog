@@ -2,144 +2,134 @@
 
 import assert from "node:assert/strict";
 import { createContentStore } from "../src/shared/lib/app/contentStore.ts";
-import {
-  formatDateByLang,
-  formatTimeByLang,
-  resolveLocale,
-  resolvePreferredLang,
-} from "../src/shared/lib/app/langCore.ts";
-import { createAppRouter, routes } from "../src/app/router/index.ts";
-import type { SelectOption } from "../src/shared/types/common.ts";
 import { MAIN_CONTENT_RESOURCES } from "../src/shared/lib/app/mainContentResources.ts";
+import { createYamlApi, createYamlApiState } from "../src/shared/lib/yaml/getYaml.core.ts";
+import { MAIN_RESOURCE_ASSERTIONS } from "./mainResourceAssertions.ts";
 import { runGoldenCases } from "./testHarness";
+import { loadTestJsonFixture } from "./testFixtures.ts";
 
-const langOptions = (values: string[]): SelectOption[] =>
-  values.map((value) => ({ label: value, value }));
+interface AppModulesSmokeFixture {
+  yamlConfig: {
+    main: {
+      url: string;
+    };
+    blog: {
+      listUrl: string;
+      url: string;
+    };
+  };
+  mainResources: Record<string, string>;
+  mainResourceLengths: Record<string, number>;
+  blog: {
+    listPath: string;
+    fileNames: string[];
+    files: Record<string, string>;
+    expectedTitles: string[];
+  };
+}
+
+const fixture = await loadTestJsonFixture<AppModulesSmokeFixture>("appModules.smoke.json");
+
+const getCollectionLength = (value: unknown): number => {
+  if (typeof value !== "object" || value === null) {
+    throw new Error("Expected parsed resource object");
+  }
+
+  const collection = Object.values(value as Record<string, unknown>)[0];
+  if (!Array.isArray(collection)) {
+    throw new Error("Expected parsed resource to expose a collection");
+  }
+
+  return collection.length;
+};
+
+const createInjectedYamlApi = () => {
+  const requests: string[] = [];
+  const files = new Map<string, string>([
+    ["/data/config/yamlUrl.json", JSON.stringify(fixture.yamlConfig)],
+    [fixture.blog.listPath, JSON.stringify(fixture.blog.fileNames)],
+    ...Object.entries(fixture.mainResources).map(([fileName, content]) => [
+      `${fixture.yamlConfig.main.url}/${fileName}`.replace(/\/+/g, "/"),
+      content,
+    ]),
+    ...Object.entries(fixture.blog.files).map(([fileName, content]) => [
+      `${fixture.yamlConfig.blog.url}/${fileName}`.replace(/\/+/g, "/"),
+      content,
+    ]),
+  ]);
+
+  const api = createYamlApi(
+    async (resourcePath) => {
+      requests.push(resourcePath);
+      const text = files.get(resourcePath);
+
+      if (!text) {
+        throw new Error(`ENOENT ${resourcePath}`);
+      }
+
+      return text;
+    },
+    {
+      state: createYamlApiState(),
+    },
+  );
+
+  return { api, requests };
+};
+
 const titleResource = MAIN_CONTENT_RESOURCES.title;
 
 const cases: Array<{ name: string; run: () => Promise<void> | void }> = [
   {
-    name: "[Lang/Preference] 语言协商逻辑 -> 应当优先保留合法当前语言，并按 raw/en 顺序处理回退",
-    run: () => {
-      assert.equal(resolvePreferredLang(langOptions(["en", "ja"]), "ja", "zh"), "ja");
-      assert.equal(resolvePreferredLang(langOptions(["en", "ja"]), "zh", "ja"), "ja");
-      assert.equal(resolvePreferredLang(langOptions(["en", "ja"]), "zh", "ko"), "en");
-      assert.equal(resolvePreferredLang(langOptions(["th", "ja"]), "zh", "ko"), "th");
-    },
-  },
-  {
-    name: "[Lang/Format] 日期时间格式化 -> 应当在未知语言时回退英文，并能正确处理泰语佛历年份",
-    run: () => {
-      assert.equal(resolveLocale("unknown"), "en-au");
-      assert.equal(formatTimeByLang("en", undefined), "error");
-      assert.equal(formatDateByLang("en", undefined), "error");
-      assert.match(formatTimeByLang("en", "2024-01-01"), /\byear|\bmonth|\bday/);
-      assert.match(formatDateByLang("th", "2024-01-01"), /2567/);
-    },
-  },
-  {
-    name: "[Cache/Posts] 博客列表缓存 -> 应当在 TTL 内命中缓存，并在过期或 force 时触发重新拉取",
+    name: "[Smoke/MainData] 依赖注入主资源 -> 应当使用伪造 DSL 数据完成 main 资源解析与结构校验",
     run: async () => {
-      let now = 1_000;
-      let calls = 0;
+      const { api, requests } = createInjectedYamlApi();
+
+      await Promise.all(
+        Object.entries(MAIN_RESOURCE_ASSERTIONS).map(async ([fileName, assertResource]) => {
+          const result = await api.loadSingleYaml("main", fileName);
+          assertResource(result);
+          assert.equal(getCollectionLength(result), fixture.mainResourceLengths[fileName]);
+        }),
+      );
+
+      assert.ok(requests.every((resourcePath) => resourcePath.startsWith("/")));
+      assert.ok(
+        requests.includes("/data/config/yamlUrl.json"),
+        "smoke test should resolve config from injected source",
+      );
+    },
+  },
+  {
+    name: "[Smoke/StoreDI] 注入式内容存储 -> 应当消费伪造博客与单文件数据，而不是依赖 public 真实文件",
+    run: async () => {
+      const { api, requests } = createInjectedYamlApi();
       const store = createContentStore({
-        now: () => now,
-        loadAllPosts: async (type) => {
-          calls++;
-          return [{ time: String(calls), title: `${type}-${calls}` }];
-        },
-        loadSingleYaml: async () => null,
+        loadAllPosts: api.loadAllPosts,
+        loadSingleYaml: api.loadSingleYaml,
       });
 
-      const first = await store.getPosts<{ time: string; title: string }>("blog");
-      const second = await store.getPosts<{ time: string; title: string }>("blog");
-      now += 601_000;
-      const third = await store.getPosts<{ time: string; title: string }>("blog");
-      const forced = await store.getPosts<{ time: string; title: string }>("blog", true);
-
-      assert.deepEqual(
-        [first[0]?.title, second[0]?.title, third[0]?.title, forced[0]?.title],
-        ["blog-1", "blog-1", "blog-2", "blog-3"],
-      );
-      assert.equal(calls, 3);
-    },
-  },
-  {
-    name: "[Cache/Single] 单文件与空数据缓存 -> 不应当缓存空列表，并应当正确缓存非空单文件解析结果",
-    run: async () => {
-      let now = 1_000;
-      let postCalls = 0;
-      let singleCalls = 0;
-      const store = createContentStore({
-        now: () => now,
-        loadAllPosts: async () => {
-          postCalls++;
-          return postCalls === 1 ? [] : [{ time: "20240101", title: "loaded" }];
-        },
-        loadSingleYaml: async (type, fileName) => {
-          singleCalls++;
-          return { type, fileName, seq: singleCalls };
-        },
-      });
-
-      const empty = await store.getPosts<{ time: string; title: string }>("blog");
-      const loaded = await store.getPosts<{ time: string; title: string }>("blog");
-      const singleA = await store.getSingle<{ seq: number }>(
-        titleResource.type,
-        titleResource.fileName,
-      );
-      const singleB = await store.getSingle<{ seq: number }>(
-        titleResource.type,
-        titleResource.fileName,
-      );
-      now += 601_000;
-      const singleC = await store.getSingle<{ seq: number }>(
+      const posts = await store.getPosts<{ title: string }>("blog");
+      const titleData = await store.getSingle<Record<string, unknown>>(
         titleResource.type,
         titleResource.fileName,
       );
 
-      assert.deepEqual(empty, []);
-      assert.equal(loaded[0]?.title, "loaded");
-      assert.equal(postCalls, 2);
-      assert.equal(singleA?.seq, 1);
-      assert.equal(singleB?.seq, 1);
-      assert.equal(singleC?.seq, 2);
-    },
-  },
-  {
-    name: "[Router/Resolve] 路由解析稳定性 -> 应当确保路由表定义正确，且 memory router 能准确识别路径",
-    run: () => {
       assert.deepEqual(
-        routes.map((route) => ({
-          path: route.path,
-          name: route.name,
-          redirect: route.redirect,
-        })),
-        [
-          { path: "/", name: "home", redirect: undefined },
-          { path: "/blog/:id?", name: "blog", redirect: undefined },
-          {
-            path: "/:pathMatch(.*)*",
-            name: undefined,
-            redirect: { path: "/", query: { invalid: "1" } },
-          },
-        ],
+        posts.map((post) => post.title),
+        fixture.blog.expectedTitles,
       );
-
-      const router = createAppRouter(true);
-      const home = router.resolve("/");
-      const blog = router.resolve("/blog/abc");
-      const miss = router.resolve("/missing");
-
-      assert.equal(home.name, "home");
-      assert.equal(blog.name, "blog");
-      assert.deepEqual(blog.params, { id: "abc" });
-      assert.deepEqual(
-        miss.matched.map((record) => record.path),
-        ["/:pathMatch(.*)*"],
+      assert.ok(titleData);
+      assert.equal(
+        getCollectionLength(titleData),
+        fixture.mainResourceLengths[titleResource.fileName],
+      );
+      assert.ok(
+        requests.every((resourcePath) => resourcePath !== "/public/data/main/title.dsl"),
+        "smoke test should stay on injected resource paths",
       );
     },
   },
 ];
 
-await runGoldenCases("App Modules", " App module golden case", cases);
+await runGoldenCases("App Modules Smoke", " App module smoke/data validation case", cases);

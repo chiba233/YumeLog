@@ -1,0 +1,106 @@
+{
+  "langPreference": {
+    "options": [
+      "en",
+      "ja"
+    ],
+    "fallbackOptions": [
+      "th",
+      "ja"
+    ],
+    "cases": [
+      {
+        "currentLang": "ja",
+        "rawLang": "zh",
+        "expected": "ja"
+      },
+      {
+        "currentLang": "zh",
+        "rawLang": "ja",
+        "expected": "ja"
+      },
+      {
+        "currentLang": "zh",
+        "rawLang": "ko",
+        "expected": "en"
+      }
+    ],
+    "fallbackCase": {
+      "currentLang": "zh",
+      "rawLang": "ko",
+      "expected": "th"
+    }
+  },
+  "formatting": {
+    "unknownLang": "unknown",
+    "sampleDate": "2024-01-01",
+    "relativeTimePattern": "\\byear|\\bmonth|\\bday",
+    "thaiYearPattern": "2567"
+  },
+  "postCache": {
+    "type": "blog",
+    "initialNow": 1000,
+    "ttlAdvance": 601000,
+    "expectedTitles": [
+      "blog-1",
+      "blog-1",
+      "blog-2",
+      "blog-3"
+    ],
+    "expectedCalls": 3
+  },
+  "singleCache": {
+    "postType": "blog",
+    "resource": {
+      "type": "main",
+      "fileName": "title.dsl"
+    },
+    "initialNow": 1000,
+    "ttlAdvance": 601000,
+    "loadedPost": {
+      "time": "20240101",
+      "title": "loaded"
+    },
+    "expectedPostCalls": 2,
+    "expectedSingleSeqs": [
+      1,
+      1,
+      2
+    ]
+  },
+  "router": {
+    "expectedRoutes": [
+      {
+        "path": "/",
+        "name": "home",
+        "redirect": null
+      },
+      {
+        "path": "/blog/:id?",
+        "name": "blog",
+        "redirect": null
+      },
+      {
+        "path": "/:pathMatch(.*)*",
+        "name": null,
+        "redirect": {
+          "path": "/",
+          "query": {
+            "invalid": "1"
+          }
+        }
+      }
+    ],
+    "paths": {
+      "home": "/",
+      "blog": "/blog/abc",
+      "missing": "/missing"
+    },
+    "expectedBlogParams": {
+      "id": "abc"
+    },
+    "expectedMissingMatchedPaths": [
+      "/:pathMatch(.*)*"
+    ]
+  }
+}

@@ -10,6 +10,7 @@ import {
 import { isRichType } from "@/shared/lib/dsl/BlogRichText/handlers.ts";
 import { readEscaped, unescapeInline } from "@/shared/lib/dsl/BlogRichText/escape.ts";
 import { TAG_HANDLERS } from "./handlers.ts";
+import { materializeTextTokens } from "./builders.ts";
 import { emitI18nError } from "./errors";
 import { flushBuffer, getCurrentTokens, pushTextToCurrent } from "./context";
 import {
@@ -184,8 +185,10 @@ export const tryConsumeTagStart = (
 };
 
 export const finalizeClosedNode = (ctx: ParseContext, node: ParseStackNode) => {
+  const materializedTokens = materializeTextTokens(node.tokens);
+
   if (!node.richType) {
-    node.tokens.forEach((t) => {
+    materializedTokens.forEach((t) => {
       if (t.type === "text" && typeof t.value === "string") {
         pushTextToCurrent(ctx, unescapeInline(t.value));
       } else {
@@ -199,10 +202,10 @@ export const finalizeClosedNode = (ctx: ParseContext, node: ParseStackNode) => {
   const handler = TAG_HANDLERS[node.richType];
   getCurrentTokens(ctx).push(
     handler?.inline
-      ? handler.inline(node.tokens)
+      ? createToken(handler.inline(node.tokens))
       : createToken({
           type: node.richType,
-          value: node.tokens,
+          value: materializedTokens,
         }),
   );
 };
@@ -241,7 +244,7 @@ export const tryConsumeEscape = (ctx: ParseContext): boolean => {
   }
 
   const [char, next] = readEscaped(ctx.text, ctx.i);
-  ctx.buffer += char;
+  ctx.buffer += ctx.stack.length > 0 ? ctx.text.slice(ctx.i, next) : char;
   ctx.i = next;
   return true;
 };

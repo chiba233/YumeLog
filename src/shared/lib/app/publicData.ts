@@ -6,13 +6,10 @@ type NodeFsPromisesModule = typeof import("node:fs/promises");
 type NodePathModule = typeof import("node:path");
 
 const loadServerPublicText = async (resourcePath: string): Promise<string> => {
-  const importNodeModule = async (specifier: string): Promise<unknown> => await import(specifier);
-  const [fsModuleUnknown, pathModuleUnknown] = await Promise.all([
-    importNodeModule("node:fs/promises"),
-    importNodeModule("node:path"),
+  const [fsModule, pathModule]: [NodeFsPromisesModule, NodePathModule] = await Promise.all([
+    import("node:fs/promises"),
+    import("node:path"),
   ]);
-  const fsModule = fsModuleUnknown as NodeFsPromisesModule;
-  const pathModule = pathModuleUnknown as NodePathModule;
   const filePath = pathModule.join(process.cwd(), "public", resourcePath);
   return await fsModule.readFile(filePath, "utf8");
 };

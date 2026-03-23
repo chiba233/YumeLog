@@ -167,6 +167,13 @@
     "th": "[RichText Error] (L{line}:C{column}) บล็อก raw ยังไม่ได้ปิด: {context}",
     "other": "[RichText Error] (L{line}:C{column}) Raw block not closed: {context}"
   },
+  "richTextRawCloseMalformed": {
+    "zh": "[RichText Error] (L{line}:C{column}) Raw 闭合行格式错误: {context}",
+    "en": "[RichText Error] (L{line}:C{column}) Malformed raw close: {context}",
+    "ja": "[RichText Error] (L{line}:C{column}) raw の閉じ行の形式が不正です: {context}",
+    "th": "[RichText Error] (L{line}:C{column}) รูปแบบบรรทัดปิด raw ไม่ถูกต้อง: {context}",
+    "other": "[RichText Error] (L{line}:C{column}) Malformed raw close: {context}"
+  },
   "unsupportedCodeLanguage": {
     "zh": "不支持的代码语言：'{language}'。",
     "en": "Unsupported code language: '{language}'.",
@@ -236,6 +243,13 @@
     "ja": "[RichText Error] (L{line}:C{column}) ブロックタグが閉じられていません: {context}",
     "th": "[RichText Error] (L{line}:C{column}) แท็กบล็อกยังไม่ได้ปิด: {context}",
     "other": "[RichText Error] (L{line}:C{column}) Block tag not closed: {context}"
+  },
+  "richTextBlockCloseMalformed": {
+    "zh": "[RichText Error] (L{line}:C{column}) Block 闭合行格式错误: {context}",
+    "en": "[RichText Error] (L{line}:C{column}) Malformed block close: {context}",
+    "ja": "[RichText Error] (L{line}:C{column}) ブロックの閉じ行の形式が不正です: {context}",
+    "th": "[RichText Error] (L{line}:C{column}) รูปแบบบรรทัดปิด block ไม่ถูกต้อง: {context}",
+    "other": "[RichText Error] (L{line}:C{column}) Malformed block close: {context}"
   },
   "richTextInlineNotClosed": {
     "zh": "[RichText Error] (L{line}:C{column}) Inline 标签未闭合: {context}",

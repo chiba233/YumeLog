@@ -1,6 +1,7 @@
 import type { ComplexTagParseResult, TextToken } from "./types";
 import {
   findBlockClose,
+  findMalformedWholeLineTokenCandidate,
   findRawClose,
   findTagArgClose,
 } from "@/shared/lib/dsl/BlogRichText/scanner.ts";
@@ -54,15 +55,27 @@ export const tryParseComplexTag = (
     const end = findBlockClose(text, contentStart);
 
     if (end === -1) {
+      const malformedCloseCandidate = findMalformedWholeLineTokenCandidate(
+        text,
+        contentStart,
+        BLOCK_CLOSE,
+      );
+
       return {
         handled: true,
         nextIndex: contentStart,
         fallbackText: text.slice(tagOpenPos, contentStart),
-        error: {
-          key: "richTextBlockNotClosed",
-          index: tagOpenPos,
-          length: contentStart - tagOpenPos,
-        },
+        error: malformedCloseCandidate
+          ? {
+              key: "richTextBlockCloseMalformed",
+              index: malformedCloseCandidate.index,
+              length: malformedCloseCandidate.length,
+            }
+          : {
+              key: "richTextBlockNotClosed",
+              index: tagOpenPos,
+              length: contentStart - tagOpenPos,
+            },
       };
     }
 
@@ -91,15 +104,27 @@ export const tryParseComplexTag = (
   const end = findRawClose(text, contentStart);
 
   if (end === -1) {
+    const malformedCloseCandidate = findMalformedWholeLineTokenCandidate(
+      text,
+      contentStart,
+      RAW_CLOSE,
+    );
+
     return {
       handled: true,
       nextIndex: contentStart,
       fallbackText: text.slice(tagOpenPos, contentStart),
-      error: {
-        key: "richTextRawNotClosed",
-        index: tagOpenPos,
-        length: contentStart - tagOpenPos,
-      },
+      error: malformedCloseCandidate
+        ? {
+            key: "richTextRawCloseMalformed",
+            index: malformedCloseCandidate.index,
+            length: malformedCloseCandidate.length,
+          }
+        : {
+            key: "richTextRawNotClosed",
+            index: tagOpenPos,
+            length: contentStart - tagOpenPos,
+          },
     };
   }
 

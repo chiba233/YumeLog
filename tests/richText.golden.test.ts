@@ -686,6 +686,19 @@ const cases: Array<{ name: string; run: () => void }> = [
     },
   },
   {
+    name: "[Inline/Unknown] 未知标签 -> 应当 fallback 但不产生 runtime 错误",
+    run: () => {
+      resetCapturedMessages();
+
+      const text = stripRichText("$$unknown(hello world)$$");
+      parseRichText("$$unknown(hello world)$$", 50, false);
+      const messageState = getCapturedMessageState();
+
+      assert.equal(text, "hello world");
+      assert.equal(messageState.errors.length, 0);
+    },
+  },
+  {
     name: "[Inline/Nested] 多层 inline 嵌套 -> 应当正确保持文本与子节点的相对顺序",
     run: () => {
       const tokens = parseRichText("$$bold(outer $$thin(inner)$$ tail)$$", 50, true);
@@ -749,6 +762,27 @@ const cases: Array<{ name: string; run: () => void }> = [
     name: "[Raw/Boundary] 未闭合 raw 标签 -> 应当退化为普通文本",
     run: () => {
       assert.equal(stripRichText("$$raw-code(ts)%\nconst a = 1"), "$$raw-code(ts)%\nconst a = 1");
+    },
+  },
+  {
+    name: "[Raw/Boundary] close 行格式错误 -> 应当 fallback 并上报独立 malformed close 错误",
+    run: () => {
+      resetCapturedMessages();
+
+      parseRichText("$$raw-code(ts)%\nconst a = 1\n  %end$$", 50, false);
+      const messageState = getCapturedMessageState();
+
+      assert.equal(
+        stripRichText("$$raw-code(ts)%\nconst a = 1\n  %end$$"),
+        "$$raw-code(ts)%\nconst a = 1\n  %end$$",
+      );
+      assert.equal(messageState.errors.length, 1);
+      assert.match(
+        messageState.errors[0]?.content ?? "",
+        /^\[RichText Error\] \(L3:C3\) Malformed raw close:/,
+      );
+      assert.doesNotMatch(messageState.errors[0]?.content ?? "", /Raw block not closed/);
+      assert.match(messageState.errors[0]?.content ?? "", />>>%end\$\$<</);
     },
   },
   {
@@ -869,6 +903,27 @@ const cases: Array<{ name: string; run: () => void }> = [
     name: "[Block/Boundary] 未闭合 block 标签 -> 应当退化为普通文本",
     run: () => {
       assert.equal(stripRichText("$$collapse(Title)*\nhello"), "$$collapse(Title)*\nhello");
+    },
+  },
+  {
+    name: "[Block/Boundary] close 行格式错误 -> 应当 fallback 并上报独立 malformed close 错误",
+    run: () => {
+      resetCapturedMessages();
+
+      parseRichText("$$collapse(Title)*\nhello\n  *end$$", 50, false);
+      const messageState = getCapturedMessageState();
+
+      assert.equal(
+        stripRichText("$$collapse(Title)*\nhello\n  *end$$"),
+        "$$collapse(Title)*\nhello\n  *end$$",
+      );
+      assert.equal(messageState.errors.length, 1);
+      assert.match(
+        messageState.errors[0]?.content ?? "",
+        /^\[RichText Error\] \(L3:C3\) Malformed block close:/,
+      );
+      assert.doesNotMatch(messageState.errors[0]?.content ?? "", /Block tag not closed/);
+      assert.match(messageState.errors[0]?.content ?? "", />>>\*end\$\$<</);
     },
   },
   {

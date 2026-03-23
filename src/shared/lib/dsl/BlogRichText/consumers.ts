@@ -185,15 +185,6 @@ export const tryConsumeTagStart = (
 
 export const finalizeClosedNode = (ctx: ParseContext, node: ParseStackNode) => {
   if (!node.richType) {
-    emitI18nError(
-      "richTextUnknownTag",
-      { tag: node.tag, i: node.openPos },
-      ctx.silent,
-      ctx.text,
-      node.openPos,
-      node.openLen,
-    );
-
     node.tokens.forEach((t) => {
       if (t.type === "text" && typeof t.value === "string") {
         pushTextToCurrent(ctx, unescapeInline(t.value));

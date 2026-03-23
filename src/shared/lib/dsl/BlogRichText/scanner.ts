@@ -189,6 +189,34 @@ export const findRawClose = (text: string, start: number): number => {
 
   return -1;
 };
+
+export const findMalformedWholeLineTokenCandidate = (
+  text: string,
+  start: number,
+  token: string,
+): { index: number; length: number } | null => {
+  let pos = start;
+
+  while (pos < text.length) {
+    const lineEnd = text.indexOf("\n", pos);
+    const end = lineEnd === -1 ? text.length : lineEnd;
+    const line = text.slice(pos, end);
+    const leadingWhitespace = line.length - line.trimStart().length;
+    const trimmedStart = line.trimStart();
+
+    if (trimmedStart.startsWith(token) && line !== token) {
+      return {
+        index: pos + leadingWhitespace,
+        length: trimmedStart.length,
+      };
+    }
+
+    if (lineEnd === -1) break;
+    pos = lineEnd + 1;
+  }
+
+  return null;
+};
 export const skipDegradedInline = (text: string, start: number): number => {
   return scanInlineBoundary(text, start, false, true);
 };

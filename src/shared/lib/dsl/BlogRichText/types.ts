@@ -63,7 +63,11 @@ export interface ComplexTagParseResult {
   token?: TextToken;
   fallbackText?: string;
   error?: {
-    key: "richTextBlockNotClosed" | "richTextRawNotClosed";
+    key:
+      | "richTextBlockNotClosed"
+      | "richTextRawNotClosed"
+      | "richTextBlockCloseMalformed"
+      | "richTextRawCloseMalformed";
     index: number;
     length?: number;
   };

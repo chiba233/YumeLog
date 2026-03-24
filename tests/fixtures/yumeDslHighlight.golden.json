@@ -1,0 +1,45 @@
+{
+  "cases": [
+    {
+      "name": "[Highlight/Source] 伪造综合 DSL 高亮回放 -> 应当逐行与源码完全一致",
+      "source": "@meta\nlayout: demo\ntime: 20260324\nlang: zh\n@end\n\n@text\n$$info(提示标题 | 这一段是 inline titled block，支持标题与正文分离)$$\n$$warning(注意事项)%\n它会保留原始换行，并且支持像 \\%end$$ 这样的转义闭合符。\n\\%end$$\n$$collapse(点我展开查看块级正文)*\n这里是 block 形态的 collapse。\n你可以在正文里继续写 $$bold(嵌套 rich text)$$。\n也可以继续写 $$info(块内提示 | 支持继续解析 inline)$$。\n如果你想在 block 正文里直接写闭合符本身，可以写成 \\*end$$，它不会提前闭合当前块。\n*end$$\n$$raw-code(json | demo.json | JSON 示例)%\n{\n  \"hello\": \"world\",\n  \"nested\": true\n}\n\\%end$$\n@end\n\n@image\n- src: https://example.com/cover.webp\n  desc: |\n    这是多行支持\n    123\n@end"
+    },
+    {
+      "name": "[Highlight/Raw] raw-code 与 inline 标题块 -> 应当保留空格 缩进 转义与 close 原文",
+      "source": "@text\n$$info(提示标题 | 这一段是 inline titled block，支持标题与正文分离)$$\n$$raw-code(json | demo.json | JSON 示例)%\n{\n  \"hello\": \"world\",\n  \"nested\": true\n}\n\\%end$$\n@end"
+    },
+    {
+      "name": "[Highlight/Recovery] 坏 raw 后接正常源码 -> 应当保持逐行源码一致而不串行污染",
+      "source": "@text\n$$warning(注意事项)%\n它会保留原始换行，并且支持像 \\%end$$ 这样的转义闭合符。\n\\%end$$\n$$raw-code(json | demo.json | JSON 示例)%\n{\n  \"hello\": \"world\",\n  \"nested\": true\n}\n\\%end$$\n@end"
+    }
+  ],
+  "randomCases": [
+    {
+      "name": "[Highlight/Random] 确定性随机源码 -> 应当逐行与源码完全一致",
+      "seed": 20260324,
+      "lines": 24,
+      "parts": [
+        "普通文本",
+        "$$bold(强调)$$",
+        "$$link(https://example.com | 链接)$$",
+        "\\@image",
+        "\\%end$$",
+        "- raw-close: \\%end$$ --> %end$$",
+        "$$info(标题 | 正文)$$",
+        "$$raw-code(json | demo.json | JSON 示例)%",
+        "{",
+        "  \"hello\": \"world\",",
+        "  \"nested\": true",
+        "}",
+        "\\*end$$",
+        "%end$$",
+        "*end$$",
+        "  desc: |",
+        "    多行 1",
+        "    多行 2"
+      ],
+      "prefixLines": ["@text"],
+      "suffixLines": ["@end"]
+    }
+  ]
+}

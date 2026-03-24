@@ -278,5 +278,33 @@
     "ja": "情報",
     "th": "ข้อมูล",
     "other": "Info"
+  },
+  "copyCode": {
+    "zh": "复制",
+    "en": "Copy",
+    "ja": "コピー",
+    "th": "คัดลอก",
+    "other": "Copy"
+  },
+  "copiedCode": {
+    "zh": "已复制",
+    "en": "Copied",
+    "ja": "コピー済み",
+    "th": "คัดลอกแล้ว",
+    "other": "Copied"
+  },
+  "copyFailed": {
+    "zh": "复制失败",
+    "en": "Copy failed",
+    "ja": "コピーに失敗しました",
+    "th": "คัดลอกล้มเหลว",
+    "other": "Copy failed"
+  },
+  "clipboardApiUnavailable": {
+    "zh": "当前环境不支持剪贴板复制",
+    "en": "Clipboard API not available",
+    "ja": "クリップボードAPIは利用できません",
+    "th": "ไม่รองรับ Clipboard API",
+    "other": "Clipboard API not available"
   }
 }

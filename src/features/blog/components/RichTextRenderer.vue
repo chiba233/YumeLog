@@ -3,6 +3,7 @@ import type { RichType, TextToken } from "@/shared/lib/dsl/BlogRichText/types";
 import { type Component, defineAsyncComponent, FunctionalComponent, h, VNode } from "vue";
 import { NAlert, NCollapse, NCollapseItem } from "naive-ui";
 import { isSSR } from "@/shared/lib/app/useHead.ts";
+import { formatDate, formatTime } from "@/shared/lib/app/setupLang";
 
 const ShikiCodeBlock = defineAsyncComponent(
   () => import("@/features/blog/components/ShikiCodeBlock.vue"),
@@ -21,6 +22,35 @@ interface CollapseWrapperProps {
   temp_id: string;
   title: string;
 }
+
+interface RuntimeTimeProps {
+  date?: string;
+  format?: string;
+  timeLang?: string;
+  lang?: string;
+}
+
+const DateText: FunctionalComponent<RuntimeTimeProps> = (props): VNode => {
+  return h(
+    "span",
+    formatDate({
+      date: props.date,
+      format: props.format,
+      lang: props.timeLang,
+    }),
+  );
+};
+
+const FromNowText: FunctionalComponent<RuntimeTimeProps> = (props): VNode => {
+  return h(
+    "span",
+    formatTime({
+      date: props.date,
+      lang: props.timeLang,
+    }),
+  );
+};
+
 const CollapseWrapper: FunctionalComponent<CollapseWrapperProps> = (props, { slots }): VNode => {
   return h(
     NCollapse,
@@ -87,6 +117,14 @@ const getComponentProps = (token: TextToken) => {
         title: token.title,
         label: token.label,
       };
+    case "date":
+    case "fromNow":
+      return {
+        ...base,
+        date: token.date,
+        format: token.format,
+        timeLang: token.timeLang,
+      };
 
     default:
       return base;
@@ -121,8 +159,8 @@ const tagMap: Record<RichType, RenderTarget> = {
   warning: NAlert,
   collapse: CollapseWrapper,
   "raw-code": ShikiCodeBlock,
-  date: "span",
-  fromNow: "span",
+  date: DateText,
+  fromNow: FromNowText,
 };
 
 const getUrl = (token: TextToken) => (token.url ? normalizeUrl(token.url) : undefined);

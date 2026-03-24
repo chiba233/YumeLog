@@ -1,12 +1,17 @@
 // noinspection DuplicatedCode
 
-import type { ParseContext, TextToken } from "./types";
+import type { ParseContext, ParseRichTextOptions, TextToken } from "./types";
 import { extractText } from "./builders.ts";
 import { tryConsumeEscape, tryConsumeTagClose, tryConsumeTagStart } from "./consumers.ts";
 import { finalizeUnclosedTags, flushBuffer } from "./context.ts";
 import { withRichTextErrorBatch } from "./errors";
 
-export const parseRichText = (text: string, depthLimit = 50, silent = false): TextToken[] => {
+export const parseRichText = (
+  text: string,
+  depthLimit = 50,
+  silent = false,
+  options: ParseRichTextOptions = {},
+): TextToken[] => {
   if (!text) return [];
 
   return withRichTextErrorBatch(silent, () => {
@@ -14,6 +19,7 @@ export const parseRichText = (text: string, depthLimit = 50, silent = false): Te
       text,
       depthLimit,
       silent,
+      mode: options.mode ?? "render",
       root: [],
       stack: [],
       buffer: "",

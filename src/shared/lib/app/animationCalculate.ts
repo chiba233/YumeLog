@@ -21,12 +21,17 @@ export const useCardGlow = () => {
 
     raf = requestAnimationFrame(() => {
       if (!rect) return;
-
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
+      const nx = x / rect.width;
+      const ny = y / rect.height;
 
-      card.style.setProperty("--mx", `${x}px`);
-      card.style.setProperty("--my", `${y}px`);
+      const ease = (t: number) => t + (t - 0.5) * 0.1;
+
+      const ex = ease(nx) * rect.width;
+      const ey = ease(ny) * rect.height;
+      card.style.setProperty("--mx", `${ex}px`);
+      card.style.setProperty("--my", `${ey}px`);
       card.style.setProperty("--opacity", "1");
     });
   };

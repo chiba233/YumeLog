@@ -5,14 +5,13 @@ import { ESCAPE_CHAR, TAG_DIVIDER } from "./constants";
 import { lang } from "@/shared/lib/app/setupLang.ts";
 import { $message } from "@/shared/lib/app/msgUtils.ts";
 import { createToken } from "@/shared/lib/dsl/BlogRichText/createToken.ts";
+import {
+  resolveSupportedCodeLang,
+  type SupportedCodeLang,
+} from "@/shared/lib/external/codeLang.ts";
 
 type CommonI18nKeys = keyof typeof commonI18n;
 type I18nMap = Record<string, string>;
-const ALLOWED_LANGS = ["typescript", "bash", "json", "yaml", "vue", "html", "text"] as const;
-type SupportedLang = (typeof ALLOWED_LANGS)[number];
-const ALLOWED_LANG_SET = new Set<string>(ALLOWED_LANGS);
-const TS_ALIAS_SET = new Set(["js", "javascript", "ts", "typescript"]);
-
 const createTextToken = (value: string): TextToken => createToken({ type: "text", value });
 
 export const extractText = (tokens?: TextToken[]): string => {
@@ -143,13 +142,10 @@ export const buildLabeledInlineBlock = (
   return buildRichBlock(type, title, content, defaultTitleI18nKey);
 };
 
-export const normalizeLang = (codeLang?: string): SupportedLang => {
+export const normalizeLang = (codeLang?: string): SupportedCodeLang => {
   if (!codeLang) return "typescript";
-  const normalized = codeLang.trim().toLowerCase();
-  if (TS_ALIAS_SET.has(normalized)) {
-    return "typescript";
-  }
-  if (!ALLOWED_LANG_SET.has(normalized)) {
+  const normalized = resolveSupportedCodeLang(codeLang);
+  if (!normalized) {
     const unsupportedCodeLanguage = commonI18n.unsupportedCodeLanguage as I18nMap;
     const unsupportedCodeLanguageMsg = (
       unsupportedCodeLanguage[lang.value] || unsupportedCodeLanguage.en
@@ -157,5 +153,5 @@ export const normalizeLang = (codeLang?: string): SupportedLang => {
     $message.error(unsupportedCodeLanguageMsg, true, 3000);
     return "text";
   }
-  return normalized as SupportedLang;
+  return normalized;
 };

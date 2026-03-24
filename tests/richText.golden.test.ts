@@ -4,7 +4,6 @@ import assert from "node:assert/strict";
 import dayjs from "dayjs";
 import { parseRichText, stripRichText } from "../src/shared/lib/dsl/BlogRichText/blogFormat.ts";
 import type { TextToken } from "../src/shared/lib/dsl/BlogRichText/types.ts";
-import { formatDateByLang } from "../src/shared/lib/app/langCore.ts";
 import { runGoldenCases } from "./testHarness";
 import { loadTestJsonFixture } from "./testFixtures.ts";
 
@@ -215,7 +214,7 @@ const cases: Array<{ name: string; run: () => void }> = [
               codeLang: "typescript",
               title: "Code:",
               label: "",
-              value: "const a = 1",
+              value: "const a = 1\n",
             },
             {
               type: "bold",
@@ -266,48 +265,44 @@ const cases: Array<{ name: string; run: () => void }> = [
 
   // --- [Inline] 行内标签相关 ---
   {
-    name: "[Inline/Date] date 标签自定义格式与语言 -> 应当产出格式化后的纯文本 token",
+    name: "[Inline/Date] date 标签自定义格式与语言 -> 应当保留运行时渲染所需参数",
     run: () => {
       const tokens = parseRichText("$$date(2024-01-02|YYYY/MM/DD|en)$$", 50, true);
 
-      assert.deepEqual(normalizeTokens(tokens), [{ type: "date", value: "2024/01/02" }]);
+      assert.deepEqual(normalizeTokens(tokens), [
+        { type: "date", date: "2024-01-02", format: "YYYY/MM/DD", timeLang: "en", value: "" },
+      ]);
     },
   },
   {
-    name: "[Inline/Date] date 标签省略 format -> 应当走按语言默认日期格式",
+    name: "[Inline/Date] date 标签省略 format -> 应当保留日期与语言，交给运行时格式化",
     run: () => {
       const offsets = createDeterministicNumbers(42, 24, 0, 3650);
 
       offsets.forEach((offset) => {
         const date = formatIsoDay("2020-01-01", offset);
         const tokens = parseRichText(`$$date(${date}||th)$$`, 50, true);
-        const expected = dayjs(date).locale("th").format("D MMMM BBBB - dddd");
 
-        assert.deepEqual(normalizeTokens(tokens), [{ type: "date", value: expected }]);
-        assert.equal(formatDateByLang("th", date), expected);
+        assert.deepEqual(normalizeTokens(tokens), [
+          { type: "date", date, format: undefined, timeLang: "th", value: "" },
+        ]);
       });
     },
   },
   {
-    name: "[Inline/Time] fromNow 标签带语言参数 -> 应当基于当前时间输出相对时间文本",
+    name: "[Inline/Time] fromNow 标签带语言参数 -> 应当保留运行时相对时间参数",
     run: () => {
-      const realDateNow = Date.now;
       const baseNow = "2026-03-23T00:00:00.000Z";
-      Date.now = () => new Date(baseNow).valueOf();
+      const offsets = createDeterministicNumbers(7, 20, -400, 400);
 
-      try {
-        const offsets = createDeterministicNumbers(7, 20, -400, 400);
+      offsets.forEach((offset) => {
+        const date = formatIsoInstant(baseNow, offset);
+        const tokens = parseRichText(`$$fromNow(${date}|en)$$`, 50, true);
 
-        offsets.forEach((offset) => {
-          const date = formatIsoInstant(baseNow, offset);
-          const tokens = parseRichText(`$$fromNow(${date}|en)$$`, 50, true);
-          const expected = dayjs(date).locale("en-au").from(dayjs(baseNow));
-
-          assert.deepEqual(normalizeTokens(tokens), [{ type: "fromNow", value: expected }]);
-        });
-      } finally {
-        Date.now = realDateNow;
-      }
+        assert.deepEqual(normalizeTokens(tokens), [
+          { type: "fromNow", date, timeLang: "en", value: "" },
+        ]);
+      });
     },
   },
   {
@@ -439,7 +434,7 @@ const cases: Array<{ name: string; run: () => void }> = [
           codeLang: "typescript",
           title: "demo",
           label: "",
-          value: "const a = 1",
+          value: "const a = 1\n",
         },
       ]);
     },
@@ -456,7 +451,7 @@ const cases: Array<{ name: string; run: () => void }> = [
           codeLang: "typescript",
           title: "Demo",
           label: "Label",
-          value: "a%end$$",
+          value: "a%end$$\n",
         },
       ]);
     },

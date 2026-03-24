@@ -1,17 +1,11 @@
-import type { ComplexTagParseResult, TextToken } from "./types";
+import type { ComplexTagParseResult, ParseRichTextOptions, TextToken } from "./types";
 import {
   findBlockClose,
   findMalformedWholeLineTokenCandidate,
   findRawClose,
   findTagArgClose,
 } from "@/shared/lib/dsl/BlogRichText/scanner.ts";
-import {
-  BLOCK_CLOSE,
-  BLOCK_OPEN,
-  ESCAPE_CHAR,
-  RAW_CLOSE,
-  RAW_OPEN,
-} from "@/shared/lib/dsl/BlogRichText/constants.ts";
+import { BLOCK_CLOSE, BLOCK_OPEN, ESCAPE_CHAR, RAW_CLOSE, RAW_OPEN } from "@/shared/lib/dsl/BlogRichText/constants.ts";
 import { isRichType, TAG_HANDLERS } from "./handlers";
 import { consumeBlockTagTrailingLineBreak, normalizeBlockTagContent } from "./blockTagFormatting";
 import { createToken } from "./createToken";
@@ -24,7 +18,13 @@ export const tryParseComplexTag = (
   inlineEnd: number,
   depthLimit: number,
   silent: boolean,
-  parseInlineContent: (text: string, depthLimit: number, silent: boolean) => TextToken[],
+  options: ParseRichTextOptions,
+  parseInlineContent: (
+    text: string,
+    depthLimit: number,
+    silent: boolean,
+    options?: ParseRichTextOptions,
+  ) => TextToken[],
 ): ComplexTagParseResult => {
   if (!isRichType(tag)) {
     return { handled: false, nextIndex: tagNameEnd };
@@ -83,19 +83,36 @@ export const tryParseComplexTag = (
     if (!handler.block) {
       return {
         handled: true,
-        nextIndex: consumeBlockTagTrailingLineBreak(tag, text, end + BLOCK_CLOSE.length),
+        nextIndex: consumeBlockTagTrailingLineBreak(
+          tag,
+          text,
+          end + BLOCK_CLOSE.length,
+          options.mode ?? "render",
+        ),
         fallbackText: text.slice(tagOpenPos, end + BLOCK_CLOSE.length),
       };
     }
 
     const arg = text.slice(tagNameEnd + 1, argClose).trim();
-    const blockContent = normalizeBlockTagContent(tag, text.slice(contentStart, end));
+    const blockContent = normalizeBlockTagContent(
+      tag,
+      text.slice(contentStart, end),
+      options.mode ?? "render",
+    );
 
     return {
       handled: true,
-      nextIndex: consumeBlockTagTrailingLineBreak(tag, text, end + BLOCK_CLOSE.length),
+      nextIndex: consumeBlockTagTrailingLineBreak(
+        tag,
+        text,
+        end + BLOCK_CLOSE.length,
+        options.mode ?? "render",
+      ),
       token: createToken(
-        handler.block(arg, parseInlineContent(blockContent, Math.max(depthLimit - 1, 0), silent)),
+        handler.block(
+          arg,
+          parseInlineContent(blockContent, Math.max(depthLimit - 1, 0), silent, options),
+        ),
       ),
     };
   }
@@ -131,23 +148,32 @@ export const tryParseComplexTag = (
   if (!handler.raw) {
     return {
       handled: true,
-      nextIndex: consumeBlockTagTrailingLineBreak(tag, text, end + RAW_CLOSE.length),
+      nextIndex: consumeBlockTagTrailingLineBreak(
+        tag,
+        text,
+        end + RAW_CLOSE.length,
+        options.mode ?? "render",
+      ),
       fallbackText: text.slice(tagOpenPos, end + RAW_CLOSE.length),
     };
   }
 
   const arg = text.slice(tagNameEnd + 1, argClose).trim();
-  const content = normalizeBlockTagContent(
-    tag,
-    text
-      .slice(contentStart, end)
-      .split(ESCAPE_CHAR + RAW_CLOSE)
-      .join(RAW_CLOSE),
-  );
+  const rawContent = text.slice(contentStart, end);
+  const normalizedRawContent =
+    options.mode === "highlight"
+      ? rawContent
+      : rawContent.split(ESCAPE_CHAR + RAW_CLOSE).join(RAW_CLOSE);
+  const content = normalizeBlockTagContent(tag, normalizedRawContent, options.mode ?? "render");
 
   return {
     handled: true,
-    nextIndex: consumeBlockTagTrailingLineBreak(tag, text, end + RAW_CLOSE.length),
+    nextIndex: consumeBlockTagTrailingLineBreak(
+      tag,
+      text,
+      end + RAW_CLOSE.length,
+      options.mode ?? "render",
+    ),
     token: createToken(handler.raw(arg, content)),
   };
 };

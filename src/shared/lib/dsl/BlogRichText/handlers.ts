@@ -8,7 +8,6 @@ import {
   parsePipeArgs,
   parsePipeTextArgs,
 } from "./builders";
-import { coreFormatTime, formatDateByLang } from "@/shared/lib/app/langCore.ts";
 
 type TitledLabelKey = "labelInfo" | "labelWarning" | "collapseClickToExpand";
 
@@ -41,36 +40,26 @@ export const TAG_HANDLERS: Partial<TagHandlerMap> = {
 
       return {
         type: "fromNow",
-        value: coreFormatTime({
-          date: args.text(0),
-          lang: args.text(1) || undefined,
-        }),
-      };
-    },
-  },
-  date: {
-    inline: (tokens: TextToken[]) => {
-      const args = parsePipeArgs(tokens);
-      const date = args.text(0);
-      const format = args.text(1);
-      const lang = args.text(2);
-      if (!format) {
-        return {
-          type: "date",
-          value: formatDateByLang(lang || "en", date),
-        };
-      }
-      return {
-        type: "date",
-        value: coreFormatTime({
-          date,
-          format,
-          lang: lang || undefined,
-        }),
+        value: "",
+        date: args.text(0),
+        timeLang: args.text(1) || undefined,
       };
     },
   },
 
+  date: {
+    inline: (tokens: TextToken[]) => {
+      const args = parsePipeArgs(tokens);
+
+      return {
+        type: "date",
+        value: "",
+        date: args.text(0),
+        format: args.text(1) || undefined,
+        timeLang: args.text(2) || undefined,
+      };
+    },
+  },
   info: createTitledTagHandler("info", "labelInfo"),
   warning: createTitledTagHandler("warning", "labelWarning"),
   collapse: createTitledTagHandler("collapse", "collapseClickToExpand"),
@@ -87,7 +76,7 @@ export const TAG_HANDLERS: Partial<TagHandlerMap> = {
         codeLang,
         title: title || "Code:",
         label,
-        value: content.replace(/\r\n/g, "\n").replace(/\n$/, ""),
+        value: content,
       };
     },
   },

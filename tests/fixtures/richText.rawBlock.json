@@ -10,7 +10,7 @@
           "codeLang": "typescript",
           "title": "标题",
           "label": "标签",
-          "value": "代码"
+          "value": "代码\n"
         }
       ]
     },
@@ -24,7 +24,7 @@
           "codeLang": "typescript",
           "title": "Code:",
           "label": "",
-          "value": "A | B"
+          "value": "A | B\n"
         }
       ]
     },

@@ -181,8 +181,8 @@ figure {
 }
 
 .n-modal-mask {
-  background-color: rgba(var(--global-theme-rgb-deep), 0.15) !important;
-  backdrop-filter: saturate(110%) blur(5px);
+  background-color: rgba(var(--global-theme-rgb-deep), 0.07) !important;
+  backdrop-filter: saturate(115%) blur(6px);
   max-height: 100dvh;
 }
 
@@ -291,10 +291,7 @@ figure {
 }
 
 :root {
-  --glass-bg: var(--global-theme-glass);
   --glass-border: 1px solid var(--global-theme-glass);
-  --glass-blur: saturate(110%) blur(25px);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
 }
 
 .themeText {
@@ -307,9 +304,10 @@ figure {
 }
 
 .glass {
-  background: var(--glass-bg);
+  background: var(--global-theme-glass);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: 20px;
   border: var(--glass-border);
   box-shadow: var(--glass-shadow);
 }

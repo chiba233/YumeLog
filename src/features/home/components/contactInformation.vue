@@ -423,8 +423,8 @@ homeContactUseHead(computed(() => data.value?.playerRating?.toString() || ""));
 }
 
 .contacts-overlay {
-  background-color: rgba(var(--global-theme-rgb-deep), 0.2) !important;
-  backdrop-filter: blur(3px);
+  background-color: rgba(var(--global-theme-rgb-deep), 0.07) !important;
+  backdrop-filter: saturate(115%) blur(6px);
   max-height: 100dvh;
 }
 

@@ -1,18 +1,90 @@
 // noinspection DuplicatedCode
 
+import {
+  DASH_LIST_INDENT,
+  DASH_LIST_MARKER,
+  MULTILINE_INDICATOR,
+  TEMP_ID_PREFIX_ITEM,
+} from "./constants.ts";
 import { createDSLTempId } from "./createDSLTempId.ts";
 import type { DSLError, DSLErrorCode } from "./dslError.ts";
-import { splitTextLines } from "./textLines.ts";
+import { findKeySeparator, splitTextLines } from "./textLines.ts";
 
 export interface ParseDashObjectListOptions {
   onError?: (error: DSLError) => void;
 }
 
-export const parseDashObjectList = (
-  content: string,
-  options: ParseDashObjectListOptions = {},
-): Array<Record<string, string> & { temp_id: string }> => {
-  return parseTypedDashObjectList<Record<string, string> & { temp_id: string }>(content, options);
+export interface DashListLineAnalysis {
+  indent: string;
+  isListItem: boolean;
+  key: string;
+  spacingAfterSeparator: string;
+  rawValue: string;
+  isMultiline: boolean;
+}
+
+export interface PropertyLineAnalysis {
+  indent: string;
+  key: string;
+  spacingAfterSeparator: string;
+  rawValue: string;
+  isMultiline: boolean;
+}
+
+export const analyzeDashListLine = (line: string): DashListLineAnalysis | null => {
+  if (!line.trim()) return null;
+  if (!line.startsWith(DASH_LIST_MARKER) && !line.startsWith(DASH_LIST_INDENT)) return null;
+
+  const indentLength = line.length - line.trimStart().length;
+  const indent = line.slice(0, indentLength);
+  const trimmed = line.slice(indentLength);
+  const isListItem = trimmed.startsWith(DASH_LIST_MARKER);
+  const contentPart = isListItem ? trimmed.slice(DASH_LIST_MARKER.length) : trimmed;
+  const sep = findKeySeparator(contentPart);
+
+  if (!sep) return null;
+
+  const key = contentPart.slice(0, sep.index).trim();
+  const afterColon = contentPart.slice(sep.index + 1);
+  const spacingLength = afterColon.length - afterColon.trimStart().length;
+  const spacingAfterSeparator = afterColon.slice(0, spacingLength);
+  const rawValue = afterColon.slice(spacingLength);
+
+  return {
+    indent,
+    isListItem,
+    key,
+    spacingAfterSeparator,
+    rawValue,
+    isMultiline: rawValue.trim() === MULTILINE_INDICATOR,
+  };
+};
+
+export const analyzePropertyLine = (line: string): PropertyLineAnalysis | null => {
+  if (!line.trim()) return null;
+
+  const indentLength = line.length - line.trimStart().length;
+  const indent = line.slice(0, indentLength);
+  const trimmed = line.slice(indentLength);
+  const sep = findKeySeparator(trimmed);
+
+  if (!sep) return null;
+
+  const key = trimmed.slice(0, sep.index).trim();
+  if (!key) return null;
+
+  const afterColon = trimmed.slice(sep.index + 1);
+  const spacingLength = afterColon.length - afterColon.trimStart().length;
+  const spacingAfterSeparator = afterColon.slice(0, spacingLength);
+  const rawValue = afterColon.slice(spacingLength);
+
+  return {
+    indent,
+    key,
+    spacingAfterSeparator,
+    rawValue,
+    isMultiline: rawValue.trim() === MULTILINE_INDICATOR,
+  };
 };
 
 export const parseTypedDashObjectList = <T extends { temp_id: string }>(
@@ -55,7 +127,7 @@ export const parseTypedDashObjectList = <T extends { temp_id: string }>(
   };
 
   const processValue = (raw: string): string => {
-    return stripQuotes(raw.trim());
+    return stripQuotes(raw);
   };
 
   for (const raw of lines) {
@@ -75,8 +147,8 @@ export const parseTypedDashObjectList = <T extends { temp_id: string }>(
 
     if (!raw.trim()) continue;
 
-    if (raw.startsWith("- ") || raw.startsWith("  ")) {
-      const isListItem = raw.startsWith("- ");
+    if (raw.startsWith(DASH_LIST_MARKER) || raw.startsWith(DASH_LIST_INDENT)) {
+      const isListItem = raw.startsWith(DASH_LIST_MARKER);
 
       if (isListItem) {
         flushMulti();
@@ -85,7 +157,7 @@ export const parseTypedDashObjectList = <T extends { temp_id: string }>(
           result.push(current);
         }
 
-        current = { temp_id: createDSLTempId("dsl-item") } as T;
+        current = { temp_id: createDSLTempId(TEMP_ID_PREFIX_ITEM) } as T;
       }
 
       if (!current) {
@@ -93,18 +165,18 @@ export const parseTypedDashObjectList = <T extends { temp_id: string }>(
         continue;
       }
 
-      const contentPart = isListItem ? raw.slice(2) : raw.trimStart();
-      const i = contentPart.indexOf(": ");
+      const contentPart = isListItem ? raw.slice(DASH_LIST_MARKER.length) : raw.trimStart();
+      const sep = findKeySeparator(contentPart);
 
-      if (i === -1) {
+      if (!sep) {
         emitError("dslFormatError", raw);
         continue;
       }
 
-      const key = contentPart.slice(0, i).trim();
-      const valuePart = contentPart.slice(i + 2);
+      const key = contentPart.slice(0, sep.index).trim();
+      const valuePart = contentPart.slice(sep.index + sep.length);
 
-      if (valuePart.trim() === "|") {
+      if (valuePart.trim() === MULTILINE_INDICATOR) {
         multiKey = key;
         continue;
       }

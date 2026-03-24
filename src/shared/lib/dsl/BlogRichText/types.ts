@@ -1,3 +1,5 @@
+import type { SupportedCodeLang } from "@/shared/lib/external/codeLang.ts";
+
 export const RICH_TYPES = [
   "bold",
   "thin",
@@ -16,18 +18,27 @@ export const RICH_TYPES = [
 
 export const BLOCK_TYPES = ["info", "warning", "center", "raw-code", "collapse"] as const;
 export const TITLED_BLOCK_TYPES = ["info", "warning", "collapse"] as const;
+export const RAW_CAPABLE_RICH_TYPES = ["info", "warning", "collapse", "raw-code"] as const;
 
 export type RichType = (typeof RICH_TYPES)[number];
 export type BlockType = (typeof BLOCK_TYPES)[number];
 export type TitledBlockType = (typeof TITLED_BLOCK_TYPES)[number];
 export type RichTagName = string;
+export type ParseRichTextMode = "render" | "highlight";
+
+export interface ParseRichTextOptions {
+  mode?: ParseRichTextMode;
+}
 
 export interface TextToken {
   type: RichType | "text";
   value: string | TextToken[];
-  codeLang?: string;
+  codeLang?: SupportedCodeLang;
   label?: string;
   title?: string;
+  date?: string;
+  format?: string;
+  timeLang?: string;
   url?: string;
   temp_id: string;
 }
@@ -46,6 +57,7 @@ export interface ParseContext {
   text: string;
   depthLimit: number;
   silent: boolean;
+  mode: ParseRichTextMode;
   root: TextToken[];
   stack: ParseStackNode[];
   buffer: string;

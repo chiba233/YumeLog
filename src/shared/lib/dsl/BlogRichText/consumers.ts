@@ -87,7 +87,7 @@ export const tryConsumeDepthLimitedTag = (ctx: ParseContext, info: TagStartInfo)
     }
 
     ctx.buffer += ctx.text.slice(ctx.i, end + RAW_CLOSE.length);
-    ctx.i = consumeBlockTagTrailingLineBreak(info.tag, ctx.text, end + RAW_CLOSE.length);
+    ctx.i = consumeBlockTagTrailingLineBreak(info.tag, ctx.text, end + RAW_CLOSE.length, ctx.mode);
     return true;
   }
 
@@ -98,7 +98,12 @@ export const tryConsumeComplexTag = (
   ctx: ParseContext,
   info: TagStartInfo,
   inlineEnd: number,
-  parseInlineContent: (text: string, depthLimit: number, silent: boolean) => TextToken[],
+  parseInlineContent: (
+    text: string,
+    depthLimit: number,
+    silent: boolean,
+    options?: { mode?: ParseContext["mode"] },
+  ) => TextToken[],
 ): boolean => {
   const result = tryParseComplexTag(
     ctx.text,
@@ -108,6 +113,7 @@ export const tryConsumeComplexTag = (
     inlineEnd,
     ctx.depthLimit,
     ctx.silent,
+    { mode: ctx.mode },
     parseInlineContent,
   );
 
@@ -169,7 +175,12 @@ export const tryConsumeInlineTag = (
 
 export const tryConsumeTagStart = (
   ctx: ParseContext,
-  parseInlineContent: (text: string, depthLimit: number, silent: boolean) => TextToken[],
+  parseInlineContent: (
+    text: string,
+    depthLimit: number,
+    silent: boolean,
+    options?: { mode?: ParseContext["mode"] },
+  ) => TextToken[],
 ): boolean => {
   const info = readTagStartInfo(ctx.text, ctx.i);
   if (!info) return false;
@@ -233,7 +244,7 @@ export const tryConsumeTagClose = (ctx: ParseContext): boolean => {
   finalizeClosedNode(ctx, node);
 
   ctx.i += END_TAG.length;
-  ctx.i = consumeBlockTagTrailingLineBreak(node.tag, ctx.text, ctx.i);
+  ctx.i = consumeBlockTagTrailingLineBreak(node.tag, ctx.text, ctx.i, ctx.mode);
 
   return true;
 };

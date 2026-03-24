@@ -1,4 +1,4 @@
-import type { BlockType } from "./types";
+import type { BlockType, ParseRichTextMode } from "./types";
 import { BLOCK_TYPES_SET } from "./handlers";
 
 export const isBlockTag = (tag: string): tag is BlockType => {
@@ -17,8 +17,13 @@ export const consumeSingleTrailingLineBreak = (text: string, index: number): num
   return index;
 };
 
-export const normalizeBlockTagContent = (tag: string, content: string): string => {
+export const normalizeBlockTagContent = (
+  tag: string,
+  content: string,
+  mode: ParseRichTextMode = "render",
+): string => {
   if (!isBlockTag(tag)) return content;
+  if (mode === "highlight") return content;
   return stripSingleLeadingLineBreak(content);
 };
 
@@ -26,7 +31,9 @@ export const consumeBlockTagTrailingLineBreak = (
   tag: string,
   text: string,
   index: number,
+  mode: ParseRichTextMode = "render",
 ): number => {
   if (!isBlockTag(tag)) return index;
+  if (mode === "highlight") return index;
   return consumeSingleTrailingLineBreak(text, index);
 };

@@ -8,6 +8,8 @@ console.log("=== Rich Text DSL ===");
 await import("./richText.golden.test.ts");
 console.log("=== Block DSL ===");
 await import("./blockDsl.golden.test.ts");
+console.log("=== Yume DSL Highlight ===");
+await import("./yumeDslHighlight.golden.test.ts");
 console.log("=== Yaml API DSL ===");
 await import("./getYamlCore.golden.test.ts");
 console.log("=== Yaml Client ===");

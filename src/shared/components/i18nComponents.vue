@@ -235,7 +235,6 @@ watchEffect(() => {
     }
   }
 }
-
 .selectLangSpan {
   display: inline-block;
   white-space: nowrap;

@@ -6,25 +6,33 @@ import type {
   PostBlock,
   TextPostBlock,
 } from "../../../types/blog.ts";
+import {
+  BLOCK_NAME_DIVIDER,
+  BLOCK_NAME_IMAGE,
+  BLOCK_NAME_META,
+  BLOCK_NAME_TEXT,
+  RESERVED_META_KEY_BLOCKS,
+  TEMP_ID_PREFIX_NODE,
+} from "./constants.ts";
 import { blockParsers } from "./blockParsers.ts";
 import { createDSLTempId } from "./createDSLTempId.ts";
 import { DSL_BLOCK_NAMES, type DSLBlockName, type DSLNode, type DSLTree } from "./types.ts";
 import type { DSLError } from "./dslError.ts";
-import { splitTextLines } from "./textLines.ts";
+import { findKeySeparator, splitTextLines } from "./textLines.ts";
 
 const applyMeta = (
   content: string,
   target: Record<string, unknown>,
-  reservedKeys: Set<string> = new Set(["blocks"]),
+  reservedKeys: Set<string> = new Set([RESERVED_META_KEY_BLOCKS]),
 ) => {
   for (const line of splitTextLines(content)) {
     if (!line) continue;
 
-    const colonIndex = line.indexOf(":");
-    if (colonIndex === -1) continue;
+    const sep = findKeySeparator(line);
+    if (!sep) continue;
 
-    const key = line.slice(0, colonIndex).trim();
-    const value = line.slice(colonIndex + 1).trim();
+    const key = line.slice(0, sep.index).trim();
+    const value = line.slice(sep.index + sep.length);
 
     if (reservedKeys.has(key)) {
       console.error(`[DSL Warning] Reserved key: ${key}`);
@@ -48,23 +56,23 @@ type PostBlockType = PostBlock["type"];
 type AstTransformMode = "metadata" | "block" | "chunked-text" | "text-fallback";
 
 const DSL_POST_BLOCK_TYPES = [
-  "image",
-  "divider",
-  "text",
+  BLOCK_NAME_IMAGE,
+  BLOCK_NAME_DIVIDER,
+  BLOCK_NAME_TEXT,
 ] as const satisfies readonly PostBlockType[];
 type DSLPostBlockType = (typeof DSL_POST_BLOCK_TYPES)[number];
 
 const AST_TRANSFORM_MODES: Record<DSLBlockName, AstTransformMode> = {
-  meta: "metadata",
-  image: "block",
-  divider: "block",
-  text: "chunked-text",
+  [BLOCK_NAME_META]: "metadata",
+  [BLOCK_NAME_IMAGE]: "block",
+  [BLOCK_NAME_DIVIDER]: "block",
+  [BLOCK_NAME_TEXT]: "chunked-text",
 };
 
 const createTextBlock = (content: string): PostBlock => ({
-  type: "text",
+  type: BLOCK_NAME_TEXT,
   content,
-  temp_id: createDSLTempId("dsl-node"),
+  temp_id: createDSLTempId(TEMP_ID_PREFIX_NODE),
 });
 
 const isDslBlockName = (nodeName: string): nodeName is DSLBlockName => {
@@ -87,25 +95,25 @@ const createParsedBlock = (
   type: PostBlockType,
   content: string,
   options: AstToPostOptions,
-  tempId: string = createDSLTempId("dsl-node"),
+  tempId: string = createDSLTempId(TEMP_ID_PREFIX_NODE),
 ): PostBlock => {
   const parser = blockParsers[type];
   const parsedContent = parser ? parser(content, { onError: options.onError }) : content;
 
   switch (type) {
-    case "text":
+    case BLOCK_NAME_TEXT:
       return {
         type,
         content: typeof parsedContent === "string" ? parsedContent : content,
         temp_id: tempId,
       } satisfies TextPostBlock;
-    case "image":
+    case BLOCK_NAME_IMAGE:
       return {
         type,
         content: Array.isArray(parsedContent) ? parsedContent : [],
         temp_id: tempId,
       } satisfies ImagePostBlock;
-    case "divider":
+    case BLOCK_NAME_DIVIDER:
       return {
         type,
         content: typeof parsedContent === "string" ? parsedContent : content,
@@ -124,7 +132,7 @@ const appendChunkedTextNode = (
   options: AstToPostOptions,
 ): void => {
   if (node.children.length === 0) {
-    target.blocks.push(createParsedBlock("text", node.content, options, node.temp_id));
+    target.blocks.push(createParsedBlock(BLOCK_NAME_TEXT, node.content, options, node.temp_id));
     return;
   }
 

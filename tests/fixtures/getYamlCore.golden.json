@@ -7,11 +7,7 @@
         "spareUrl": "/spare-blog"
       }
     },
-    "listFileNames": [
-      "a.dsl",
-      "b.dsl",
-      "c.dsl"
-    ],
+    "listFileNames": ["a.dsl", "b.dsl", "c.dsl"],
     "files": {
       "/blog/a.dsl": "@meta\ntitle: A\ntime: 20240101\n@end\n@text\nA\n@end",
       "/blog/b.dsl": "@meta\ntitle: B\ntime: 20250101\npin: true\n@end\n@text\nB\n@end",

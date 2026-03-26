@@ -6,11 +6,11 @@ import {
   BLOCK_NAME_REGEX,
   BLOCK_PREFIX,
   BOM,
-  DEFAULT_NESTABLE_BLOCKS,
   ESCAPE_CHAR,
   TEMP_ID_PREFIX_CHUNK,
   TEMP_ID_PREFIX_NODE,
 } from "./constants.ts";
+import { NESTABLE_BLOCK_NAMES } from "./blockHandlers.ts";
 import { createDSLTempId } from "./createDSLTempId.ts";
 import { trimTrailingEmptyLines } from "./textLines.ts";
 import {
@@ -25,7 +25,7 @@ import {
 export { DSL_BLOCK_NAMES } from "./types.ts";
 export type { DSLBlockName, DSLChunk, DSLNode, DSLTextChunk, DSLTree } from "./types.ts";
 const DEFAULT_BLOCK_NAMES = [...DSL_BLOCK_NAMES];
-const DEFAULT_NESTED_BLOCKS: readonly string[] = [...DEFAULT_NESTABLE_BLOCKS];
+const DEFAULT_NESTED_BLOCKS: readonly string[] = NESTABLE_BLOCK_NAMES;
 
 export interface SyntaxConfig {
   blockPrefix: string;

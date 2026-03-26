@@ -34,9 +34,6 @@
     ],
     "limit": 12,
     "expectedSummary": "first block...",
-    "expectedCalls": [
-      "first block",
-      "second block"
-    ]
+    "expectedCalls": ["first block", "second block"]
   }
 }

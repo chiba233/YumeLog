@@ -1,11 +1,6 @@
 // noinspection DuplicatedCode
 
-import {
-  DASH_LIST_INDENT,
-  DASH_LIST_MARKER,
-  MULTILINE_INDICATOR,
-  TEMP_ID_PREFIX_ITEM,
-} from "./constants.ts";
+import { DASH_LIST_MARKER, MULTILINE_INDICATOR, TEMP_ID_PREFIX_ITEM } from "./constants.ts";
 import { createDSLTempId } from "./createDSLTempId.ts";
 import type { DSLError, DSLErrorCode } from "./dslError.ts";
 import { findKeySeparator, splitTextLines } from "./textLines.ts";
@@ -17,6 +12,7 @@ export interface ParseDashObjectListOptions {
 export interface DashListLineAnalysis {
   indent: string;
   isListItem: boolean;
+  listMarker: string | null;
   key: string;
   spacingAfterSeparator: string;
   rawValue: string;
@@ -33,13 +29,26 @@ export interface PropertyLineAnalysis {
 
 export const analyzeDashListLine = (line: string): DashListLineAnalysis | null => {
   if (!line.trim()) return null;
-  if (!line.startsWith(DASH_LIST_MARKER) && !line.startsWith(DASH_LIST_INDENT)) return null;
 
   const indentLength = line.length - line.trimStart().length;
   const indent = line.slice(0, indentLength);
   const trimmed = line.slice(indentLength);
   const isListItem = trimmed.startsWith(DASH_LIST_MARKER);
-  const contentPart = isListItem ? trimmed.slice(DASH_LIST_MARKER.length) : trimmed;
+
+  if (!isListItem && indentLength === 0) return null;
+
+  let contentPart: string;
+  let listMarker: string | null = null;
+
+  if (isListItem) {
+    const afterDash = trimmed.slice(1);
+    const spacesAfterDash = afterDash.length - afterDash.trimStart().length;
+    listMarker = trimmed.slice(0, 1 + spacesAfterDash);
+    contentPart = afterDash.trimStart();
+  } else {
+    contentPart = trimmed;
+  }
+
   const sep = findKeySeparator(contentPart);
 
   if (!sep) return null;
@@ -53,6 +62,7 @@ export const analyzeDashListLine = (line: string): DashListLineAnalysis | null =
   return {
     indent,
     isListItem,
+    listMarker,
     key,
     spacingAfterSeparator,
     rawValue,
@@ -96,6 +106,7 @@ export const parseTypedDashObjectList = <T extends { temp_id: string }>(
   let current: T | null = null;
   let multiKey: string | null = null;
   let multiBuffer: string[] = [];
+  let itemMarkerWidth = 0;
 
   const emitError = (code: DSLErrorCode, raw: string): void => {
     options.onError?.({
@@ -110,14 +121,10 @@ export const parseTypedDashObjectList = <T extends { temp_id: string }>(
 
   const flushMulti = (): void => {
     if (current && multiKey) {
-      const indents = multiBuffer
-        .filter((l) => l.trim() !== "")
-        .map((l) => l.match(/^(\s*)/)?.[1].length ?? 0);
-
-      const minIndent = indents.length ? Math.min(...indents) : 0;
+      const stripWidth = itemMarkerWidth + 2;
 
       current[multiKey as keyof T] = multiBuffer
-        .map((l) => l.slice(minIndent))
+        .map((l) => l.slice(stripWidth))
         .join("\n")
         .trimEnd() as T[keyof T];
     }
@@ -126,19 +133,13 @@ export const parseTypedDashObjectList = <T extends { temp_id: string }>(
     multiBuffer = [];
   };
 
-  const processValue = (raw: string): string => {
-    return stripQuotes(raw);
-  };
-
   for (const raw of lines) {
     if (multiKey) {
-      if (/^\s+/.test(raw) || raw.trim() === "") {
-        if (raw.trim() === "") {
-          multiBuffer.push("");
-          continue;
-        }
+      const multilineIndent = itemMarkerWidth + 2;
+      const lineIndent = raw.length - raw.trimStart().length;
 
-        multiBuffer.push(raw);
+      if (raw.trim() === "" || lineIndent >= multilineIndent) {
+        multiBuffer.push(raw.trim() === "" ? "" : raw);
         continue;
       }
 
@@ -147,52 +148,46 @@ export const parseTypedDashObjectList = <T extends { temp_id: string }>(
 
     if (!raw.trim()) continue;
 
-    if (raw.startsWith(DASH_LIST_MARKER) || raw.startsWith(DASH_LIST_INDENT)) {
-      const isListItem = raw.startsWith(DASH_LIST_MARKER);
+    const analysis = analyzeDashListLine(raw);
 
-      if (isListItem) {
-        flushMulti();
-
-        if (current && hasMeaningfulFields(current)) {
-          result.push(current);
-        }
-
-        current = { temp_id: createDSLTempId(TEMP_ID_PREFIX_ITEM) } as T;
-      }
-
-      if (!current) {
-        emitError("dslIsolatedProperty", raw);
-        continue;
-      }
-
-      const contentPart = isListItem ? raw.slice(DASH_LIST_MARKER.length) : raw.trimStart();
-      const sep = findKeySeparator(contentPart);
-
-      if (!sep) {
+    if (!analysis) {
+      if (raw.startsWith(DASH_LIST_MARKER)) {
         emitError("dslFormatError", raw);
-        continue;
+      } else if (/^\s/.test(raw)) {
+        emitError(current ? "dslFormatError" : "dslIsolatedProperty", raw);
+      } else {
+        emitError("dslUnrecognizedLine", raw);
       }
-
-      const key = contentPart.slice(0, sep.index).trim();
-      const valuePart = contentPart.slice(sep.index + sep.length);
-
-      if (valuePart.trim() === MULTILINE_INDICATOR) {
-        multiKey = key;
-        continue;
-      }
-
-      current[key as keyof T] = processValue(valuePart) as T[keyof T];
-    } else {
-      emitError("dslUnrecognizedLine", raw);
+      continue;
     }
+
+    if (analysis.isListItem) {
+      flushMulti();
+      if (current && hasMeaningfulFields(current)) result.push(current);
+      current = { temp_id: createDSLTempId(TEMP_ID_PREFIX_ITEM) } as T;
+      itemMarkerWidth = analysis.listMarker!.length;
+    }
+
+    if (!current) {
+      emitError("dslIsolatedProperty", raw);
+      continue;
+    }
+
+    if (!analysis.isListItem && analysis.indent.length !== itemMarkerWidth) {
+      emitError("dslFormatError", raw);
+      continue;
+    }
+
+    if (analysis.isMultiline) {
+      multiKey = analysis.key;
+      continue;
+    }
+
+    current[analysis.key as keyof T] = stripQuotes(analysis.rawValue) as T[keyof T];
   }
 
   flushMulti();
-
-  if (current && hasMeaningfulFields(current)) {
-    result.push(current);
-  }
-
+  if (current && hasMeaningfulFields(current)) result.push(current);
   return result;
 };
 

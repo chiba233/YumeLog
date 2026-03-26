@@ -1,13 +1,7 @@
 {
   "langPreference": {
-    "options": [
-      "en",
-      "ja"
-    ],
-    "fallbackOptions": [
-      "th",
-      "ja"
-    ],
+    "options": ["en", "ja"],
+    "fallbackOptions": ["th", "ja"],
     "cases": [
       {
         "currentLang": "ja",
@@ -41,12 +35,7 @@
     "type": "blog",
     "initialNow": 1000,
     "ttlAdvance": 601000,
-    "expectedTitles": [
-      "blog-1",
-      "blog-1",
-      "blog-2",
-      "blog-3"
-    ],
+    "expectedTitles": ["blog-1", "blog-1", "blog-2", "blog-3"],
     "expectedCalls": 3
   },
   "singleCache": {
@@ -62,11 +51,7 @@
       "title": "loaded"
     },
     "expectedPostCalls": 2,
-    "expectedSingleSeqs": [
-      1,
-      1,
-      2
-    ]
+    "expectedSingleSeqs": [1, 1, 2]
   },
   "router": {
     "expectedRoutes": [
@@ -99,8 +84,6 @@
     "expectedBlogParams": {
       "id": "abc"
     },
-    "expectedMissingMatchedPaths": [
-      "/:pathMatch(.*)*"
-    ]
+    "expectedMissingMatchedPaths": ["/:pathMatch(.*)*"]
   }
 }

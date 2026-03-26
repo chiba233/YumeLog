@@ -4,16 +4,9 @@
       "name": "[Parser/Block] 嵌套允许模式 -> 应当正确构建树状 AST 结构",
       "input": "@fromNow\n@event\ntime: 20200101\n@names\n- type: en\n  content: test\n@end\n@end\n@end",
       "syntax": {
-        "blockNames": [
-          "fromNow",
-          "event",
-          "names"
-        ],
+        "blockNames": ["fromNow", "event", "names"],
         "maxDepth": 3,
-        "nestableBlocks": [
-          "fromNow",
-          "event"
-        ]
+        "nestableBlocks": ["fromNow", "event"]
       },
       "expectedAst": [
         {
@@ -28,34 +21,21 @@
                   "name": "names",
                   "content": "- type: en\n  content: test",
                   "children": [],
-                  "chunks": [
-                    {
-                      "type": "text",
-                      "value": "- type: en\n  content: test"
-                    }
-                  ],
+                  "chunks": [{ "type": "text", "value": "- type: en\n  content: test" }],
                   "depth": 2,
                   "lineStart": 4,
                   "lineEnd": 7
                 }
               ],
               "chunks": [
-                {
-                  "type": "text",
-                  "value": "time: 20200101"
-                },
+                { "type": "text", "value": "time: 20200101" },
                 {
                   "type": "child",
                   "node": {
                     "name": "names",
                     "content": "- type: en\n  content: test",
                     "children": [],
-                    "chunks": [
-                      {
-                        "type": "text",
-                        "value": "- type: en\n  content: test"
-                      }
-                    ],
+                    "chunks": [{ "type": "text", "value": "- type: en\n  content: test" }],
                     "depth": 2,
                     "lineStart": 4,
                     "lineEnd": 7
@@ -78,34 +58,21 @@
                     "name": "names",
                     "content": "- type: en\n  content: test",
                     "children": [],
-                    "chunks": [
-                      {
-                        "type": "text",
-                        "value": "- type: en\n  content: test"
-                      }
-                    ],
+                    "chunks": [{ "type": "text", "value": "- type: en\n  content: test" }],
                     "depth": 2,
                     "lineStart": 4,
                     "lineEnd": 7
                   }
                 ],
                 "chunks": [
-                  {
-                    "type": "text",
-                    "value": "time: 20200101"
-                  },
+                  { "type": "text", "value": "time: 20200101" },
                   {
                     "type": "child",
                     "node": {
                       "name": "names",
                       "content": "- type: en\n  content: test",
                       "children": [],
-                      "chunks": [
-                        {
-                          "type": "text",
-                          "value": "- type: en\n  content: test"
-                        }
-                      ],
+                      "chunks": [{ "type": "text", "value": "- type: en\n  content: test" }],
                       "depth": 2,
                       "lineStart": 4,
                       "lineEnd": 7
@@ -133,12 +100,7 @@
           "name": "text",
           "content": "hello",
           "children": [],
-          "chunks": [
-            {
-              "type": "text",
-              "value": "hello"
-            }
-          ],
+          "chunks": [{ "type": "text", "value": "hello" }],
           "depth": 0,
           "lineStart": 1,
           "lineEnd": 3
@@ -151,12 +113,7 @@
       "name": "[Parser/Block] 非法嵌套块 -> 应当将内层块退化为文本并上报错误",
       "input": "@text\n@image\n- src: /a.webp\n@end\n@end",
       "syntax": {
-        "blockNames": [
-          "meta",
-          "text",
-          "image",
-          "divider"
-        ],
+        "blockNames": ["meta", "text", "image", "divider"],
         "maxDepth": 1,
         "nestableBlocks": []
       },
@@ -165,12 +122,7 @@
           "name": "text",
           "content": "@image\n- src: /a.webp",
           "children": [],
-          "chunks": [
-            {
-              "type": "text",
-              "value": "@image\n- src: /a.webp"
-            }
-          ],
+          "chunks": [{ "type": "text", "value": "@image\n- src: /a.webp" }],
           "depth": 0,
           "lineStart": 1,
           "lineEnd": 4
@@ -179,33 +131,18 @@
       "errors": [
         {
           "code": "dslNestedBlockNotAllowed",
-          "params": {
-            "parent": "text",
-            "name": "image",
-            "line": "2"
-          }
+          "params": { "parent": "text", "name": "image", "line": "2" }
         },
-        {
-          "code": "dslUnexpectedBlockEnd",
-          "params": {
-            "line": "5"
-          }
-        }
+        { "code": "dslUnexpectedBlockEnd", "params": { "line": "5" } }
       ]
     },
     {
       "name": "[Parser/Block] 深度溢出处理 -> 应当在达到 maxDepth 后将子块退化为文本",
       "input": "@fromNow\n@event\n@event\n@end\n@end\n@end",
       "syntax": {
-        "blockNames": [
-          "fromNow",
-          "event"
-        ],
+        "blockNames": ["fromNow", "event"],
         "maxDepth": 2,
-        "nestableBlocks": [
-          "fromNow",
-          "event"
-        ]
+        "nestableBlocks": ["fromNow", "event"]
       },
       "expectedAst": [
         {
@@ -216,12 +153,7 @@
               "name": "event",
               "content": "@event",
               "children": [],
-              "chunks": [
-                {
-                  "type": "text",
-                  "value": "@event"
-                }
-              ],
+              "chunks": [{ "type": "text", "value": "@event" }],
               "depth": 1,
               "lineStart": 2,
               "lineEnd": 4
@@ -234,12 +166,7 @@
                 "name": "event",
                 "content": "@event",
                 "children": [],
-                "chunks": [
-                  {
-                    "type": "text",
-                    "value": "@event"
-                  }
-                ],
+                "chunks": [{ "type": "text", "value": "@event" }],
                 "depth": 1,
                 "lineStart": 2,
                 "lineEnd": 4
@@ -254,18 +181,9 @@
       "errors": [
         {
           "code": "dslMaxDepthExceeded",
-          "params": {
-            "maxDepth": "2",
-            "name": "event",
-            "line": "3"
-          }
+          "params": { "maxDepth": "2", "name": "event", "line": "3" }
         },
-        {
-          "code": "dslUnexpectedBlockEnd",
-          "params": {
-            "line": "6"
-          }
-        }
+        { "code": "dslUnexpectedBlockEnd", "params": { "line": "6" } }
       ]
     },
     {
@@ -273,14 +191,7 @@
       "input": "@end",
       "syntax": {},
       "expectedAst": [],
-      "errors": [
-        {
-          "code": "dslUnexpectedBlockEnd",
-          "params": {
-            "line": "1"
-          }
-        }
-      ]
+      "errors": [{ "code": "dslUnexpectedBlockEnd", "params": { "line": "1" } }]
     },
     {
       "name": "[Parser/Block] 未闭合块处理 -> 应当在文件结束时自动补全闭合并上报缺失错误",
@@ -291,40 +202,21 @@
           "name": "text",
           "content": "hello",
           "children": [],
-          "chunks": [
-            {
-              "type": "text",
-              "value": "hello"
-            }
-          ],
+          "chunks": [{ "type": "text", "value": "hello" }],
           "depth": 0,
           "lineStart": 1,
           "lineEnd": 2
         }
       ],
-      "errors": [
-        {
-          "code": "dslBlockNotClosed",
-          "params": {
-            "name": "text",
-            "line": "1"
-          }
-        }
-      ]
+      "errors": [{ "code": "dslBlockNotClosed", "params": { "name": "text", "line": "1" } }]
     },
     {
       "name": "[Parser/Block] 深度隔离 -> 深度限制触发后后续应当仍能正确解析 sibling 块",
       "input": "@fromNow\n@event\n@event\n@end\nafter\n@end\n@event\nok\n@end\n@end",
       "syntax": {
-        "blockNames": [
-          "fromNow",
-          "event"
-        ],
+        "blockNames": ["fromNow", "event"],
         "maxDepth": 2,
-        "nestableBlocks": [
-          "fromNow",
-          "event"
-        ]
+        "nestableBlocks": ["fromNow", "event"]
       },
       "expectedAst": [
         {
@@ -335,12 +227,7 @@
               "name": "event",
               "content": "@event",
               "children": [],
-              "chunks": [
-                {
-                  "type": "text",
-                  "value": "@event"
-                }
-              ],
+              "chunks": [{ "type": "text", "value": "@event" }],
               "depth": 1,
               "lineStart": 2,
               "lineEnd": 4
@@ -353,21 +240,13 @@
                 "name": "event",
                 "content": "@event",
                 "children": [],
-                "chunks": [
-                  {
-                    "type": "text",
-                    "value": "@event"
-                  }
-                ],
+                "chunks": [{ "type": "text", "value": "@event" }],
                 "depth": 1,
                 "lineStart": 2,
                 "lineEnd": 4
               }
             },
-            {
-              "type": "text",
-              "value": "after"
-            }
+            { "type": "text", "value": "after" }
           ],
           "depth": 0,
           "lineStart": 1,
@@ -377,12 +256,7 @@
           "name": "event",
           "content": "ok",
           "children": [],
-          "chunks": [
-            {
-              "type": "text",
-              "value": "ok"
-            }
-          ],
+          "chunks": [{ "type": "text", "value": "ok" }],
           "depth": 0,
           "lineStart": 7,
           "lineEnd": 9
@@ -391,18 +265,9 @@
       "errors": [
         {
           "code": "dslMaxDepthExceeded",
-          "params": {
-            "maxDepth": "2",
-            "name": "event",
-            "line": "3"
-          }
+          "params": { "maxDepth": "2", "name": "event", "line": "3" }
         },
-        {
-          "code": "dslUnexpectedBlockEnd",
-          "params": {
-            "line": "10"
-          }
-        }
+        { "code": "dslUnexpectedBlockEnd", "params": { "line": "10" } }
       ]
     }
   ],
@@ -411,9 +276,7 @@
       "name": "[Post/Meta] 重复 Key 处理 -> 应当使用后出现的值进行覆盖并上报告警",
       "input": "@meta\ntitle: first\ntitle: second\n@end",
       "syntax": {
-        "blockNames": [
-          "meta"
-        ],
+        "blockNames": ["meta"],
         "maxDepth": 1,
         "nestableBlocks": []
       },
@@ -421,17 +284,13 @@
         "blocks": [],
         "title": "second"
       },
-      "warnings": [
-        "[DSL Warning] Duplicate key: title"
-      ]
+      "warnings": ["[DSL Warning] Duplicate key: title"]
     },
     {
       "name": "[Post/Meta] 保留 Key 冲突 -> 应当忽略 meta 块中名为 blocks 的非法 Key",
       "input": "@meta\nblocks: hacked\ntitle: ok\n@end",
       "syntax": {
-        "blockNames": [
-          "meta"
-        ],
+        "blockNames": ["meta"],
         "maxDepth": 1,
         "nestableBlocks": []
       },
@@ -439,9 +298,7 @@
         "blocks": [],
         "title": "ok"
       },
-      "warnings": [
-        "[DSL Warning] Reserved key: blocks"
-      ]
+      "warnings": ["[DSL Warning] Reserved key: blocks"]
     }
   ]
 }

@@ -252,7 +252,6 @@ watch(
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   max-width: 95%;
   z-index: 3;
-
   .copy-floating-button {
     position: absolute;
     top: 2.5rem;

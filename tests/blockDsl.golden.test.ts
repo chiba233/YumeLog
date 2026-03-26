@@ -116,6 +116,7 @@ interface BlockDslTransformFixture {
     name: string;
     input: string;
     expected: unknown;
+    errors?: DSLError[];
   }>;
   dashListErrorCase: {
     name: string;
@@ -216,11 +217,23 @@ const singleResourceErrorCases = singleResourceFixture.errorCases.map((testCase)
 const dashListCases = transformFixture.dashListCases.map((testCase) => ({
   name: testCase.name,
   run: () => {
-    const result = parseTypedDashObjectList<
-      Record<string, string | undefined> & { temp_id: string }
-    >(testCase.input);
+    if (testCase.errors) {
+      const errors = collectErrors((bucket) => {
+        const result = parseTypedDashObjectList<
+          Record<string, string | undefined> & { temp_id: string }
+        >(testCase.input, { onError: (error) => bucket.push(error) });
 
-    assert.deepEqual(stripTempIds(result), testCase.expected);
+        assert.deepEqual(stripTempIds(result), testCase.expected);
+      });
+
+      assert.deepEqual(errors, testCase.errors);
+    } else {
+      const result = parseTypedDashObjectList<
+        Record<string, string | undefined> & { temp_id: string }
+      >(testCase.input);
+
+      assert.deepEqual(stripTempIds(result), testCase.expected);
+    }
   },
 }));
 
@@ -322,6 +335,37 @@ const cases: Array<{ name: string; run: () => void }> = [
   ...singleResourceErrorCases,
 
   // --- [Common] 鲁棒性与压力测试 ---
+  {
+    name: "[Common/Robustness] dash-list 随机脏数据 -> 各种缩进和 marker 组合不应崩溃",
+    run: () => {
+      const parts = [
+        "- key: val\n",
+        "-key: val\n",
+        "-  key: val\n",
+        "  key: val\n",
+        " key: val\n",
+        "   key: val\n",
+        "  body: |\n",
+        "    multi line\n",
+        "      deep indent\n",
+        "broken line\n",
+        "- no-colon\n",
+        "  : empty-key\n",
+        "\n",
+        '- title: "quoted"\n',
+        "  desc: 'single'\n",
+        "- k:      spaced\n",
+      ] as const;
+
+      for (let seed = 1; seed <= 100; seed++) {
+        const source = createDeterministicDirtyText(seed, parts, 15);
+
+        assert.doesNotThrow(() => {
+          parseTypedDashObjectList(source);
+        });
+      }
+    },
+  },
   {
     name: "[Common/Robustness] 随机脏输入压力测试 -> 块级 DSL 解析链路应当永不崩溃并输出稳定",
     run: () => {

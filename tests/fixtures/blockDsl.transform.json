@@ -4,25 +4,180 @@
       "name": "[Parser/DashList] 基础解析 -> 应当支持引号包裹的标题与多行字面量内容",
       "input": "- title: \"Hello\"\n  body: |\n    line1\n      line2\n\n- title: 'World'\n  desc: done",
       "expected": [
-        {
-          "title": "Hello",
-          "body": "line1\n  line2"
-        },
-        {
-          "title": "World",
-          "desc": "done"
-        }
+        { "title": "Hello", "body": "line1\n  line2" },
+        { "title": "World", "desc": "done" }
       ]
     },
     {
       "name": "[Parser/DashList] 引号转义行为 -> 应当支持双引号内转义并保留单引号反斜杠",
       "input": "- title: \"a\\\"b\"\n  desc: 'c\\'d'",
+      "expected": [{ "title": "a\"b", "desc": "c\\'d" }]
+    },
+
+    {
+      "name": "[Parser/DashList/Indent] markerWidth=2 缩进 2 通过 -> 标准 '- ' marker 续行必须恰好 2 空格",
+      "input": "- a: 1\n  b: 2",
+      "expected": [{ "a": "1", "b": "2" }]
+    },
+    {
+      "name": "[Parser/DashList/Indent] markerWidth=2 缩进 1 拒绝 -> 少 1 空格必须报 dslFormatError",
+      "input": "- a: 1\n b: 2",
+      "expected": [{ "a": "1" }],
+      "errors": [{ "code": "dslFormatError", "params": { "raw": " b: 2" } }]
+    },
+    {
+      "name": "[Parser/DashList/Indent] markerWidth=2 缩进 3 拒绝 -> 多 1 空格必须报 dslFormatError",
+      "input": "- a: 1\n   b: 2",
+      "expected": [{ "a": "1" }],
+      "errors": [{ "code": "dslFormatError", "params": { "raw": "   b: 2" } }]
+    },
+    {
+      "name": "[Parser/DashList/Indent] markerWidth=1 缩进 1 通过 -> '-key' 无空格 marker 续行恰好 1 空格",
+      "input": "-a: 1\n b: 2\n c: 3",
+      "expected": [{ "a": "1", "b": "2", "c": "3" }]
+    },
+    {
+      "name": "[Parser/DashList/Indent] markerWidth=1 缩进 2 拒绝 -> 多 1 空格必须报 dslFormatError",
+      "input": "-a: 1\n  b: 2",
+      "expected": [{ "a": "1" }],
+      "errors": [{ "code": "dslFormatError", "params": { "raw": "  b: 2" } }]
+    },
+    {
+      "name": "[Parser/DashList/Indent] markerWidth=3 缩进 3 通过 -> '-  key' 宽 marker 续行恰好 3 空格",
+      "input": "-  a: 1\n   b: 2",
+      "expected": [{ "a": "1", "b": "2" }]
+    },
+    {
+      "name": "[Parser/DashList/Indent] markerWidth=3 缩进 2 拒绝 -> 少 1 空格必须报 dslFormatError",
+      "input": "-  a: 1\n  b: 2",
+      "expected": [{ "a": "1" }],
+      "errors": [{ "code": "dslFormatError", "params": { "raw": "  b: 2" } }]
+    },
+    {
+      "name": "[Parser/DashList/Indent] 混合 markerWidth -> 不同 item 各自独立锁定缩进",
+      "input": "- a: 1\n  b: 2\n-c: 3\n d: 4",
       "expected": [
-        {
-          "title": "a\"b",
-          "desc": "c\\'d"
-        }
+        { "a": "1", "b": "2" },
+        { "c": "3", "d": "4" }
       ]
+    },
+    {
+      "name": "[Parser/DashList/Indent] 全错缩进混排 -> 每一行都单独报错不影响后续 item",
+      "input": "- x: 1\n y: err\n   z: err\n- ok: yes\n  v: fine",
+      "expected": [{ "x": "1" }, { "ok": "yes", "v": "fine" }],
+      "errors": [
+        { "code": "dslFormatError", "params": { "raw": " y: err" } },
+        { "code": "dslFormatError", "params": { "raw": "   z: err" } }
+      ]
+    },
+
+    {
+      "name": "[Parser/DashList/Value] 冒号后无空格 -> value 直接紧跟冒号",
+      "input": "- key:value",
+      "expected": [{ "key": "value" }]
+    },
+    {
+      "name": "[Parser/DashList/Value] 冒号后 1 空格 -> 标准写法剥离 1 空格",
+      "input": "- key: value",
+      "expected": [{ "key": "value" }]
+    },
+    {
+      "name": "[Parser/DashList/Value] 冒号后 6 空格 -> 全部前导空格剥离",
+      "input": "- key:      value",
+      "expected": [{ "key": "value" }]
+    },
+    {
+      "name": "[Parser/DashList/Value] value 尾部空格 -> 应当原样保留不 trim",
+      "input": "- key: value   ",
+      "expected": [{ "key": "value   " }]
+    },
+    {
+      "name": "[Parser/DashList/Value] 冒号后只有空格 -> value 为空字符串",
+      "input": "- key:   ",
+      "expected": [{ "key": "" }]
+    },
+    {
+      "name": "[Parser/DashList/Value] 冒号后无内容 -> value 为空字符串",
+      "input": "- key:",
+      "expected": [{ "key": "" }]
+    },
+    {
+      "name": "[Parser/DashList/Value] value 含内部多空格 -> 中间空格原样保留",
+      "input": "- key: a   b   c",
+      "expected": [{ "key": "a   b   c" }]
+    },
+    {
+      "name": "[Parser/DashList/Value] key 前后空格 -> key 应当被 trim",
+      "input": "- key : val\n   key2 : val2",
+      "expected": [{ "key": "val" }],
+      "errors": [{ "code": "dslFormatError", "params": { "raw": "   key2 : val2" } }]
+    },
+    {
+      "name": "[Parser/DashList/Value] 续行 value 空格处理 -> 续行也遵守相同的前导空格剥离规则",
+      "input": "- a: 1\n  b:    spaced\n  c:tight",
+      "expected": [{ "a": "1", "b": "spaced", "c": "tight" }]
+    },
+
+    {
+      "name": "[Parser/DashList/Multi] stripWidth=4 精确剥离 -> 恰好 4 字符缩进剥离为无缩进",
+      "input": "- body: |\n    line",
+      "expected": [{ "body": "line" }]
+    },
+    {
+      "name": "[Parser/DashList/Multi] stripWidth=4 保留相对缩进 -> 6 字符缩进剥离后保留 2 空格",
+      "input": "- body: |\n      deep",
+      "expected": [{ "body": "  deep" }]
+    },
+    {
+      "name": "[Parser/DashList/Multi] stripWidth=3 紧凑 marker -> markerWidth=1 时 stripWidth=3",
+      "input": "-body: |\n   line1\n     indented\n   line3",
+      "expected": [{ "body": "line1\n  indented\nline3" }]
+    },
+    {
+      "name": "[Parser/DashList/Multi] stripWidth=5 宽 marker -> markerWidth=3 时 stripWidth=5",
+      "input": "-  body: |\n     line1\n       deep",
+      "expected": [{ "body": "line1\n  deep" }]
+    },
+    {
+      "name": "[Parser/DashList/Multi] 缩进不足退出 -> indent < stripWidth 的行终止多行回到续行",
+      "input": "- desc: |\n    hello\n    world\n  next: 456",
+      "expected": [{ "desc": "hello\nworld", "next": "456" }]
+    },
+    {
+      "name": "[Parser/DashList/Multi] 缩进恰好等于 markerWidth 退出 -> indent=2 < stripWidth=4 终止多行",
+      "input": "- desc: |\n    inside\n  after: done",
+      "expected": [{ "desc": "inside", "after": "done" }]
+    },
+    {
+      "name": "[Parser/DashList/Multi] 缩进 3 夹在中间退出 -> indent=3 < stripWidth=4 终止多行",
+      "input": "- desc: |\n    inside\n   not-enough: x",
+      "expected": [{ "desc": "inside" }],
+      "errors": [{ "code": "dslFormatError", "params": { "raw": "   not-enough: x" } }]
+    },
+    {
+      "name": "[Parser/DashList/Multi] 空行保留 -> 多行中的空行保留为换行符",
+      "input": "- body: |\n    para1\n\n    para2",
+      "expected": [{ "body": "para1\n\npara2" }]
+    },
+    {
+      "name": "[Parser/DashList/Multi] 连续空行保留 -> 多个连续空行全部保留",
+      "input": "- body: |\n    a\n\n\n    b",
+      "expected": [{ "body": "a\n\n\nb" }]
+    },
+    {
+      "name": "[Parser/DashList/Multi] 尾部空行修剪 -> trimEnd 去掉末尾空行产生的换行",
+      "input": "- body: |\n    text\n\n",
+      "expected": [{ "body": "text" }]
+    },
+    {
+      "name": "[Parser/DashList/Multi] 多行后新 item -> 多行结束后下一个 dash 正确开启新对象",
+      "input": "- body: |\n    line1\n    line2\n- next: ok",
+      "expected": [{ "body": "line1\nline2" }, { "next": "ok" }]
+    },
+    {
+      "name": "[Parser/DashList/Multi] 续行上的多行 -> 非首行属性也能开启多行并使用相同 stripWidth",
+      "input": "- name: test\n  body: |\n    hello\n    world\n  after: ok",
+      "expected": [{ "name": "test", "body": "hello\nworld", "after": "ok" }]
     }
   ],
   "dashListErrorCase": {
@@ -30,24 +185,9 @@
     "input": "  key: value\nabc\n- broken",
     "expected": [],
     "errors": [
-      {
-        "code": "dslIsolatedProperty",
-        "params": {
-          "raw": "  key: value"
-        }
-      },
-      {
-        "code": "dslUnrecognizedLine",
-        "params": {
-          "raw": "abc"
-        }
-      },
-      {
-        "code": "dslFormatError",
-        "params": {
-          "raw": "- broken"
-        }
-      }
+      { "code": "dslIsolatedProperty", "params": { "raw": "  key: value" } },
+      { "code": "dslUnrecognizedLine", "params": { "raw": "abc" } },
+      { "code": "dslFormatError", "params": { "raw": "- broken" } }
     ]
   },
   "postCases": [
@@ -55,34 +195,15 @@
       "name": "[Post/Transform] 基础转换 -> 应当将 AST 映射为包含元数据和块列表的文章结构",
       "input": "@meta\ntime: 2024-01-01\ntitle: hi\n@end\n@text\nhello\n@end\n@image\n- src: /a.webp\n  desc: wow\n@end\n@divider\n@end",
       "syntax": {
-        "blockNames": [
-          "meta",
-          "text",
-          "image",
-          "divider"
-        ],
+        "blockNames": ["meta", "text", "image", "divider"],
         "maxDepth": 1,
         "nestableBlocks": []
       },
       "expected": {
         "blocks": [
-          {
-            "type": "text",
-            "content": "hello"
-          },
-          {
-            "type": "image",
-            "content": [
-              {
-                "src": "/a.webp",
-                "desc": "wow"
-              }
-            ]
-          },
-          {
-            "type": "divider",
-            "content": ""
-          }
+          { "type": "text", "content": "hello" },
+          { "type": "image", "content": [{ "src": "/a.webp", "desc": "wow" }] },
+          { "type": "divider", "content": "" }
         ],
         "time": "2024-01-01",
         "title": "hi"
@@ -92,31 +213,15 @@
       "name": "[Post/Transform] 顺序稳定性 -> 在块内包含子指令时应当按原始顺序拆分块序列",
       "input": "@text\nhello\n@divider\n@end\nworld\n@end",
       "syntax": {
-        "blockNames": [
-          "meta",
-          "text",
-          "image",
-          "divider"
-        ],
+        "blockNames": ["meta", "text", "image", "divider"],
         "maxDepth": 2,
-        "nestableBlocks": [
-          "text"
-        ]
+        "nestableBlocks": ["text"]
       },
       "expected": {
         "blocks": [
-          {
-            "type": "text",
-            "content": "hello"
-          },
-          {
-            "type": "divider",
-            "content": ""
-          },
-          {
-            "type": "text",
-            "content": "world"
-          }
+          { "type": "text", "content": "hello" },
+          { "type": "divider", "content": "" },
+          { "type": "text", "content": "world" }
         ]
       }
     },
@@ -124,39 +229,16 @@
       "name": "[Post/Transform] 错误恢复 -> 损坏块后面跟正常文本时块顺序仍能正确恢复",
       "input": "@text\n@image\n- src: /a.webp\n@end\nhello $$bold(ok)$$\n@divider\n@end\nworld\n@end",
       "syntax": {
-        "blockNames": [
-          "meta",
-          "text",
-          "image",
-          "divider"
-        ],
+        "blockNames": ["meta", "text", "image", "divider"],
         "maxDepth": 2,
-        "nestableBlocks": [
-          "text"
-        ]
+        "nestableBlocks": ["text"]
       },
       "expected": {
         "blocks": [
-          {
-            "type": "image",
-            "content": [
-              {
-                "src": "/a.webp"
-              }
-            ]
-          },
-          {
-            "type": "text",
-            "content": "hello $$bold(ok)$$"
-          },
-          {
-            "type": "divider",
-            "content": ""
-          },
-          {
-            "type": "text",
-            "content": "world"
-          }
+          { "type": "image", "content": [{ "src": "/a.webp" }] },
+          { "type": "text", "content": "hello $$bold(ok)$$" },
+          { "type": "divider", "content": "" },
+          { "type": "text", "content": "world" }
         ]
       }
     }

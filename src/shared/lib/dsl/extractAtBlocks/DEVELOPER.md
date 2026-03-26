@@ -4,107 +4,266 @@
 
 ---
 
-## 1. 核心函数职责 (Function Responsibilities)
+## 1. 架构概览
 
-### 1.1 `parseDSL.ts` (第一阶段：解析外壳)
+```
+原始 DSL 文本
+    │
+    ▼
+parseDSL.ts          第一阶段：行扫描 → AST (DSLTree)
+    │
+    ▼
+astToPost.ts         第二阶段：AST → Post 对象
+    │  查询
+    ▼
+blockHandlers.ts     块行为注册表 (handler registry)
+    │  调用
+    ▼
+parseDashList.ts     子解析器：dash-list / 多行字面量
+```
 
-- **`parseDirective(line, blockNameSet)`**:
-    - **职责**: 识别当前行是否为 `@name` 或 `@end` 指令。
-    - **逻辑**: 检查前缀、校验名称合法性、匹配已知块名。
-- **`flushFrameText(frame, trimTrailing)`**:
-    - **职责**: 将当前 `textBuffer`（暂存的行）转换为一个 `DSLTextChunk` 并存入 `chunks`。
-    - **逻辑**: 处理末尾空行修剪，确保文本块的连贯性。
-- **`buildNode(frame, depth, lineEnd)`**:
-    - **职责**: 将一个解析状态帧（Frame）封装为完整的 `DSLNode`。
-    - **逻辑**: 计算 content 字符串，整合 chunks 和 children。
-- **`closeFrame(stack, root, lineEnd)`**:
-    - **职责**: 处理块闭合时的树形嵌套。
-    - **逻辑**: 从栈中弹出当前帧，将其作为子节点添加到父帧或根节点中。
-- **`parseDSL(text, options)`**:
-    - **职责**: **总调度器**。
-    - **逻辑**: 逐行扫描、管理状态栈、处理转义字符、处理未闭合块的报错回退。
+所有 block 类型的行为定义集中在 `blockHandlers.ts` 一处：
 
-### 1.2 `astToPost.ts` (第二阶段：转换语义)
-
-- **`applyMeta(content, target)`**:
-    - **职责**: 解析 `@meta` 内容。
-    - **逻辑**: 将 `key: value` 行提取并写入目标对象的根部。
-- **`appendNode(target, node, options)`**:
-    - **职责**: **核心分发器**。
-    - **逻辑**: 根据节点的 `AstTransformMode`（如 `metadata` / `block` / `chunked-text`）决定该节点如何转换为最终结果。
-- **`createParsedBlock(type, content, options)`**:
-    - **职责**: 业务块构造器。
-    - **逻辑**: 调用 `blockParsers` 对内容进行深度解析（如图片列表）。
-- **`appendChunkedTextNode(target, node, options)`**:
-    - **职责**: 针对 `@text` 块的特殊处理。
-    - **逻辑**: 保持内部文本段和嵌套块的交替顺序。
-
-### 1.3 `parseDashList.ts` (子解析器)
-
-- **`parseTypedDashObjectList(content, options)`**:
-    - **职责**: 解析 `- key: value` 列表。
-    - **逻辑**: 处理短横线起始行、键值对分割、引号剥离。
-- **`flushMulti()`**:
-    - **职责**: 处理 `|` 引导的多行文本块。
-    - **逻辑**: 计算并移除基础缩进，还原多行字符串。
+```typescript
+export const BLOCK_HANDLERS: Record<DSLBlockName, BlockHandler> = {
+  meta: { transform: "metadata" },
+  text: { nestable: true, transform: "chunked-text", buildBlock: createStringBlock("text") },
+  image: { transform: "block", buildBlock: (content, tempId, onError) => ({ ... }) },
+  divider: { transform: "block", buildBlock: createStringBlock("divider") },
+};
+```
 
 ---
 
-## 2. 调试打 Log 指南 (Debug & Logging)
+## 2. 核心文件职责
 
-当出现特定问题时，请在以下位置插入 `console.log`：
+### 2.1 `blockHandlers.ts` — 块行为注册表 (单一数据源)
 
-### 2.1 怀疑块识别失败 (如：页面直接显示了 @text)
+每个 block 在此声明三项属性：
 
-- **位置**: `parseDSL.ts` -> `parseDSL` 循环内部。
-- **Log 内容**: `console.log('Line:', lineIndex, 'Directive:', directive);`
-- **目的**: 确认 `parseDirective` 是否正确识别了起始和结束标记。
+| 属性            | 类型                                         | 说明                  |
+|---------------|--------------------------------------------|---------------------|
+| `transform`   | `"metadata" \| "block" \| "chunked-text"`  | AST 节点如何映射到最终 Post  |
+| `nestable?`   | `boolean`                                  | 是否允许子块嵌套            |
+| `buildBlock?` | `(content, tempId, onError?) => PostBlock` | 内容解析 + PostBlock 构建 |
 
-### 2.2 怀疑嵌套结构乱了 (如：子块跑到了父块外面)
+派生值自动从注册表计算，无需手动同步：
 
-- **位置**: `parseDSL.ts` -> `closeFrame` 底部。
-- **Log 内容**: `console.log('Closing:', node.name, 'Stack Depth:', stack.length);`
-- **目的**: 观察栈的弹出顺序是否与 DSL 结构匹配。
+- `NESTABLE_BLOCK_NAMES` — 从 `handler.nestable === true` 的 key 中收集
+- `createFallbackTextBlock` — 未知块的降级处理
 
-### 2.3 怀疑 Meta 丢失 (如：标题、日期读取不到)
+### 2.2 `parseDSL.ts` — 第一阶段：解析外壳
 
-- **位置**: `astToPost.ts` -> `applyMeta` 循环内。
-- **Log 内容**: `console.log('Meta Entry:', { key, value });`
-- **目的**: 确认冒号分割逻辑是否正确，是否因为 key 的拼写或空格导致失败。
+- `parseDirective(line, blockNameSet)` — 识别 `@name` / `@end` 指令
+- `processLine(...)` — 管理状态栈、处理转义、嵌套校验
+- `parseDSL(text, options)` — 总调度器，逐行扫描产出 `DSLTree`
 
-### 2.4 怀疑图片或列表解析错误
+### 2.3 `astToPost.ts` — 第二阶段：转换语义
 
-- **位置**: `parseDashList.ts` -> `parseTypedDashObjectList` 循环末尾。
-- **Log 内容**: `console.log('Current Item:', current);`
-- **目的**: 检查每个 `-` 引导的项目是否被正确识别，属性是否丢失。
+- `appendNode(target, node, options)` — 核心分发器，查询 `BLOCK_HANDLERS[name].transform` 决定行为
+- `buildBlock(node, onError)` — 调用 handler 的 `buildBlock` 构建 PostBlock
+- `applyMeta(content, target)` — 解析 `@meta` 的 `key: value` 行写入 Post 根部
 
-### 2.5 怀疑多行字符串 (|) 缩进不对
+### 2.4 `parseDashList.ts` — 子解析器
 
-- **位置**: `parseDashList.ts` -> `flushMulti` 内部。
-- **Log 内容**: `console.log('MultiBuffer:', multiBuffer, 'MinIndent:', minIndent);`
-- **目的**: 确认缩进计算是否过载，导致文本被过度修剪或没修剪。
+- `analyzeDashListLine(line)` — 结构化分析单行（indent / marker / key / value / multiline）
+- `parseTypedDashObjectList(content)` — 消费 `analyzeDashListLine` 解析完整列表
 
----
+缩进规则：
 
-## 3. 核心坑点与设计决策
+```
+- name: test          ← 新 item，markerWidth = 2（"- " 的长度）
+  value: 456          ← 续行，indent 必须 === markerWidth (2)
+  body: |             ← 多行指示符
+    line1             ← 多行内容，indent >= markerWidth + 2 (4)
+    line2
+  next: done          ← 回到续行层级 (2)
+```
 
-- **`@end` 必须独占一行**: 解析器是基于行扫描的。
-- **转义符 `\`**: 仅在行首有效（如 `\@text`）。行中的 `@` 不需要转义。
-- **文本块合并**: 连续的文字行会被合并为一个 `DSLTextChunk`，以减少 AST 的复杂度。
-
----
-
-## 4. 扩展指南 (新增块类型流程)
-
-1. **`types.ts`**: 将新名加入 `DSL_BLOCK_NAMES`。
-2. **`astToPost.ts`**: 在 `AST_TRANSFORM_MODES` 中定义其模式（通常为 `block`）。
-3. **`blockParsers.ts`**: (可选) 如果块内有特殊语法，注册解析器。
-4. **`src/shared/types/blog.ts`**: 定义对应的业务 `PostBlock` 类型。
+- marker 宽度动态检测：`-key: val`（宽度 1）和 `- key: val`（宽度 2）均合法
+- 续行缩进严格锁定：必须等于首行 marker 宽度
+- 多行内容缩进：`markerWidth + 2`，剥离时固定按此宽度裁切
 
 ---
 
-## 5. 测试验证
+## 3. 新增块类型流程
 
-- **指令**: `pnpm run test:dsl`
-- **文件**: `tests/blockDsl.golden.test.ts`
-- **机制**: 对比解析后的 JSON 与 `.golden` 预设文件。
+### 3.1 添加简单块（string 内容）
+
+以新增 `@quote` 块为例：
+
+**第 1 步** — `types.ts`：注册块名
+
+```typescript
+export const DSL_BLOCK_NAMES = ["image", "meta", "divider", "text", "quote"] as const;
+```
+
+**第 2 步** — `blockHandlers.ts`：声明 handler
+
+```typescript
+export const BLOCK_HANDLERS: Record<DSLBlockName, BlockHandler> = {
+  // ... 现有 handlers
+  quote: {
+    transform: "block",
+    buildBlock: createStringBlock("quote"),
+  },
+};
+```
+
+**第 3 步** — `src/shared/types/blog.ts`：添加 PostBlock 类型
+
+```typescript
+export interface QuotePostBlock extends BaseBlock<"quote", string> {
+  content: string;
+  temp_id: string;
+}
+
+export type PostBlock = TextPostBlock | ImagePostBlock | DividerPostBlock | QuotePostBlock;
+```
+
+完成。`astToPost.ts` 和 `parseDSL.ts` 不需要改动。
+
+### 3.2 添加带自定义解析器的块
+
+以新增 `@gallery` 块（内容为 dash-list 图片列表）为例：
+
+```typescript
+// blockHandlers.ts
+import type { GalleryItem } from "../../../types/blog.ts";
+
+export const BLOCK_HANDLERS: Record<DSLBlockName, BlockHandler> = {
+  // ... 现有 handlers
+  gallery: {
+    transform: "block",
+    buildBlock: (content, tempId, onError) => ({
+      type: "gallery",
+      content: parseTypedDashObjectList<GalleryItem>(content, { onError }),
+      temp_id: tempId,
+    }),
+  },
+};
+```
+
+### 3.3 添加可嵌套的块
+
+以新增 `@section` 块为例（允许子块，行为类似 `@text`）：
+
+```typescript
+// blockHandlers.ts
+export const BLOCK_HANDLERS: Record<DSLBlockName, BlockHandler> = {
+  // ... 现有 handlers
+  section: {
+    nestable: true,                            // ← 允许子块
+    transform: "chunked-text",                 // ← 文本+子块交替
+    buildBlock: createStringBlock("section"),
+  },
+};
+```
+
+设置 `nestable: true` 后，`NESTABLE_BLOCK_NAMES` 会自动包含 `"section"`，无需手动同步。
+
+DSL 输入示例：
+
+```
+@section
+这是外层文字
+@divider
+@end
+这是分隔符后的文字
+@end
+```
+
+产出结构：
+
+```json
+{
+  "blocks": [
+    {
+      "type": "section",
+      "content": "这是外层文字"
+    },
+    {
+      "type": "divider",
+      "content": ""
+    },
+    {
+      "type": "section",
+      "content": "这是分隔符后的文字"
+    }
+  ]
+}
+```
+
+---
+
+## 4. Dash-List 数据结构
+
+`parseTypedDashObjectList<T>` 将 dash-list 文本解析为 `T[]`。
+
+### 输入
+
+```
+- src: /a.webp
+  desc: "风景照"
+- src: /b.webp
+  desc: wow
+  body: |
+    多行内容第一行
+    多行内容第二行
+```
+
+### 产出
+
+```json
+[
+  {
+    "temp_id": "...",
+    "src": "/a.webp",
+    "desc": "风景照"
+  },
+  {
+    "temp_id": "...",
+    "src": "/b.webp",
+    "desc": "wow",
+    "body": "多行内容第一行\n多行内容第二行"
+  }
+]
+```
+
+### 缩进违规示例
+
+```
+- test: 123
+ x: 1              ← dslFormatError（indent 1 ≠ markerWidth 2）
+   y: 2            ← dslFormatError（indent 3 ≠ 2）
+  z: 3             ← OK（indent 2 === 2）
+```
+
+---
+
+## 5. 调试指南
+
+| 症状             | 打 Log 位置                           | 内容                                       |
+|----------------|------------------------------------|------------------------------------------|
+| 页面直接显示 `@text` | `parseDSL.ts` → `processLine`      | `directive` 值，确认指令是否被识别                  |
+| 子块跑到父块外面       | `parseDSL.ts` → `closeFrame`       | `node.name` + `stack.length`，确认弹栈顺序      |
+| Meta 标题/日期读不到  | `astToPost.ts` → `applyMeta`       | `{ key, value }`，确认冒号分割                  |
+| 图片列表解析错误       | `parseDashList.ts` → `analysis` 变量 | `analyzeDashListLine(raw)` 的返回值          |
+| 多行字符串被截断       | `parseDashList.ts` → `flushMulti`  | `multiBuffer` + `itemMarkerWidth`，确认剥离宽度 |
+
+---
+
+## 6. 核心约束
+
+- `@end` 必须独占一行（解析器基于行扫描）
+- 转义符 `\` 仅在行首有效（如 `\@text`），行中的 `@` 不需要转义
+- 连续文字行会合并为单个 `DSLTextChunk`
+- dash-list 续行缩进必须严格等于 marker 宽度，不是"有空格就收"
+
+---
+
+## 7. 测试验证
+
+- 命令: `pnpm run test:dsl`
+- 文件: `tests/blockDsl.golden.test.ts`
+- Fixture: `tests/fixtures/blockDsl.*.json`

@@ -103,14 +103,9 @@
         "spareUrl": "/spare-blog"
       }
     },
-    "listFileNames": [
-      "bad.dsl",
-      "missing.dsl"
-    ],
+    "listFileNames": ["bad.dsl", "missing.dsl"],
     "badDsl": "@meta\ntitle: Bad\ntime: 20240101\n@end\n@image\noops\n@end\n@text\nhello\n@end",
-    "expectedTitles": [
-      "Bad"
-    ],
+    "expectedTitles": ["Bad"],
     "expectedMessages": [
       {
         "level": "error",

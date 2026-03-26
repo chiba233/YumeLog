@@ -24,17 +24,11 @@
   },
   "blog": {
     "listPath": "/blog/list.json",
-    "fileNames": [
-      "welcome.dsl",
-      "update.dsl"
-    ],
+    "fileNames": ["welcome.dsl", "update.dsl"],
     "files": {
       "welcome.dsl": "@meta\ntitle: Welcome\ntime: 20240102\n@end\n@text\nHello\n@end",
       "update.dsl": "@meta\ntitle: Update\ntime: 20240203\n@end\n@text\nWorld\n@end"
     },
-    "expectedTitles": [
-      "Update",
-      "Welcome"
-    ]
+    "expectedTitles": ["Update", "Welcome"]
   }
 }

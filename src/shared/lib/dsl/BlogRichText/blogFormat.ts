@@ -1,48 +1,47 @@
-// noinspection DuplicatedCode
+import type { ParseError, TagHandler, TextToken as LibTextToken } from "yume-dsl-rich-text";
+import { createParser } from "yume-dsl-rich-text";
+import type { TextToken } from "./types";
+import { BLOCK_TYPES } from "./types";
+import { TAG_HANDLERS } from "./handlers";
+import { emitLibraryError, withRichTextErrorBatch } from "./errors";
 
-import type { ParseContext, ParseRichTextOptions, TextToken } from "./types";
-import { extractText } from "./builders.ts";
-import { tryConsumeEscape, tryConsumeTagClose, tryConsumeTagStart } from "./consumers.ts";
-import { finalizeUnclosedTags, flushBuffer } from "./context.ts";
-import { withRichTextErrorBatch } from "./errors";
+const attachTempIds = (tokens: LibTextToken[]): TextToken[] =>
+  tokens.map((t) => ({
+    ...t,
+    temp_id: t.id,
+    value: Array.isArray(t.value) ? attachTempIds(t.value) : t.value,
+  })) as TextToken[];
+
+const BLOCK_TAG_LIST: string[] = [...BLOCK_TYPES];
+const BLOG_RICH_TEXT_PARSER = createParser({
+  handlers: TAG_HANDLERS as Record<string, TagHandler>,
+  blockTags: BLOCK_TAG_LIST,
+});
 
 export const parseRichText = (
   text: string,
   depthLimit = 50,
   silent = false,
-  options: ParseRichTextOptions = {},
+  options: { mode?: "render" | "highlight" } = {},
 ): TextToken[] => {
   if (!text) return [];
 
   return withRichTextErrorBatch(silent, () => {
-    const ctx: ParseContext = {
-      text,
-      depthLimit,
-      silent,
-      mode: options.mode ?? "render",
-      root: [],
-      stack: [],
-      buffer: "",
-      i: 0,
-    };
-
-    while (ctx.i < ctx.text.length) {
-      if (tryConsumeTagStart(ctx, parseRichText)) continue;
-      if (tryConsumeTagClose(ctx)) continue;
-      if (tryConsumeEscape(ctx)) continue;
-
-      ctx.buffer += ctx.text[ctx.i];
-      ctx.i++;
-    }
-
-    flushBuffer(ctx);
-    finalizeUnclosedTags(ctx);
-    return ctx.root;
+    return attachTempIds(
+      BLOG_RICH_TEXT_PARSER.parse(text, {
+        depthLimit,
+        mode: options.mode ?? "render",
+        onError: silent ? undefined : (error: ParseError) => emitLibraryError(error, depthLimit),
+      }),
+    );
   });
 };
 
 export const stripRichText = (text?: string): string => {
   if (!text) return "";
-  const tokens = parseRichText(text, 50, true);
-  return extractText(tokens);
+
+  return BLOG_RICH_TEXT_PARSER.strip(text, {
+    depthLimit: 50,
+    mode: "render",
+  });
 };

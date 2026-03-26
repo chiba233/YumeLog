@@ -1,30 +1,15 @@
 // noinspection DuplicatedCode,ES6PreferShortImport
 
-import type {
-  DividerPostBlock,
-  ImagePostBlock,
-  PostBlock,
-  TextPostBlock,
-} from "../../../types/blog.ts";
-import {
-  BLOCK_NAME_DIVIDER,
-  BLOCK_NAME_IMAGE,
-  BLOCK_NAME_META,
-  BLOCK_NAME_TEXT,
-  RESERVED_META_KEY_BLOCKS,
-  TEMP_ID_PREFIX_NODE,
-} from "./constants.ts";
-import { blockParsers } from "./blockParsers.ts";
-import { createDSLTempId } from "./createDSLTempId.ts";
+import type { PostBlock } from "../../../types/blog.ts";
+import { RESERVED_META_KEY_BLOCKS } from "./constants.ts";
+import { BLOCK_HANDLERS, createFallbackTextBlock } from "./blockHandlers.ts";
 import { DSL_BLOCK_NAMES, type DSLBlockName, type DSLNode, type DSLTree } from "./types.ts";
 import type { DSLError } from "./dslError.ts";
 import { findKeySeparator, splitTextLines } from "./textLines.ts";
 
-const applyMeta = (
-  content: string,
-  target: Record<string, unknown>,
-  reservedKeys: Set<string> = new Set([RESERVED_META_KEY_BLOCKS]),
-) => {
+const RESERVED_META_KEYS: ReadonlySet<string> = new Set([RESERVED_META_KEY_BLOCKS]);
+
+const applyMeta = (content: string, target: Record<string, unknown>) => {
   for (const line of splitTextLines(content)) {
     if (!line) continue;
 
@@ -34,7 +19,7 @@ const applyMeta = (
     const key = line.slice(0, sep.index).trim();
     const value = line.slice(sep.index + sep.length);
 
-    if (reservedKeys.has(key)) {
+    if (RESERVED_META_KEYS.has(key)) {
       console.error(`[DSL Warning] Reserved key: ${key}`);
       continue;
     }
@@ -52,74 +37,16 @@ export interface AstToPostOptions {
 }
 
 type FinalPost = Record<string, unknown> & { blocks: PostBlock[] };
-type PostBlockType = PostBlock["type"];
-type AstTransformMode = "metadata" | "block" | "chunked-text" | "text-fallback";
 
-const DSL_POST_BLOCK_TYPES = [
-  BLOCK_NAME_IMAGE,
-  BLOCK_NAME_DIVIDER,
-  BLOCK_NAME_TEXT,
-] as const satisfies readonly PostBlockType[];
-type DSLPostBlockType = (typeof DSL_POST_BLOCK_TYPES)[number];
+const isDslBlockName = (name: string): name is DSLBlockName =>
+  (DSL_BLOCK_NAMES as readonly string[]).includes(name);
 
-const AST_TRANSFORM_MODES: Record<DSLBlockName, AstTransformMode> = {
-  [BLOCK_NAME_META]: "metadata",
-  [BLOCK_NAME_IMAGE]: "block",
-  [BLOCK_NAME_DIVIDER]: "block",
-  [BLOCK_NAME_TEXT]: "chunked-text",
-};
-
-const createTextBlock = (content: string): PostBlock => ({
-  type: BLOCK_NAME_TEXT,
-  content,
-  temp_id: createDSLTempId(TEMP_ID_PREFIX_NODE),
-});
-
-const isDslBlockName = (nodeName: string): nodeName is DSLBlockName => {
-  return (DSL_BLOCK_NAMES as readonly string[]).includes(nodeName);
-};
-
-const isPostBlockType = (nodeName: string): nodeName is DSLPostBlockType => {
-  return (DSL_POST_BLOCK_TYPES as readonly string[]).includes(nodeName);
-};
-
-const resolveTransformMode = (nodeName: string): AstTransformMode => {
-  if (!isDslBlockName(nodeName)) {
-    return "text-fallback";
-  }
-
-  return AST_TRANSFORM_MODES[nodeName];
-};
-
-const createParsedBlock = (
-  type: PostBlockType,
-  content: string,
-  options: AstToPostOptions,
-  tempId: string = createDSLTempId(TEMP_ID_PREFIX_NODE),
-): PostBlock => {
-  const parser = blockParsers[type];
-  const parsedContent = parser ? parser(content, { onError: options.onError }) : content;
-
-  switch (type) {
-    case BLOCK_NAME_TEXT:
-      return {
-        type,
-        content: typeof parsedContent === "string" ? parsedContent : content,
-        temp_id: tempId,
-      } satisfies TextPostBlock;
-    case BLOCK_NAME_IMAGE:
-      return {
-        type,
-        content: Array.isArray(parsedContent) ? parsedContent : [],
-        temp_id: tempId,
-      } satisfies ImagePostBlock;
-    case BLOCK_NAME_DIVIDER:
-      return {
-        type,
-        content: typeof parsedContent === "string" ? parsedContent : content,
-        temp_id: tempId,
-      } satisfies DividerPostBlock;
-  }
+const buildBlock = (node: DSLNode, onError?: (error: DSLError) => void): PostBlock => {
+  const handler = isDslBlockName(node.name) ? BLOCK_HANDLERS[node.name] : null;
+  return (
+    handler?.buildBlock?.(node.content, node.temp_id, onError) ??
+    createFallbackTextBlock(node.content)
+  );
 };
 
 const appendChildren = (target: FinalPost, node: DSLNode, options: AstToPostOptions): void => {
@@ -132,14 +59,14 @@ const appendChunkedTextNode = (
   options: AstToPostOptions,
 ): void => {
   if (node.children.length === 0) {
-    target.blocks.push(createParsedBlock(BLOCK_NAME_TEXT, node.content, options, node.temp_id));
+    target.blocks.push(buildBlock(node, options.onError));
     return;
   }
 
   for (const chunk of node.chunks) {
     if (chunk.type === "text") {
       if (chunk.value !== "") {
-        target.blocks.push(createTextBlock(chunk.value));
+        target.blocks.push(createFallbackTextBlock(chunk.value));
       }
       continue;
     }
@@ -149,25 +76,25 @@ const appendChunkedTextNode = (
 };
 
 const appendNode = (target: FinalPost, node: DSLNode, options: AstToPostOptions): void => {
-  switch (resolveTransformMode(node.name)) {
+  const handler = isDslBlockName(node.name) ? BLOCK_HANDLERS[node.name] : null;
+
+  if (!handler) {
+    target.blocks.push(createFallbackTextBlock(node.content));
+    appendChildren(target, node, options);
+    return;
+  }
+
+  switch (handler.transform) {
     case "metadata":
       applyMeta(node.content, target);
       appendChildren(target, node, options);
       return;
     case "block":
-      if (isPostBlockType(node.name)) {
-        target.blocks.push(createParsedBlock(node.name, node.content, options, node.temp_id));
-      } else {
-        target.blocks.push(createTextBlock(node.content));
-      }
+      target.blocks.push(buildBlock(node, options.onError));
       appendChildren(target, node, options);
       return;
     case "chunked-text":
       appendChunkedTextNode(target, node, options);
-      return;
-    case "text-fallback":
-      target.blocks.push(createTextBlock(node.content));
-      appendChildren(target, node, options);
       return;
   }
 };

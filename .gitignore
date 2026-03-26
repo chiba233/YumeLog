@@ -19,6 +19,7 @@ pnpm-workspace.yaml
 
 /cypress/videos/
 /cypress/screenshots/
+/yumeDSL/
 
 # Editor directories and files
 .vscode/*
@@ -31,3 +32,4 @@ pnpm-workspace.yaml
 *.sw?
 
 .eslintcache
+/yumeDSL/

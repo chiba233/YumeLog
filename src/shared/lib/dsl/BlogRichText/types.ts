@@ -16,23 +16,45 @@ export const RICH_TYPES = [
   "date",
 ] as const;
 
-export const BLOCK_TYPES = ["info", "warning", "center", "raw-code", "collapse"] as const;
-export const TITLED_BLOCK_TYPES = ["info", "warning", "collapse"] as const;
-export const RAW_CAPABLE_RICH_TYPES = ["info", "warning", "collapse", "raw-code"] as const;
-
 export type RichType = (typeof RICH_TYPES)[number];
+export const BLOCK_TYPES = ["info", "warning", "center", "raw-code", "collapse"] as const;
 export type BlockType = (typeof BLOCK_TYPES)[number];
-export type TitledBlockType = (typeof TITLED_BLOCK_TYPES)[number];
-export type RichTagName = string;
-export type ParseRichTextMode = "render" | "highlight";
 
-export interface ParseRichTextOptions {
-  mode?: ParseRichTextMode;
-}
+const SIMPLE_INLINE_EXCLUDED_TYPES = new Set<RichType>([
+  "link",
+  "info",
+  "warning",
+  "raw-code",
+  "collapse",
+  "fromNow",
+  "date",
+]);
+
+export const SIMPLE_INLINE_TYPES = RICH_TYPES.filter(
+  (
+    type,
+  ): type is Exclude<
+    RichType,
+    "link" | "info" | "warning" | "raw-code" | "collapse" | "fromNow" | "date"
+  > => !SIMPLE_INLINE_EXCLUDED_TYPES.has(type),
+);
+
+export const TITLED_BLOCK_TYPES = BLOCK_TYPES.filter(
+  (type): type is Exclude<BlockType, "center" | "raw-code"> =>
+    type !== "center" && type !== "raw-code",
+);
+export type TitledBlockType = (typeof TITLED_BLOCK_TYPES)[number];
+
+export const RAW_CAPABLE_RICH_TYPES = RICH_TYPES.filter(
+  (type): type is Extract<RichType, "info" | "warning" | "raw-code" | "collapse"> =>
+    type === "info" || type === "warning" || type === "raw-code" || type === "collapse",
+);
 
 export interface TextToken {
   type: RichType | "text";
   value: string | TextToken[];
+  id: string;
+  temp_id: string;
   codeLang?: SupportedCodeLang;
   label?: string;
   title?: string;
@@ -40,68 +62,10 @@ export interface TextToken {
   format?: string;
   timeLang?: string;
   url?: string;
-  temp_id: string;
+  [key: string]: unknown;
 }
 
-export type TokenDraft = Omit<TextToken, "temp_id">;
+export type TokenDraft = Omit<TextToken, "temp_id" | "id">;
 
-export interface ParseStackNode {
-  tag: RichTagName;
-  richType: RichType | null;
-  tokens: TextToken[];
-  openPos: number;
-  openLen: number;
-}
-
-export interface ParseContext {
-  text: string;
-  depthLimit: number;
-  silent: boolean;
-  mode: ParseRichTextMode;
-  root: TextToken[];
-  stack: ParseStackNode[];
-  buffer: string;
-  i: number;
-}
-
-export interface TagStartInfo {
-  tag: string;
-  tagOpenPos: number;
-  tagNameEnd: number;
-  inlineContentStart: number;
-}
-
-export interface ComplexTagParseResult {
-  handled: boolean;
-  nextIndex: number;
-  token?: TextToken;
-  fallbackText?: string;
-  error?: {
-    key:
-      | "richTextBlockNotClosed"
-      | "richTextRawNotClosed"
-      | "richTextBlockCloseMalformed"
-      | "richTextRawCloseMalformed";
-    index: number;
-    length?: number;
-  };
-}
-
-export interface TagHead {
-  tag: string;
-  tagStart: number;
-  tagNameEnd: number;
-  argStart: number;
-}
-
-export type InlineParser = (tokens: TextToken[]) => TokenDraft;
-export type RawParser = (arg: string | undefined, content: string) => TokenDraft;
-export type BlockParser = (arg: string | undefined, content: TextToken[]) => TokenDraft;
-
-export interface TagHandler {
-  inline?: InlineParser;
-  raw?: RawParser;
-  block?: BlockParser;
-}
-
-export type TagHandlerMap = Partial<Record<RichType, TagHandler>>;
+export type { TagHandler } from "yume-dsl-rich-text";
+export type TagHandlerMap = Partial<Record<RichType, import("yume-dsl-rich-text").TagHandler>>;

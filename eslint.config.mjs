@@ -8,6 +8,7 @@ export default tseslint.config(
   {
     ignores: [
       "dist/**",
+      "yumeDSL/**",
       "node_modules/**",
       ".vscode/**",
       ".idea/**",

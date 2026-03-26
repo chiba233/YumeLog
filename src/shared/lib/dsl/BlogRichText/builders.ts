@@ -1,101 +1,20 @@
-import type { RichType, TextToken, TitledBlockType, TokenDraft } from "./types";
+import type { RichType } from "./types";
+import type { TextToken, TokenDraft } from "yume-dsl-rich-text";
+import { createToken, extractText, parsePipeArgs, unescapeInline } from "yume-dsl-rich-text";
 import commonI18n from "@/data/I18N/commonI18n.json";
-import { readEscapedSequence, unescapeInline } from "./escape";
-import { ESCAPE_CHAR, TAG_DIVIDER } from "./constants";
 import { lang } from "@/shared/lib/app/setupLang.ts";
 import { $message } from "@/shared/lib/app/msgUtils.ts";
-import { createToken } from "@/shared/lib/dsl/BlogRichText/createToken.ts";
 import {
   resolveSupportedCodeLang,
   type SupportedCodeLang,
 } from "@/shared/lib/external/codeLang.ts";
 
+export { extractText, parsePipeArgs } from "yume-dsl-rich-text";
+
 type CommonI18nKeys = keyof typeof commonI18n;
 type I18nMap = Record<string, string>;
+
 const createTextToken = (value: string): TextToken => createToken({ type: "text", value });
-
-export const extractText = (tokens?: TextToken[]): string => {
-  if (!tokens?.length) return "";
-  return tokens.map((t) => (typeof t.value === "string" ? t.value : extractText(t.value))).join("");
-};
-
-export const materializeTextTokens = (tokens: TextToken[]): TextToken[] => {
-  return tokens.map((token) => {
-    if (typeof token.value === "string") {
-      return token.type === "text" ? { ...token, value: unescapeInline(token.value) } : token;
-    }
-
-    return {
-      ...token,
-      value: materializeTextTokens(token.value),
-    };
-  });
-};
-
-export interface PipeArgs {
-  parts: TextToken[][];
-  text: (index: number) => string;
-  materializedTokens: (index: number) => TextToken[];
-  materializedTailTokens: (startIndex: number) => TextToken[];
-}
-
-export const splitTokensByPipe = (tokens: TextToken[]): TextToken[][] => {
-  const parts: TextToken[][] = [[]];
-
-  for (const token of tokens) {
-    if (token.type !== "text" || typeof token.value !== "string") {
-      parts[parts.length - 1].push(token);
-      continue;
-    }
-
-    let buffer = "";
-    let i = 0;
-    const val = token.value;
-
-    const flushText = () => {
-      if (buffer) {
-        parts[parts.length - 1].push(createTextToken(buffer));
-        buffer = "";
-      }
-    };
-
-    while (i < val.length) {
-      const [escaped, next] = readEscapedSequence(val, i);
-      if (escaped !== null) {
-        buffer += ESCAPE_CHAR + escaped;
-        i = next;
-        continue;
-      }
-
-      if (val[i] === TAG_DIVIDER) {
-        flushText();
-        parts.push([]);
-        i++;
-        while (i < val.length && val[i] === " ") i++;
-        continue;
-      }
-
-      buffer += val[i];
-      i++;
-    }
-
-    flushText();
-  }
-  return parts;
-};
-
-export const parsePipeArgs = (tokens: TextToken[]): PipeArgs => {
-  const parts = splitTokensByPipe(tokens);
-
-  return {
-    parts,
-    text: (index) => unescapeInline(extractText(parts[index] ?? [])).trim(),
-    materializedTokens: (index) => materializeTextTokens(parts[index] ?? []),
-    materializedTailTokens: (startIndex) => materializeTextTokens(parts.slice(startIndex).flat()),
-  };
-};
-
-export const parsePipeTextArgs = (text: string): PipeArgs => parsePipeArgs([createTextToken(text)]);
 
 export const buildRichBlock = (
   type: RichType,
@@ -118,7 +37,7 @@ export const buildRichBlock = (
 };
 
 export const buildPlainRawBlock = (
-  type: TitledBlockType,
+  type: RichType,
   arg: string | undefined,
   content: string,
   defaultTitleI18nKey: CommonI18nKeys,
@@ -127,7 +46,7 @@ export const buildPlainRawBlock = (
 };
 
 export const buildLabeledInlineBlock = (
-  type: TitledBlockType,
+  type: RichType,
   tokens: TextToken[],
   defaultTitleI18nKey: CommonI18nKeys,
 ): TokenDraft => {

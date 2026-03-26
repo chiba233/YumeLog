@@ -1,12 +1,12 @@
-import type { BlockType, RichType, TagHandler, TagHandlerMap, TextToken } from "./types";
-import { BLOCK_TYPES, RICH_TYPES } from "./types";
+import type { BlockType, RichType, TagHandlerMap } from "./types";
+import { BLOCK_TYPES, RICH_TYPES, SIMPLE_INLINE_TYPES } from "./types";
+import type { TagHandler, TextToken } from "yume-dsl-rich-text";
+import { createSimpleInlineHandlers, parsePipeArgs, parsePipeTextList } from "yume-dsl-rich-text";
 import {
   buildLabeledInlineBlock,
   buildPlainRawBlock,
   buildRichBlock,
   normalizeLang,
-  parsePipeArgs,
-  parsePipeTextArgs,
 } from "./builders";
 
 type TitledLabelKey = "labelInfo" | "labelWarning" | "collapseClickToExpand";
@@ -23,6 +23,7 @@ const createTitledTagHandler = (
 });
 
 export const TAG_HANDLERS: Partial<TagHandlerMap> = {
+  ...createSimpleInlineHandlers(SIMPLE_INLINE_TYPES),
   link: {
     inline: (tokens) => {
       const args = parsePipeArgs(tokens);
@@ -66,10 +67,8 @@ export const TAG_HANDLERS: Partial<TagHandlerMap> = {
 
   "raw-code": {
     raw: (arg, content) => {
-      const args = parsePipeTextArgs(arg ?? "");
-      const codeLang = normalizeLang(args.text(0));
-      const title = args.text(1);
-      const label = args.text(2);
+      const [langArg, title = "", label = ""] = parsePipeTextList(arg ?? "");
+      const codeLang = normalizeLang(langArg);
 
       return {
         type: "raw-code",

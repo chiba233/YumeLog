@@ -22,7 +22,6 @@ interface CollapseWrapperProps {
   temp_id: string;
   title: string;
 }
-
 interface RuntimeTimeProps {
   date?: string;
   format?: string;

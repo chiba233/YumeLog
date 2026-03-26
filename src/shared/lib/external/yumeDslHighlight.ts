@@ -185,7 +185,7 @@ const renderPropertyAnalysis = (
 const renderDashListLine = (line: string): HighlightToken[] => {
   const analysis = analyzeDashListLine(line);
   if (!analysis) return [{ content: line, color: COLORS.value }];
-  return renderPropertyAnalysis(analysis, analysis.isListItem ? "- " : null);
+  return renderPropertyAnalysis(analysis, analysis.listMarker);
 };
 
 const renderKeyValueLine = (line: string): HighlightToken[] => {
@@ -532,6 +532,15 @@ export const tokenizeYumeDsl = (code: string): HighlightToken[][] => {
         continue;
       }
       scalarIndent = null;
+    }
+
+    if (role?.kind === "content" && line.startsWith(ESCAPE_CHAR)) {
+      let slashEnd = 0;
+      while (line[slashEnd] === ESCAPE_CHAR) slashEnd++;
+      if (parseDirective(line.slice(slashEnd), BLOCK_NAME_SET)) {
+        tokenLines.push(tokenizeDirectiveFragmentLine(line));
+        continue;
+      }
     }
 
     if (role?.kind === "content" && role.blockName === "meta") {

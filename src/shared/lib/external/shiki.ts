@@ -9,6 +9,7 @@ import html from "shiki/langs/html.mjs";
 import theme from "shiki/themes/github-light-high-contrast.mjs";
 import type { ThemeRegistration } from "shiki/types";
 import { PROJECT_DSL_LANGUAGES, SHIKI_THEME } from "@/shared/lib/external/shikiLanguages.ts";
+import { isSSR } from "@/shared/lib/app/useHead.ts";
 
 const projectTheme: ThemeRegistration = {
   ...theme,
@@ -116,7 +117,7 @@ const projectTheme: ThemeRegistration = {
 };
 
 const getWasm = async () => {
-  if (typeof window !== "undefined") {
+  if (!isSSR) {
     return import("shiki/wasm");
   } else {
     const m = await import("shiki/wasm");

@@ -1,4 +1,17 @@
-import type { TagHead, TagStartInfo } from "./types";
+interface TagHead {
+  tag: string;
+  tagStart: number;
+  tagNameEnd: number;
+  argStart: number;
+}
+
+interface TagStartInfo {
+  tag: string;
+  tagOpenPos: number;
+  tagNameEnd: number;
+  inlineContentStart: number;
+}
+
 import { getLineEnd, isTagChar, isTagStartChar, isWholeLineToken } from "./chars";
 import {
   BLOCK_CLOSE,

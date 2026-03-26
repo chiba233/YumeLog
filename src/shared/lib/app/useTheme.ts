@@ -94,7 +94,7 @@ export const useTheme = () => {
 
     const strokeOpacity = isDark ? 0.25 : 0.7;
 
-    const shadowColor = isDark ? `rgba(0, 0, 0, 0.5)` : `rgba(${m.deepRgbStr}, 0.25)`;
+    const shadowColor = isDark ? `rgba(0,0,0,0.5)` : `rgba(${m.deepRgbStr}, 0.25)`;
 
     const directShadow = isDark
       ? `0.5px 0 0 rgba(0,0,0,0.28),

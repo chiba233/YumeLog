@@ -32,7 +32,8 @@
     "p-limit": "^7.3.0",
     "vue": "^3.5.30",
     "vue-router": "^5.0.4",
-    "yume-dsl-rich-text": "^0.1.11"
+    "yume-dsl-rich-text": "^1.0.1",
+    "yume-dsl-shiki-highlight": "^0.1.0"
   },
   "devDependencies": {
     "@babel/types": "^7.29.0",

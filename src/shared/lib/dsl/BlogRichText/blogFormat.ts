@@ -18,19 +18,13 @@ const BLOG_RICH_TEXT_PARSER = createParser({
   blockTags: BLOCK_TAG_LIST,
 });
 
-export const parseRichText = (
-  text: string,
-  depthLimit = 50,
-  silent = false,
-  options: { mode?: "render" | "highlight" } = {},
-): TextToken[] => {
+export const parseRichText = (text: string, depthLimit = 50, silent = false): TextToken[] => {
   if (!text) return [];
 
   return withRichTextErrorBatch(silent, () => {
     return attachTempIds(
       BLOG_RICH_TEXT_PARSER.parse(text, {
         depthLimit,
-        mode: options.mode ?? "render",
         onError: silent ? undefined : (error: ParseError) => emitLibraryError(error, depthLimit),
       }),
     );
@@ -40,8 +34,5 @@ export const parseRichText = (
 export const stripRichText = (text?: string): string => {
   if (!text) return "";
 
-  return BLOG_RICH_TEXT_PARSER.strip(text, {
-    depthLimit: 50,
-    mode: "render",
-  });
+  return BLOG_RICH_TEXT_PARSER.strip(text, { depthLimit: 50 });
 };

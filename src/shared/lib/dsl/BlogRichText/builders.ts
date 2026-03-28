@@ -9,8 +9,6 @@ import {
   type SupportedCodeLang,
 } from "@/shared/lib/external/codeLang.ts";
 
-export { extractText, parsePipeArgs } from "yume-dsl-rich-text";
-
 type CommonI18nKeys = keyof typeof commonI18n;
 type I18nMap = Record<string, string>;
 

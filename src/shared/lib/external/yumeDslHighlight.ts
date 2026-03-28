@@ -10,33 +10,16 @@ import {
   syntax,
 } from "@/shared/lib/dsl/extractAtBlocks/parseDSL.ts";
 import { splitTextLines } from "@/shared/lib/dsl/extractAtBlocks/textLines.ts";
+import { DEFAULT_SYNTAX, readEscapedSequence } from "yume-dsl-rich-text";
 import {
-  BLOCK_CLOSE,
-  BLOCK_OPEN,
-  END_TAG,
-  ESCAPE_CHAR,
-  RAW_CLOSE,
-  RAW_OPEN,
-  TAG_CLOSE,
-  TAG_DIVIDER,
-  TAG_OPEN,
-  TAG_PREFIX,
-} from "@/shared/lib/dsl/BlogRichText/constants.ts";
-import { readEscapedSequence } from "@/shared/lib/dsl/BlogRichText/escape.ts";
-import {
-  findBlockClose,
-  findInlineClose,
-  findRawClose,
-  getTagCloserType,
-  readTagStartInfo,
-  skipDegradedInline,
-} from "@/shared/lib/dsl/BlogRichText/scanner.ts";
+  type HighlightToken,
+  splitTokensByLineBreak,
+  tokenizeRichText as tokenizeRichTextHighlight,
+} from "yume-dsl-shiki-highlight";
 
-export interface HighlightToken {
-  content: string;
-  color?: string;
-  fontStyle?: string;
-}
+const ESCAPE_CHAR = DEFAULT_SYNTAX.escapeChar;
+
+export type { HighlightToken };
 
 const COLORS = {
   plain: undefined,
@@ -48,24 +31,24 @@ const COLORS = {
   end: "#8250DF",
   property: "#0A3069",
   value: "#0A7EA4",
-  richTextArg: "#0A3069",
-  richTextContent: "#0A7EA4",
   escape: "#116329",
+} as const;
+
+const RICH_TEXT_COLORS = {
+  tagName: COLORS.tagName,
+  punct: COLORS.punct,
+  bracket: COLORS.bracket,
+  separator: COLORS.separator,
+  operator: COLORS.operator,
+  end: COLORS.end,
+  escape: COLORS.escape,
+  argText: COLORS.property,
+  contentText: COLORS.value,
 } as const;
 
 type BlockName = (typeof DSL_BLOCK_NAMES)[number];
 type LineRole = { kind: "start" | "end" | "content"; blockName: BlockName } | null;
-type RichTextTreeNode =
-  | { type: "text"; value: string }
-  | { type: "escape"; raw: string }
-  | { type: "separator" }
-  | { type: "inline"; tag: string; args: RichTextTreeNode[] }
-  | { type: "raw"; tag: string; args: RichTextTreeNode[]; content: string }
-  | { type: "block"; tag: string; args: RichTextTreeNode[]; content: RichTextTreeNode[] };
-
 const BLOCK_NAME_SET = new Set<string>(DSL_BLOCK_NAMES);
-const RAW_MARKER = RAW_OPEN.slice(TAG_CLOSE.length);
-const BLOCK_MARKER = BLOCK_OPEN.slice(TAG_CLOSE.length);
 
 const pushToken = (
   line: HighlightToken[],
@@ -198,252 +181,15 @@ const tokenizeScalarContentLine = (line: string): HighlightToken[] => [
   { content: line, color: COLORS.value },
 ];
 
-const findNextSpecialIndex = (text: string, start: number): number => {
-  let next = text.length;
-  const nextEscape = text.indexOf(ESCAPE_CHAR, start);
-  const nextTag = text.indexOf(TAG_PREFIX, start);
-  const nextDivider = text.indexOf(TAG_DIVIDER, start);
-
-  if (nextEscape !== -1) next = Math.min(next, nextEscape);
-  if (nextTag !== -1) next = Math.min(next, nextTag);
-  if (nextDivider !== -1) next = Math.min(next, nextDivider);
-  return next;
-};
-
-const findTagBoundary = (text: string, info: ReturnType<typeof readTagStartInfo>): number => {
-  if (!info) return -1;
-
-  const closerInfo = getTagCloserType(text, info.tagNameEnd + TAG_OPEN.length);
-  if (!closerInfo) {
-    return info.inlineContentStart;
-  }
-
-  if (closerInfo.closer === END_TAG) {
-    const closeStart = findInlineClose(text, info.inlineContentStart);
-    return closeStart === -1
-      ? skipDegradedInline(text, info.inlineContentStart)
-      : closeStart + END_TAG.length;
-  }
-
-  if (closerInfo.closer === RAW_CLOSE) {
-    const contentStart = closerInfo.argClose + RAW_OPEN.length;
-    const closeStart = findRawClose(text, contentStart);
-    return closeStart === -1 ? contentStart : closeStart + RAW_CLOSE.length;
-  }
-
-  const contentStart = closerInfo.argClose + BLOCK_OPEN.length;
-  const closeStart = findBlockClose(text, contentStart);
-  return closeStart === -1 ? contentStart : closeStart + BLOCK_CLOSE.length;
-};
-
-const parseRichTextTree = (text: string, depth = 0, depthLimit = 50): RichTextTreeNode[] => {
-  const nodes: RichTextTreeNode[] = [];
-  let i = 0;
-  let buffer = "";
-
-  const flush = () => {
-    if (!buffer) return;
-    nodes.push({ type: "text", value: buffer });
-    buffer = "";
-  };
-
-  while (i < text.length) {
-    const [escaped, next] = readEscapedSequence(text, i);
-    if (escaped !== null) {
-      flush();
-      nodes.push({ type: "escape", raw: text.slice(i, next) });
-      i = next;
-      continue;
-    }
-
-    if (text[i] === TAG_DIVIDER) {
-      flush();
-      nodes.push({ type: "separator" });
-      i++;
-      continue;
-    }
-
-    const info = readTagStartInfo(text, i);
-    if (!info) {
-      const nextSpecial = findNextSpecialIndex(text, i);
-      if (nextSpecial <= i) {
-        buffer += text[i];
-        i++;
-        continue;
-      }
-      buffer += text.slice(i, nextSpecial);
-      i = nextSpecial;
-      continue;
-    }
-
-    if (depth >= depthLimit) {
-      const degradedEnd = findTagBoundary(text, info);
-      buffer += text.slice(i, degradedEnd);
-      i = degradedEnd;
-      continue;
-    }
-
-    const closerInfo = getTagCloserType(text, info.tagNameEnd + TAG_OPEN.length);
-    if (!closerInfo) {
-      buffer += text.slice(i, info.inlineContentStart);
-      i = info.inlineContentStart;
-      continue;
-    }
-
-    if (closerInfo.closer === END_TAG) {
-      const closeStart = findInlineClose(text, info.inlineContentStart);
-      if (closeStart === -1) {
-        buffer += text.slice(i, info.inlineContentStart);
-        i = info.inlineContentStart;
-        continue;
-      }
-
-      flush();
-      nodes.push({
-        type: "inline",
-        tag: info.tag,
-        args: parseRichTextTree(
-          text.slice(info.inlineContentStart, closeStart),
-          depth + 1,
-          depthLimit,
-        ),
-      });
-      i = closeStart + END_TAG.length;
-      continue;
-    }
-
-    if (closerInfo.closer === RAW_CLOSE) {
-      const contentStart = closerInfo.argClose + RAW_OPEN.length;
-      const closeStart = findRawClose(text, contentStart);
-      if (closeStart === -1) {
-        buffer += text.slice(i, contentStart);
-        i = contentStart;
-        continue;
-      }
-
-      flush();
-      nodes.push({
-        type: "raw",
-        tag: info.tag,
-        args: parseRichTextTree(
-          text.slice(info.inlineContentStart, closerInfo.argClose),
-          depth + 1,
-          depthLimit,
-        ),
-        content: text.slice(contentStart, closeStart),
-      });
-      i = closeStart + RAW_CLOSE.length;
-      continue;
-    }
-
-    const contentStart = closerInfo.argClose + BLOCK_OPEN.length;
-    const closeStart = findBlockClose(text, contentStart);
-    if (closeStart === -1) {
-      buffer += text.slice(i, contentStart);
-      i = contentStart;
-      continue;
-    }
-
-    flush();
-    nodes.push({
-      type: "block",
-      tag: info.tag,
-      args: parseRichTextTree(
-        text.slice(info.inlineContentStart, closerInfo.argClose),
-        depth + 1,
-        depthLimit,
-      ),
-      content: parseRichTextTree(text.slice(contentStart, closeStart), depth + 1, depthLimit),
-    });
-    i = closeStart + BLOCK_CLOSE.length;
-  }
-
-  flush();
-  return nodes;
-};
-
-const renderRichTextTree = (nodes: RichTextTreeNode[], textColor?: string): HighlightToken[] => {
-  const tokens: HighlightToken[] = [];
-
-  for (const node of nodes) {
-    if (node.type === "text") {
-      pushToken(tokens, node.value, textColor);
-      continue;
-    }
-
-    if (node.type === "escape") {
-      pushToken(tokens, node.raw, COLORS.escape);
-      continue;
-    }
-
-    if (node.type === "separator") {
-      pushToken(tokens, TAG_DIVIDER, COLORS.separator, "bold");
-      continue;
-    }
-
-    pushToken(tokens, TAG_PREFIX, COLORS.punct, "bold");
-    pushToken(tokens, node.tag, COLORS.tagName, "bold");
-    pushToken(tokens, TAG_OPEN, COLORS.bracket);
-    renderRichTextTree(node.args, COLORS.richTextArg).forEach((token) => tokens.push(token));
-    pushToken(tokens, TAG_CLOSE, COLORS.bracket);
-
-    if (node.type === "inline") {
-      pushToken(tokens, TAG_PREFIX, COLORS.punct, "bold");
-      continue;
-    }
-
-    if (node.type === "raw") {
-      pushToken(tokens, RAW_MARKER, COLORS.operator, "bold");
-      colorizeEscapes(node.content, COLORS.value).forEach((token) => tokens.push(token));
-      pushToken(tokens, RAW_MARKER, COLORS.operator, "bold");
-      pushToken(tokens, syntax.blockEnd, COLORS.end, "bold");
-      pushToken(tokens, TAG_PREFIX, COLORS.punct, "bold");
-      continue;
-    }
-
-    pushToken(tokens, BLOCK_MARKER, COLORS.operator, "bold");
-    renderRichTextTree(node.content, COLORS.richTextContent).forEach((token) => tokens.push(token));
-    pushToken(tokens, BLOCK_MARKER, COLORS.operator, "bold");
-    pushToken(tokens, syntax.blockEnd, COLORS.end, "bold");
-    pushToken(tokens, TAG_PREFIX, COLORS.punct, "bold");
-  }
-
-  return tokens;
-};
-
 const tokenizeTextLine = (line: string): HighlightToken[] => {
-  const richTokens = renderRichTextTree(parseRichTextTree(line));
+  const richTokens = tokenizeRichTextHighlight(line, { colors: RICH_TEXT_COLORS });
   const hasStructured = richTokens.some((token) => token.color !== undefined);
   return hasStructured ? richTokens : tokenizeDirectiveFragmentLine(line);
 };
 
-const splitTokensByLineBreak = (tokens: HighlightToken[]): HighlightToken[][] => {
-  const lines: HighlightToken[][] = [[]];
-
-  for (const token of tokens) {
-    const parts = token.content.split("\n");
-
-    for (let i = 0; i < parts.length; i++) {
-      if (parts[i]) {
-        lines[lines.length - 1].push({
-          content: parts[i],
-          color: token.color,
-          fontStyle: token.fontStyle,
-        });
-      }
-
-      if (i < parts.length - 1) {
-        lines.push([]);
-      }
-    }
-  }
-
-  return lines;
-};
-
 const tokenizeTextBlockLines = (lines: string[]): HighlightToken[][] => {
   const joined = lines.join("\n");
-  const rendered = renderRichTextTree(parseRichTextTree(joined));
+  const rendered = tokenizeRichTextHighlight(joined, { colors: RICH_TEXT_COLORS });
   const splitLines = splitTokensByLineBreak(rendered);
 
   if (splitLines.length !== lines.length) {

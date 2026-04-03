@@ -1,21 +1,23 @@
-import type { ParseError, TagHandler, TextToken as LibTextToken } from "yume-dsl-rich-text";
+import type { ParseError, TextToken as LibTextToken } from "yume-dsl-rich-text";
 import { createParser } from "yume-dsl-rich-text";
 import type { TextToken } from "./types";
-import { BLOCK_TYPES } from "./types";
+import { MULTILINE_TAGS } from "./types";
 import { TAG_HANDLERS } from "./handlers";
 import { emitLibraryError, withRichTextErrorBatch } from "./errors";
 
 const attachTempIds = (tokens: LibTextToken[]): TextToken[] =>
-  tokens.map((t) => ({
-    ...t,
-    temp_id: t.id,
-    value: Array.isArray(t.value) ? attachTempIds(t.value) : t.value,
-  })) as TextToken[];
+  tokens.map(
+    (token): TextToken => ({
+      ...token,
+      type: token.type as TextToken["type"],
+      temp_id: token.id,
+      value: Array.isArray(token.value) ? attachTempIds(token.value) : token.value,
+    }),
+  );
 
-const BLOCK_TAG_LIST: string[] = [...BLOCK_TYPES];
 const BLOG_RICH_TEXT_PARSER = createParser({
-  handlers: TAG_HANDLERS as Record<string, TagHandler>,
-  blockTags: BLOCK_TAG_LIST,
+  handlers: TAG_HANDLERS,
+  blockTags: MULTILINE_TAGS,
 });
 
 export const parseRichText = (text: string, depthLimit = 50, silent = false): TextToken[] => {

@@ -130,13 +130,12 @@ const cases: Array<{ name: string; run: () => void }> = [
               codeLang: "typescript",
               title: "Code:",
               label: "",
-              value: "const a = 1\n",
+              value: "const a = 1",
             },
             {
               type: "bold",
               value: [{ type: "text", value: "x" }],
             },
-            { type: "text", value: "\n" },
           ],
         },
       ]);
@@ -173,7 +172,7 @@ const cases: Array<{ name: string; run: () => void }> = [
           codeLang: "typescript",
           title: "demo",
           label: "",
-          value: "const a = 1\n",
+          value: "const a = 1",
         },
       ]);
     },
@@ -189,7 +188,7 @@ const cases: Array<{ name: string; run: () => void }> = [
           codeLang: "typescript",
           title: "Demo",
           label: "Label",
-          value: "a%end$$\n",
+          value: "a%end$$",
         },
       ]);
     },
@@ -203,7 +202,7 @@ const cases: Array<{ name: string; run: () => void }> = [
         {
           type: "info",
           title: "标题",
-          value: [{ type: "text", value: "正文\n" }],
+          value: [{ type: "text", value: "正文" }],
         },
       ]);
     },
@@ -217,7 +216,7 @@ const cases: Array<{ name: string; run: () => void }> = [
         {
           type: "warning",
           title: "标题",
-          value: [{ type: "text", value: "正文\n" }],
+          value: [{ type: "text", value: "正文" }],
         },
       ]);
     },
@@ -231,7 +230,7 @@ const cases: Array<{ name: string; run: () => void }> = [
         {
           type: "collapse",
           title: "标题",
-          value: [{ type: "text", value: "正文\n" }],
+          value: [{ type: "text", value: "正文" }],
         },
       ]);
     },

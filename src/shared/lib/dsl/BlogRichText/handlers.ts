@@ -1,5 +1,5 @@
-import type { BlockType, RichType, TagHandlerMap } from "./types";
-import { BLOCK_TYPES, BLOG_TAG_GROUPS, RICH_TYPES } from "./types";
+import type { RichTokenDraft, TagHandlerMap } from "./types";
+import { BLOG_TAG_GROUPS } from "./types";
 import type { TagHandler, TextToken } from "yume-dsl-rich-text";
 import {
   createPipeHandlers,
@@ -30,14 +30,14 @@ export const TAG_HANDLERS = {
   ...createSimpleInlineHandlers(BLOG_TAG_GROUPS.simpleInline),
   ...createPipeHandlers({
     link: {
-      inline: (args) => ({
+      inline: (args): RichTokenDraft<"link"> => ({
         type: "link",
         url: args.text(0),
         value: args.parts.length > 1 ? args.materializedTailTokens(1) : args.materializedTokens(0),
       }),
     },
     fromNow: {
-      inline: (args) => ({
+      inline: (args): RichTokenDraft<"fromNow"> => ({
         type: "fromNow",
         value: "",
         date: args.text(0),
@@ -45,7 +45,7 @@ export const TAG_HANDLERS = {
       }),
     },
     date: {
-      inline: (args) => ({
+      inline: (args): RichTokenDraft<"date"> => ({
         type: "date",
         value: "",
         date: args.text(0),
@@ -69,11 +69,7 @@ export const TAG_HANDLERS = {
         title: title || "Code:",
         label,
         value: content,
-      };
+      } satisfies RichTokenDraft<"raw-code">;
     },
   },
 } satisfies TagHandlerMap;
-
-const RICH_TYPE_SET: ReadonlySet<RichType> = new Set(RICH_TYPES);
-export const BLOCK_TYPES_SET: ReadonlySet<BlockType> = new Set(BLOCK_TYPES);
-export const isRichType = (tag: string): tag is RichType => RICH_TYPE_SET.has(tag as RichType);

@@ -21,6 +21,7 @@ const attachTempIds = (tokens: LibTextToken[]): TextToken[] =>
 const BLOG_RICH_TEXT_PARSER = createParser({
   handlers: TAG_HANDLERS,
   blockTags: MULTILINE_TAGS,
+  implicitInlineShorthand: true,
 });
 
 export const parseRichText = (text: string, depthLimit = 50, silent = false): TextToken[] => {

@@ -36,11 +36,11 @@ importers:
         specifier: ^5.0.4
         version: 5.0.4(@vue/compiler-sfc@3.5.32)(vue@3.5.32(typescript@5.9.3))
       yume-dsl-rich-text:
-        specifier: ^1.1.10
-        version: 1.1.10
+        specifier: ^1.3.5
+        version: 1.3.5
       yume-dsl-shiki-highlight:
-        specifier: ^2.0.1
-        version: 2.0.1
+        specifier: ^2.1.1
+        version: 2.1.1
     devDependencies:
       '@babel/types':
         specifier: ^7.29.0
@@ -2361,12 +2361,12 @@ packages:
     resolution: {integrity: sha512-4LCcse/U2MHZ63HAJVE+v71o7yOdIe4cZ70Wpf8D/IyjDKYQLV5GD46B+hSTjJsvV5PztjvHoU580EftxjDZFQ==}
     engines: {node: '>=12.20'}
 
-  yume-dsl-rich-text@1.1.10:
-    resolution: {integrity: sha512-cSWXENLBTNkss1lqfteW+CrY6EYVOXDZ9l0rC17akt8961KED3smvQenNStUoQYW3ldhiEawQIJjpZB0EtEYHA==}
+  yume-dsl-rich-text@1.3.5:
+    resolution: {integrity: sha512-O3Bh7+WH6n4DryDEpZvOJYIdJ0f/N6fxwraqB/l/AAABosY8gXtxs9ZIjOCoMjQBfN87JhgKsNJf8EDpfobz+w==}
     engines: {node: '>=18'}
 
-  yume-dsl-shiki-highlight@2.0.1:
-    resolution: {integrity: sha512-w8bzS0USPXyndii9PBkvKygaVFAHc1RaU2HIcN7EXFw9QrHgr0Kibx92UQYg8vY5qr51Pp5ukNT0uFK6ugUDFQ==}
+  yume-dsl-shiki-highlight@2.1.1:
+    resolution: {integrity: sha512-wmrPQnUMFFZ5iDI8+FaOdOvkP/TkgENOx41ogx2SPuE4c0FWB6V5i4rZq64WpQQcHW5mGd5hnOy+oG6G2mxu1g==}
     engines: {node: '>=18'}
 
   zwitch@2.0.4:
@@ -4551,10 +4551,10 @@ snapshots:
 
   yocto-queue@1.2.2: {}
 
-  yume-dsl-rich-text@1.1.10: {}
+  yume-dsl-rich-text@1.3.5: {}
 
-  yume-dsl-shiki-highlight@2.0.1:
+  yume-dsl-shiki-highlight@2.1.1:
     dependencies:
-      yume-dsl-rich-text: 1.1.10
+      yume-dsl-rich-text: 1.3.5
 
   zwitch@2.0.4: {}

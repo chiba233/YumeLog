@@ -9,6 +9,11 @@ title: 这是测试标题喵
 
 @text
 这是测试文本
+$$bold(114514bold(233$$info(1234)*
+afdwadawdawdad
+$$bold(233date(20250101))$$
+*end$$
+))$$
 @end
 
 @text

@@ -6,7 +6,6 @@
     "spareListUrl": "/data/blog/list.json"
   },
   "main": {
-    "listUrl": "/data/main/list.json",
     "url": "/data/main/"
   }
 }

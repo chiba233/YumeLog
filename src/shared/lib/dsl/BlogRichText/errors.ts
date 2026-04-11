@@ -112,6 +112,7 @@ const ERROR_CODE_TO_I18N: Record<ErrorCode, keyof typeof commonI18n> = {
   BLOCK_CLOSE_MALFORMED: "richTextBlockCloseMalformed",
   RAW_NOT_CLOSED: "richTextRawNotClosed",
   RAW_CLOSE_MALFORMED: "richTextRawCloseMalformed",
+  SHORTHAND_NOT_CLOSED: "shorthandNotClosed",
 };
 
 export const emitLibraryError = (error: ParseError, depthLimit: number) => {

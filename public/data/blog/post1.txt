@@ -1,5 +1,4 @@
 @meta
-layout: common
 time: 20260106
 lang: zh
 id: test

@@ -10,14 +10,15 @@ import {
   syntax,
 } from "@/shared/lib/dsl/extractAtBlocks/parseDSL.ts";
 import { splitTextLines } from "@/shared/lib/dsl/extractAtBlocks/textLines.ts";
-import { DEFAULT_SYNTAX, readEscapedSequence } from "yume-dsl-rich-text";
+import { createSyntax, readEscapedSequence } from "yume-dsl-rich-text";
 import {
   type HighlightToken,
   splitTokensByLineBreak,
   tokenizeRichText as tokenizeRichTextHighlight,
 } from "yume-dsl-shiki-highlight";
 
-const ESCAPE_CHAR = DEFAULT_SYNTAX.escapeChar;
+const RICH_TEXT_SYNTAX = createSyntax();
+const ESCAPE_CHAR = RICH_TEXT_SYNTAX.escapeChar;
 
 export type { HighlightToken };
 
@@ -79,7 +80,7 @@ const colorizeEscapes = (text: string, valueColor?: string): HighlightToken[] =>
   };
 
   while (i < text.length) {
-    const [escaped, next] = readEscapedSequence(text, i);
+    const [escaped, next] = readEscapedSequence(text, i, RICH_TEXT_SYNTAX);
     if (escaped === null) {
       buffer += text[i];
       i++;
